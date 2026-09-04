@@ -10,13 +10,13 @@
     <nav class="sidebar">
       <div class="brand">
         <span class="brand-mark">⬢</span>
-        <span class="brand-name">Game Host</span>
+        <span class="brand-name">AP PVP Host</span>
       </div>
       <button class="nav-item is-active" data-tab="main">메인</button>
-      <button class="nav-item" data-tab="dashboard">대시보드</button>
+      <button class="nav-item" data-tab="dashboard">공유</button>
       <button class="nav-item" data-tab="settings">전투 설정</button>
       <button class="nav-item" data-tab="formulas">수식 동기화</button>
-      <button class="nav-item" data-tab="players">참가자</button>
+      <button class="nav-item" data-tab="players">참가자 현황</button>
       <button class="nav-item" data-tab="usage">사용법</button>
       <button class="nav-item" data-tab="log">로그</button>
       <div class="sidebar-status" id="connStatus">
@@ -29,7 +29,8 @@
       <!-- 메인 -->
       <section class="pane is-active" id="pane-main">
         <h1>메인</h1>
-        <p class="lead">자캐 커뮤니티 Altiora Petamus의 2차 전투를 재현한 프로그램입니다. 상식 선에서 자유롭게 사용해주세요.</p>
+        <img src="../build/icon.png" alt="AP PVP Host Logo" class="logo" width="30%" />
+        <p class="lead">자캐 커뮤니티 Altiora Petamus의 2차 전투를 재현한 프로그램입니다. <br>상식 선에서 자유롭게 사용해주세요.</p>
         <p class="lead">전투 시스템 및 프로그램 개발 : 바지</p>
 
         <div class="contact-box">
@@ -37,15 +38,7 @@
           <ul class="contact-list">
             <li>
               <span class="contact-label">이메일</span>
-              <a href="mailto:you@example.com">you@example.com</a>
-            </li>
-            <li>
-              <span class="contact-label">문의 폼</span>
-              <a href="https://forms.gle/여기에폼링크" target="_blank" rel="noopener">Google Form</a>
-            </li>
-            <li>
-              <span class="contact-label">GitHub</span>
-              <a href="https://github.com/여기에아이디" target="_blank" rel="noopener">github.com/여기에아이디</a>
+              <a href="mailto:lrk9582@gmail.com">lrk9582@gmail.com</a>
             </li>
             <li>
               <span class="contact-label">X (Twitter)</span>
@@ -59,7 +52,7 @@
           <ul class="contact-list">
             <li>
               <span class="contact-label">GitHub</span>
-              <a href="https://github.com/여기에아이디" target="_blank" rel="noopener">github.com/여기에아이디</a>
+              <a href="https://github.com/RyunK/AP-PVP-Host" target="_blank" rel="noopener">https://github.com/RyunK/AP-PVP-Host</a>
             </li>
           </ul>
         </div>
@@ -159,7 +152,7 @@
       <!-- 로그 -->
       <section class="pane" id="pane-log">
         <h1>로그</h1>
-        <p class="lead">서버와 터널 상태 로그입니다. 문제가 생기면 이 내용을 확인해주세요.</p>
+        <p class="lead">서버와 터널 상태 로그입니다. 에러가 발생했을 때 이 내용과 함께 문의해주세요.</p>
         <pre class="log-box" id="logBox"></pre>
       </section>
     </main>

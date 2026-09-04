@@ -1,28 +1,28 @@
 :root {
   /* 배경 */
-  --bg-page: #14171c;
-  --bg-sidebar: #171a20;
-  --bg-panel: #1b1f26;
-  --bg-input: #14171c;
+  --bg-page: #F1F1F1;
+  --bg-sidebar: #F2F2F8;
+  --bg-panel: #F2F2F8;
+  --bg-input: #F1F1F1;
   --bg-log: #0f1114;
-  --bg-nav-hover: #1f242c;
-  --bg-nav-active: #22282f;
-  --bg-btn-ghost: #262b33;
-  --bg-btn-ghost-hover: #2f3540;
+  --bg-nav-hover: #E4E5FF;
+  --bg-nav-active: #D6D8FF;
+  --bg-btn-ghost: #D6D8FF;
+  --bg-btn-ghost-hover: #E4E5FF;
 
   /* 테두리 */
   --border: #262b33;
   --border-strong: #2f3540;
 
   /* 텍스트 */
-  --text: #e8e6de;
-  --text-muted: #8b92a0;
-  --text-dim: #a3aab6;
+  --text: #222240;
+  --text-muted: #828282;
+  --text-dim: #C1C1C1;
 
   /* 포인트 / 상태 */
-  --accent: #4fd1c5;
-  --accent-hover: #6adbd1;
-  --accent-text-on: #0d1113; /* 포인트색 배경 위에 올라가는 텍스트 */
+  --accent: #002BFF;
+  --accent-hover: #647EFF;
+  --accent-text-on: #F1F1F1; /* 포인트색 배경 위에 올라가는 텍스트 */
   --danger: #e2574c;
 
   /* 폰트 */
@@ -99,7 +99,7 @@ html, body {
   padding: 40px 48px;
 }
 
-.pane { display: none; max-width: 640px; }
+.pane { display: none; max-width: 640px; margin: 0 auto; }
 .pane.is-active { display: block; }
 
 h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
