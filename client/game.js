@@ -125,10 +125,14 @@ document.getElementById("addCharacterBtn").addEventListener("click", addCharacte
 document.getElementById("saveCharactersBtn").addEventListener("click", () => {
   const defs = [...characterForm.querySelectorAll(".char-row")].map((row) => ({
     name: row.querySelector(".c-name").value.trim() || "이름없음",
-    hp: Number(row.querySelector(".c-hp").value) || 100,
-    atk: Number(row.querySelector(".c-atk").value) || 10,
-    def: Number(row.querySelector(".c-def").value) || 5,
-    power: 10,
+    position: row.querySelector(".c-position").value.trim() || "아이기스",
+    skill: row.querySelector(".c-skill").value.trim()  || "엄호",
+    hp: Number(row.querySelector(".c-hp").value) || 1,
+    hp_stat: Number(row.querySelector(".c-hp-stat").value) || 1,
+    power: Number(row.querySelector(".c-power").value) || 1,
+    dex: Number(row.querySelector(".c-dex").value) || 1,
+    mnd: Number(row.querySelector(".c-mnd").value) || 1,
+    luck: Number(row.querySelector(".c-luck").value) || 1,
   }));
 
   socket.emit("characters:set", defs, (res) => {
