@@ -7,8 +7,9 @@ const store = new Store({
     matchSettings: {
       teamSize: 3, // 3:3 기본, 1~3 가변
       allowMultiCharacterPerPlayer: true,
-      turnTimeLimitSec: 60,
+      turnTimeLimitSec: 300,
       maxCharactersPerPlayer: 3,
+      allowAsymmetricBattles: true,
     },
     sheetConfig: {
       spreadsheetId: "",

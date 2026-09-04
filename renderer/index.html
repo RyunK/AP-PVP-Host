@@ -88,7 +88,7 @@
       <!-- 전투 설정 -->
       <section class="pane" id="pane-settings">
         <h1>전투 설정</h1>
-        <p class="lead">코드를 건드리지 않고 규칙의 세부값을 조정합니다.</p>
+        <p class="lead">플레이어와 캐릭터 규칙을 정합니다.</p>
 
         <form class="form-grid" id="settingsForm">
           <label class="field">
@@ -97,16 +97,23 @@
           </label>
           <label class="field">
             <span>턴 제한시간 (초)</span>
-            <input type="number" name="turnTimeLimitSec" min="10" max="300" required />
+            <input type="number" name="turnTimeLimitSec" min="10" max="900" required />
           </label>
           <label class="field">
             <span>플레이어당 최대 캐릭터 수</span>
             <input type="number" name="maxCharactersPerPlayer" min="1" max="6" required />
           </label>
-          <label class="field checkbox-field">
-            <input type="checkbox" name="allowMultiCharacterPerPlayer" />
-            <span>한 플레이어가 여러 캐릭터를 조작할 수 있음</span>
-          </label>
+          <div>
+            <label class="field checkbox-field">
+              <input type="checkbox" name="allowMultiCharacterPerPlayer" />
+              <span>한 플레이어가 여러 캐릭터를 조작할 수 있음</span>
+            </label>
+            <label class="field checkbox-field">
+              <input type="checkbox" name="allowAsymmetricBattles" />
+              <span>비대칭 전투가 가능함</span>
+            </label>
+          </div>
+          
           <button class="btn btn-primary" type="submit">설정 저장</button>
         </form>
         <div class="save-toast" id="settingsToast"></div>
