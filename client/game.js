@@ -70,10 +70,21 @@ function addCharacterRow() {
   const row = document.createElement("div");
   row.className = "char-row";
   row.innerHTML = `
+    <label for="c-name">이름</label>
     <input type="text" placeholder="이름" class="c-name" />
-    <input type="number" placeholder="HP" class="c-hp" value="100" />
-    <input type="number" placeholder="공격" class="c-atk" value="10" />
-    <input type="number" placeholder="방어" class="c-def" value="5" />
+
+    <label for="c-hp">현재체력</label>
+    <input type="number" placeholder="현재체력" class="c-hp" />
+    <label for="c-hp-stat">체력(스탯)</label>
+    <input type="number" placeholder="체력(스탯)" class="c-hp-stat"/>
+    <label for="c-power">이능력</label>
+    <input type="number" placeholder="이능력" class="c-power" />
+    <label for="c-dex">민첩</label>
+    <input type="number" placeholder="민첩" class="c-dex" />
+    <label for="c-mnd">정신력</label>
+    <input type="number" placeholder="정신력" class="c-mnd" />
+    <label for="c-luck">행운</label>
+    <input type="number" placeholder="행운" class="c-luck" />
   `;
   characterForm.appendChild(row);
 }
