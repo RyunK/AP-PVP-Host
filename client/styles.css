@@ -8,7 +8,7 @@ html, body {
   font-family: -apple-system, "Segoe UI", "Pretendard", Inter, sans-serif;
 }
 
-.app { max-width: 480px; margin: 0 auto; padding: 28px 20px 60px; }
+.app { max-width: 750px; margin: 0 auto; padding: 28px 20px 60px; }
 
 .screen { display: none; }
 .screen.is-active { display: block; }
@@ -35,7 +35,6 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
 .field input:focus { outline: 2px solid #4fd1c5; outline-offset: 1px; }
 
 .btn {
-  all: unset;
   cursor: pointer;
   display: block;
   width: 100%;
