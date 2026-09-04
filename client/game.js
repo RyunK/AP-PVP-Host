@@ -1,5 +1,12 @@
 const socket = io();
 
+// 포지션별로 고를 수 있는 선택 스킬 목록
+const POSITION_SKILLS = {
+  "아이기스": ["엄호", "수호"],
+  "드레파논": ["확산", "침식"],
+  "카두케우스": ["성호", "환희", "낙화"],
+};
+
 const screens = {
   entry: document.getElementById("screen-entry"),
   lobby: document.getElementById("screen-lobby"),
@@ -64,6 +71,17 @@ function enterLobby() {
   startBattleBtn.style.display = me?.isHost ? "block" : "none";
 }
 
+function buildSkillOptions(position) {
+  const skills = POSITION_SKILLS[position] || [];
+  return skills.map((s) => `<option value="${s}">${s}</option>`).join("");
+}
+
+function refreshSkillSelect(row) {
+  const position = row.querySelector(".c-position").value;
+  const skillSelect = row.querySelector(".c-skill");
+  skillSelect.innerHTML = buildSkillOptions(position);
+}
+
 function addCharacterRow() {
   const max = roomState.settings.maxCharactersPerPlayer || 3;
   if (characterForm.children.length >= max) return;
@@ -72,6 +90,16 @@ function addCharacterRow() {
   row.innerHTML = `
     <label for="c-name">이름</label>
     <input type="text" placeholder="이름" class="c-name" />
+
+    <label for="c-position">포지션</label>
+    <select class="c-position">
+      <option value="아이기스">아이기스</option>
+      <option value="드레파논">드레파논</option>
+      <option value="카두케우스">카두케우스</option>
+    </select>
+
+    <label for="c-skill">선택 스킬</label>
+    <select class="c-skill"></select>
 
     <label for="c-hp">현재체력</label>
     <input type="number" placeholder="현재체력" class="c-hp" />
@@ -87,6 +115,9 @@ function addCharacterRow() {
     <input type="number" placeholder="행운" class="c-luck" />
   `;
   characterForm.appendChild(row);
+
+  refreshSkillSelect(row); // 기본 선택된 포지션(아이기스)에 맞춰 스킬 목록 초기 세팅
+  row.querySelector(".c-position").addEventListener("change", () => refreshSkillSelect(row));
 }
 
 document.getElementById("addCharacterBtn").addEventListener("click", addCharacterRow);
