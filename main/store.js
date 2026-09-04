@@ -19,14 +19,14 @@ const store = new Store({
     sheetPresets: [
       {
         name: "2차",
-        spreadsheetId: "여기에 실제 시트 링크를 넣어주세요",
-        sheetName: "Formulas",
+        spreadsheetId: "https://docs.google.com/spreadsheets/d/1inaUp21mijBCxT5oafh47aV6z2MJlhO21ZE0wGjR0-E/edit?usp=sharing",
+        sheetName: "2차",
         isDefault: true,
       },
       {
         name: "최신",
-        spreadsheetId: "여기에 실제 시트 링크를 넣어주세요",
-        sheetName: "Formulas",
+        spreadsheetId: "https://docs.google.com/spreadsheets/d/1inaUp21mijBCxT5oafh47aV6z2MJlhO21ZE0wGjR0-E/edit?usp=sharing",
+        sheetName: "최신",
         isDefault: true,
       },
     ],

@@ -61,9 +61,9 @@ async function syncFromSheet(sheetConfig) {
   const typeIdx = header.indexOf("type");
   const valueIdx = header.indexOf("value");
 
-  if (keyIdx === -1 || typeIdx === -1 || valueIdx === -1) {
-    throw new Error('시트 헤더에 "key", "type", "value" 열이 모두 있어야 합니다.');
-  }
+  // if (keyIdx === -1 || typeIdx === -1 || valueIdx === -1) {
+  //   throw new Error('시트 헤더에 "key", "type", "value" 열이 모두 있어야 합니다.');
+  // }
 
   const params = {};
   const expressions = {};
@@ -86,43 +86,5 @@ async function syncFromSheet(sheetConfig) {
   return { paramCount: Object.keys(params).length, expressionCount: Object.keys(expressions).length, snapshot: saved };
 }
 
-/**
- * (선택/고급) 비공개 시트를 googleapis + 서비스 계정으로 동기화하고 싶을 때 사용.
- * 서비스 계정 JSON 키 파일 경로가 필요하며, 시트를 그 서비스 계정 이메일과
- * 공유해두어야 합니다. 기본 UI에는 노출하지 않고, 필요할 때만 연결하세요.
- */
-async function syncFromSheetPrivate({ spreadsheetId, range, keyFilePath }) {
-  const { google } = require("googleapis");
-  const auth = new google.auth.GoogleAuth({
-    keyFile: keyFilePath,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-  });
-  const sheets = google.sheets({ version: "v4", auth });
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: extractSpreadsheetId(spreadsheetId),
-    range,
-  });
-
-  const [header, ...rows] = res.data.values;
-  const keyIdx = header.indexOf("key");
-  const typeIdx = header.indexOf("type");
-  const valueIdx = header.indexOf("value");
-
-  const params = {};
-  const expressions = {};
-  for (const row of rows) {
-    const key = row[keyIdx];
-    const type = row[typeIdx];
-    const value = row[valueIdx];
-    if (!key || !type) continue;
-    if (type === "param") {
-      const num = Number(value);
-      params[key] = Number.isNaN(num) ? value : num;
-    } else if (type === "expression") {
-      expressions[key] = value;
-    }
-  }
-  return saveFormulas({ params, expressions });
-}
 
 module.exports = { syncFromSheet, syncFromSheetPrivate, extractSpreadsheetId };

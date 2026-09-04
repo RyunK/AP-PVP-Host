@@ -59,6 +59,7 @@ function fillSettingsForm(settings) {
   settingsForm.turnTimeLimitSec.value = settings.turnTimeLimitSec;
   settingsForm.maxCharactersPerPlayer.value = settings.maxCharactersPerPlayer;
   settingsForm.allowMultiCharacterPerPlayer.checked = settings.allowMultiCharacterPerPlayer;
+  settingsForm.allowAsymmetricBattles.checked = settings.allowAsymmetricBattles;
 }
 
 settingsForm.addEventListener("submit", async (e) => {
@@ -69,6 +70,7 @@ settingsForm.addEventListener("submit", async (e) => {
     turnTimeLimitSec: Number(formData.get("turnTimeLimitSec")),
     maxCharactersPerPlayer: Number(formData.get("maxCharactersPerPlayer")),
     allowMultiCharacterPerPlayer: formData.get("allowMultiCharacterPerPlayer") === "on",
+    allowAsymmetricBattles: formData.get("allowAsymmetricBattles") === "on",
   };
   await window.host.saveMatchSettings(settings);
   settingsToast.textContent = "저장되었습니다.";
@@ -90,7 +92,7 @@ sheetForm.addEventListener("submit", async (e) => {
   syncResult.textContent = "동기화 중...";
   try {
     const result = await window.host.syncFormulasFromSheet(sheetConfig);
-    syncResult.textContent = `완료: 파라미터 ${result.paramCount}개, 수식 ${result.expressionCount}개 반영됨`;
+    syncResult.textContent = `수식 설정 완료`;
   } catch (err) {
     syncResult.className = "sync-result is-error";
     syncResult.textContent = `실패: ${err.message}`;
