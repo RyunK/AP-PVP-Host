@@ -1,20 +1,12 @@
-// "수식이 변경 가능하다"를 두 가지 레벨로 지원합니다.
-//
-//  A) 파라미터 방식(권장/기본): 공식의 "형태"는 damageCalc.js 등 JS 코드로 고정하고,
-//     배율/계수 같은 숫자만 시트에서 가져와 주입합니다. 안전하고 디버깅이 쉽습니다.
-//
-//  B) 수식 문자열 방식: 시트 셀에 "atk * 1.5 - def * 0.8" 같은 수식 자체를 문자열로
-//     저장해두고, mathjs로 런타임에 파싱/평가합니다. 기획자가 공식의 구조 자체를
-//     자유롭게 바꾸고 싶을 때 사용합니다.
-//
-// 실제 API를 매 턴 호출하지 않고, syncFromSheet()로 한 번 받아온 결과를
-// config/formulas.json에 스냅샷으로 저장한 뒤, 전투 중에는 이 캐시만 읽습니다.
+// 구글 시트("data" 탭)에서 동기화한 스킬표/크리티컬표를 로컬에 캐싱하고 읽어오는 모듈입니다.
+// 원본 Apps Script GameData 클래스가 하던 역할(생성자에서 시트를 읽어 this.skillTable /
+// this.criticalTable로 들고 있던 것)을, "동기화 시 파일로 저장 → 전투 중엔 파일만 읽기"
+// 구조로 바꾼 버전입니다. 매 턴 시트 API를 호출하지 않아 지연/쿼터 걱정이 없습니다.
 
 const fs = require("fs");
 const path = require("path");
-const { evaluate } = require("mathjs");
 
-const CACHE_PATH = path.join(__dirname, "..", "..", "config", "formulas.json");
+const CACHE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
 
 let cache = null;
 
@@ -23,30 +15,28 @@ function ensureConfigDir() {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-function loadFormulas() {
+function loadGameData() {
   if (cache) return cache;
+
   if (fs.existsSync(CACHE_PATH)) {
     cache = JSON.parse(fs.readFileSync(CACHE_PATH, "utf-8"));
   } else {
-    // 시트 동기화 전 기본값 (개발/테스트용)
+    // 시트 동기화 전 기본값 (개발/테스트용) — 예시로 몇 개만 채워둠
     cache = {
-      params: {
-        atkMultiplier: 1.5,
-        defMultiplier: 0.8,
-        critChance: 0.15,
-        critMultiplier: 1.5,
+      skillTable: {
+        공격: { uses: null, types: ["공격"], diceCount: 3, statBonus: "", extraDiceCount: 0, extraDiceStat: "" },
+        방어: { uses: null, types: ["방어"], diceCount: 2, statBonus: "", extraDiceCount: 0, extraDiceStat: "" },
       },
-      // key: 수식 이름, value: mathjs 수식 문자열
-      expressions: {
-        physicalDamage: "max(1, atk * atkMultiplier - def * defMultiplier)",
-        healAmount: "power * 1.2",
+      criticalTable: {
+        1: { chance: 10, multiplier: 1.1 },
+        2: { chance: 18, multiplier: 1.2 },
       },
     };
   }
   return cache;
 }
 
-function saveFormulas(newCache) {
+function saveGameData(newCache) {
   ensureConfigDir();
   cache = newCache;
   fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), "utf-8");
@@ -55,26 +45,23 @@ function saveFormulas(newCache) {
 
 function reload() {
   cache = null;
-  return loadFormulas();
+  return loadGameData();
 }
 
-/** 방식 A: JS 함수가 파라미터만 캐시에서 가져다 쓰는 형태 */
-function getParams() {
-  return loadFormulas().params;
+/** 스킬 이름으로 스킬 데이터 조회 (엄호, 수호, 확산 ... 공격/방어/회복/도주 포함) */
+function getSkill(name) {
+  return loadGameData().skillTable[name] || null;
 }
 
-/** 방식 B: 이름으로 등록된 수식 문자열을 변수와 함께 평가 */
-function evalExpression(name, scope) {
-  const formulas = loadFormulas();
-  const expr = formulas.expressions[name];
-  if (!expr) {
-    throw new Error(`정의되지 않은 수식입니다: ${name}`);
-  }
-  try {
-    return evaluate(expr, { ...formulas.params, ...scope });
-  } catch (err) {
-    throw new Error(`수식 평가 실패 [${name}]: "${expr}" - ${err.message}`);
-  }
+/** 민첩/행운 등으로 환산된 "치명 스탯 등급"으로 확률/배율 조회 */
+function getCriticalStat(statLevel) {
+  return loadGameData().criticalTable[statLevel] || null;
 }
 
-module.exports = { loadFormulas, saveFormulas, reload, getParams, evalExpression };
+module.exports = {
+  loadGameData,
+  saveGameData,
+  reload,
+  getSkill,
+  getCriticalStat,
+};

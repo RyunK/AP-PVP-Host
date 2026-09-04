@@ -59,7 +59,7 @@ async function bootstrap() {
     send("tunnel:error", { message: err.message });
     send(
       "log:line",
-      `터널 생성 실패: ${err.message} (같은 와이파이라면 로컬 IP로도 접속 가능합니다)`
+      `터널 생성 실패: ${err.message} `
     );
   }
 }

@@ -2,7 +2,7 @@
 // 호스트(Electron 앱을 실행 중인 사람)가 서버이자 유일한 "진실의 소스"이고,
 // 클라이언트(플레이어 브라우저)는 액션만 보내고 결과는 항상 서버 계산을 받아 렌더링합니다.
 
-const { resolveAction } = require("../engine/damageCalc");
+const { resolveSkillAction } = require("../engine/damageCalc");
 
 function randomRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 헷갈리는 문자 제외
@@ -177,11 +177,19 @@ class RoomManager {
       if (!actor || !actor.alive) continue;
       const target = action.targetId ? room.characters.get(action.targetId) : null;
 
-      const result = resolveAction({
-        actorStats: actor.stats,
-        targetStats: target ? target.stats : {},
-        action,
-      });
+      // action은 이제 { skillName, targetId } 형태입니다 (예: skillName: "엄호").
+      // 실제 주사위/피해 계산 공식은 아직 미구현(TODO)이라, 지금은 에러 없이
+      // "todo" 이벤트만 기록하고 다음 턴으로 넘어갑니다. HP는 아직 변하지 않습니다.
+      let result;
+      try {
+        result = resolveSkillAction({
+          actorStats: actor.stats,
+          targetStats: target ? target.stats : {},
+          skillName: action.skillName,
+        });
+      } catch (err) {
+        result = { type: "error", message: err.message };
+      }
 
       if (result.type === "damage" && target) {
         target.stats.hp = Math.max(0, target.stats.hp - result.amount);

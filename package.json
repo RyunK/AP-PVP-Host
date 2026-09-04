@@ -28,7 +28,7 @@
   },
   "build": {
     "appId": "com.yourteam.gamehost",
-    "productName": "PVP Game Host",
+    "productName": "AP 2차 PVP",
     "files": [
       "main/**/*",
       "renderer/**/*",

@@ -1,0 +1,149 @@
+{
+  "skillTable": {
+    "엄호": {
+      "uses": 3,
+      "types": [
+        "방어"
+      ],
+      "diceCount": 4,
+      "statBonus": "4",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "수호": {
+      "uses": 2,
+      "types": [
+        "방어",
+        "수호"
+      ],
+      "diceCount": 3,
+      "statBonus": "3",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "확산": {
+      "uses": 3,
+      "types": [
+        "공격"
+      ],
+      "diceCount": 2,
+      "statBonus": 2,
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "침식": {
+      "uses": 3,
+      "types": [
+        "공격"
+      ],
+      "diceCount": 3,
+      "statBonus": 8,
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "성호": {
+      "uses": 3,
+      "types": [
+        "회복"
+      ],
+      "diceCount": 3,
+      "statBonus": "3",
+      "extraDiceCount": 2,
+      "extraDiceStat": "이능력"
+    },
+    "환희": {
+      "uses": 1,
+      "types": [
+        "버프"
+      ],
+      "diceCount": 3,
+      "statBonus": "3",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "낙화": {
+      "uses": 1,
+      "types": [
+        "디버프"
+      ],
+      "diceCount": 3,
+      "statBonus": "3",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "공격": {
+      "uses": null,
+      "types": [
+        "공격"
+      ],
+      "diceCount": 3,
+      "statBonus": "3",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "방어": {
+      "uses": null,
+      "types": [
+        "방어"
+      ],
+      "diceCount": 2,
+      "statBonus": "2",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
+    },
+    "회복": {
+      "uses": null,
+      "types": [
+        "회복"
+      ],
+      "diceCount": 2,
+      "statBonus": "2",
+      "extraDiceCount": 1,
+      "extraDiceStat": "이능력"
+    },
+    "도주": {
+      "uses": null,
+      "types": [
+        "도주"
+      ],
+      "diceCount": 1,
+      "statBonus": "1",
+      "extraDiceCount": 1,
+      "extraDiceStat": "행운"
+    }
+  },
+  "criticalTable": {
+    "1": {
+      "chance": 10,
+      "multiplier": 1.1
+    },
+    "2": {
+      "chance": 18,
+      "multiplier": 1.2
+    },
+    "3": {
+      "chance": 27,
+      "multiplier": 1.2
+    },
+    "4": {
+      "chance": 36,
+      "multiplier": 1.3
+    },
+    "5": {
+      "chance": 45,
+      "multiplier": 1.3
+    },
+    "6": {
+      "chance": 54,
+      "multiplier": 1.4
+    },
+    "크리티컬": {
+      "chance": 0,
+      "multiplier": 0
+    },
+    "스탯": {
+      "chance": 0,
+      "multiplier": null
+    }
+  }
+}

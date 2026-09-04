@@ -59,7 +59,6 @@ function fillSettingsForm(settings) {
   settingsForm.turnTimeLimitSec.value = settings.turnTimeLimitSec;
   settingsForm.maxCharactersPerPlayer.value = settings.maxCharactersPerPlayer;
   settingsForm.allowMultiCharacterPerPlayer.checked = settings.allowMultiCharacterPerPlayer;
-  settingsForm.allowAsymmetricBattles.checked = settings.allowAsymmetricBattles;
 }
 
 settingsForm.addEventListener("submit", async (e) => {
@@ -70,7 +69,6 @@ settingsForm.addEventListener("submit", async (e) => {
     turnTimeLimitSec: Number(formData.get("turnTimeLimitSec")),
     maxCharactersPerPlayer: Number(formData.get("maxCharactersPerPlayer")),
     allowMultiCharacterPerPlayer: formData.get("allowMultiCharacterPerPlayer") === "on",
-    allowAsymmetricBattles: formData.get("allowAsymmetricBattles") === "on",
   };
   await window.host.saveMatchSettings(settings);
   settingsToast.textContent = "저장되었습니다.";
@@ -89,10 +87,10 @@ sheetForm.addEventListener("submit", async (e) => {
     sheetName: formData.get("sheetName") || "Formulas",
   };
   syncResult.className = "sync-result";
-  syncResult.textContent = "동기화 중...";
+  syncResult.textContent = "설정 반영 중...";
   try {
     const result = await window.host.syncFormulasFromSheet(sheetConfig);
-    syncResult.textContent = `수식 설정 완료`;
+    syncResult.textContent = `반영이 완료되었습니다.`;
   } catch (err) {
     syncResult.className = "sync-result is-error";
     syncResult.textContent = `실패: ${err.message}`;
@@ -176,7 +174,7 @@ window.host.onTunnelError(({ message }) => {
   connDot.className = "dot err";
   connText.textContent = "터널 연결 실패";
   tunnelUrlEl.textContent = "링크 생성 실패";
-  tunnelHintEl.textContent = `${message} — 같은 와이파이라면 로컬 IP:포트로도 접속할 수 있습니다.`;
+  tunnelHintEl.textContent = `${message}`;
 });
 window.host.onRoomsUpdate((rooms) => renderRooms(rooms));
 window.host.onLogLine((line) => appendLog(line));
@@ -184,14 +182,20 @@ window.host.onLogLine((line) => appendLog(line));
 // ---- 초기 상태 로드 ----
 (async () => {
   const state = await window.host.getInitialState();
+  console.log("1")
   fillSettingsForm(state.settings);
+  console.log("2")
   if (state.tunnelUrl) setLink(state.tunnelUrl);
+  console.log("3")
   if (state.sheetConfig?.spreadsheetId) {
     sheetForm.spreadsheetId.value = state.sheetConfig.spreadsheetId;
   }
+  console.log("4")
 
   const presets = await window.host.getSheetPresets();
+  console.log("5")
   renderPresets(presets);
+  console.log("6")
 
   appendLog(`관리자 창 로드됨 (로컬 포트 ${state.localPort})`);
 })();

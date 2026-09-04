@@ -13,7 +13,6 @@ const store = new Store({
     },
     sheetConfig: {
       spreadsheetId: "",
-      formulaRange: "Formulas!A2:D200",
       serviceAccountKeyPath: "",
     },
     sheetPresets: [
