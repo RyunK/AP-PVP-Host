@@ -11,13 +11,13 @@
   --bg-btn-ghost-hover: #E4E5FF;
 
   /* 테두리 */
-  --border: #262b33;
-  --border-strong: #2f3540;
+  --border: #3636FF;
+  --border-strong: #00007D;
 
   /* 텍스트 */
-  --text: #222240;
-  --text-muted: #828282;
-  --text-dim: #C1C1C1;
+  --text: #1A1A32;
+  --text-muted: #7979B9;
+  --text-dim: #C8C8F0;
 
   /* 포인트 / 상태 */
   --accent: #002BFF;

@@ -84,7 +84,7 @@ sheetForm.addEventListener("submit", async (e) => {
   const formData = new FormData(sheetForm);
   const sheetConfig = {
     spreadsheetId: formData.get("spreadsheetId"),
-    sheetName: formData.get("sheetName") || "Formulas",
+    sheetName: formData.get("sheetName") || "data",
   };
   syncResult.className = "sync-result";
   syncResult.textContent = "설정 반영 중...";
@@ -189,6 +189,7 @@ window.host.onLogLine((line) => appendLog(line));
   console.log("3")
   if (state.sheetConfig?.spreadsheetId) {
     sheetForm.spreadsheetId.value = state.sheetConfig.spreadsheetId;
+    sheetForm.sheetName.value = state.sheetConfig.sheetName;
   }
   console.log("4")
 
