@@ -12,10 +12,12 @@
         <span class="brand-mark">⬢</span>
         <span class="brand-name">Game Host</span>
       </div>
-      <button class="nav-item is-active" data-tab="dashboard">대시보드</button>
+      <button class="nav-item is-active" data-tab="main">메인</button>
+      <button class="nav-item" data-tab="dashboard">대시보드</button>
       <button class="nav-item" data-tab="settings">전투 설정</button>
       <button class="nav-item" data-tab="formulas">수식 동기화</button>
       <button class="nav-item" data-tab="players">참가자</button>
+      <button class="nav-item" data-tab="usage">사용법</button>
       <button class="nav-item" data-tab="log">로그</button>
       <div class="sidebar-status" id="connStatus">
         <span class="dot" id="connDot"></span>
@@ -24,10 +26,49 @@
     </nav>
 
     <main class="content">
+      <!-- 메인 -->
+      <section class="pane is-active" id="pane-main">
+        <h1>메인</h1>
+        <p class="lead">자캐 커뮤니티 Altiora Petamus의 2차 전투를 재현한 프로그램입니다. 윤리적인 선에서 자유롭게 사용해주세요.</p>
+        <p class="lead">전투 시스템 및 프로그램 개발 : 바지</p>
+
+        <div class="contact-box">
+          <h2 class="contact-box__title">문의 및 연락처</h2>
+          <ul class="contact-list">
+            <li>
+              <span class="contact-label">이메일</span>
+              <a href="mailto:you@example.com">you@example.com</a>
+            </li>
+            <li>
+              <span class="contact-label">문의 폼</span>
+              <a href="https://forms.gle/여기에폼링크" target="_blank" rel="noopener">Google Form</a>
+            </li>
+            <li>
+              <span class="contact-label">GitHub</span>
+              <a href="https://github.com/여기에아이디" target="_blank" rel="noopener">github.com/여기에아이디</a>
+            </li>
+            <li>
+              <span class="contact-label">X (Twitter)</span>
+              <a href="https://x.com/여기에핸들" target="_blank" rel="noopener">@여기에핸들</a>
+            </li>
+          </ul>
+          
+        </div>
+        <div class="contact-box">
+          <h2 class="contact-box__title">소스코드 및 다운로드</h2>
+          <ul class="contact-list">
+            <li>
+              <span class="contact-label">GitHub</span>
+              <a href="https://github.com/여기에아이디" target="_blank" rel="noopener">github.com/여기에아이디</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <!-- 대시보드 -->
-      <section class="pane is-active" id="pane-dashboard">
+      <section class="pane" id="pane-dashboard">
         <h1>공유 링크</h1>
-        <p class="lead">플레이어에게 아래 링크를 보내주세요. 설치나 계정이 필요 없습니다.</p>
+        <p class="lead">플레이어에게 아래 링크를 보내고, 자신도 해당 링크를 사용하여 게임에 참여하거나 방을 만들 수 있습니다.</p>
 
         <div class="link-card" id="linkCard">
           <div class="link-value" id="tunnelUrl">링크 생성 중...</div>
@@ -106,6 +147,13 @@
         <h1>참가자</h1>
         <p class="lead">현재 열려 있는 방 목록입니다.</p>
         <div class="room-list" id="roomList"></div>
+      </section>
+
+       <!-- 사용법 -->
+      <section class="pane" id="pane-usage">
+        <h1>사용법</h1>
+        <p class="lead">프로그램 사용 방법에 대한 안내입니다.</p>
+        
       </section>
 
       <!-- 로그 -->
