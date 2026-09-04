@@ -1,0 +1,48 @@
+{
+  "name": "game-host-app",
+  "version": "0.1.0",
+  "description": "PVP RPG 게임 호스트 런처 - 서버, 터널, 설정 UI를 하나의 데스크톱 앱으로 패키징",
+  "main": "main/main.js",
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "cloudflared": "^0.6.0",
+    "electron-store": "^8.2.0",
+    "express": "^4.22.2",
+    "googleapis": "^140.0.1",
+    "mathjs": "^13.2.3",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.yourteam.gamehost",
+    "productName": "PVP Game Host",
+    "files": [
+      "main/**/*",
+      "renderer/**/*",
+      "client/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

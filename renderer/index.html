@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>PVP Game Host</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <nav class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">⬢</span>
+        <span class="brand-name">Game Host</span>
+      </div>
+      <button class="nav-item is-active" data-tab="dashboard">대시보드</button>
+      <button class="nav-item" data-tab="settings">전투 설정</button>
+      <button class="nav-item" data-tab="formulas">수식 동기화</button>
+      <button class="nav-item" data-tab="players">참가자</button>
+      <button class="nav-item" data-tab="log">로그</button>
+      <div class="sidebar-status" id="connStatus">
+        <span class="dot" id="connDot"></span>
+        <span id="connText">서버 준비 중</span>
+      </div>
+    </nav>
+
+    <main class="content">
+      <!-- 대시보드 -->
+      <section class="pane is-active" id="pane-dashboard">
+        <h1>공유 링크</h1>
+        <p class="lead">플레이어에게 아래 링크를 보내주세요. 설치나 계정이 필요 없습니다.</p>
+
+        <div class="link-card" id="linkCard">
+          <div class="link-value" id="tunnelUrl">링크 생성 중...</div>
+          <div class="link-actions">
+            <button class="btn btn-primary" id="copyLinkBtn">링크 복사</button>
+            <button class="btn btn-ghost" id="openLinkBtn">브라우저로 열기</button>
+          </div>
+        </div>
+
+        <div class="hint" id="tunnelHint"></div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-number" id="roomCount">0</div>
+            <div class="stat-label">진행 중인 방</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="playerCount">0</div>
+            <div class="stat-label">접속 인원</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 전투 설정 -->
+      <section class="pane" id="pane-settings">
+        <h1>전투 설정</h1>
+        <p class="lead">코드를 건드리지 않고 규칙의 세부값을 조정합니다.</p>
+
+        <form class="form-grid" id="settingsForm">
+          <label class="field">
+            <span>팀 인원 (1~3)</span>
+            <input type="number" name="teamSize" min="1" max="3" required />
+          </label>
+          <label class="field">
+            <span>턴 제한시간 (초)</span>
+            <input type="number" name="turnTimeLimitSec" min="10" max="300" required />
+          </label>
+          <label class="field">
+            <span>플레이어당 최대 캐릭터 수</span>
+            <input type="number" name="maxCharactersPerPlayer" min="1" max="6" required />
+          </label>
+          <label class="field checkbox-field">
+            <input type="checkbox" name="allowMultiCharacterPerPlayer" />
+            <span>한 플레이어가 여러 캐릭터를 조작할 수 있음</span>
+          </label>
+          <button class="btn btn-primary" type="submit">설정 저장</button>
+        </form>
+        <div class="save-toast" id="settingsToast"></div>
+      </section>
+
+      <!-- 수식 동기화 -->
+      <section class="pane" id="pane-formulas">
+        <h1>수식 동기화</h1>
+        <p class="lead">
+          구글 시트 링크를 붙여넣고 동기화하면, 시트에 적어둔 배율/수식이 게임에 바로 반영됩니다.
+          시트 공유 설정이 "링크가 있는 모든 사용자 - 뷰어"로 되어 있어야 합니다.
+        </p>
+
+        <form class="form-grid" id="sheetForm">
+          <label class="field field-wide">
+            <span>구글 시트 링크</span>
+            <input type="text" name="spreadsheetId" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </label>
+          <label class="field">
+            <span>탭(시트) 이름</span>
+            <input type="text" name="sheetName" placeholder="Formulas" />
+          </label>
+          <button class="btn btn-primary" type="submit">지금 동기화</button>
+        </form>
+
+        <div class="sync-result" id="syncResult"></div>
+      </section>
+
+      <!-- 참가자 -->
+      <section class="pane" id="pane-players">
+        <h1>참가자</h1>
+        <p class="lead">현재 열려 있는 방 목록입니다.</p>
+        <div class="room-list" id="roomList"></div>
+      </section>
+
+      <!-- 로그 -->
+      <section class="pane" id="pane-log">
+        <h1>로그</h1>
+        <p class="lead">서버와 터널 상태 로그입니다. 문제가 생기면 이 내용을 확인해주세요.</p>
+        <pre class="log-box" id="logBox"></pre>
+      </section>
+    </main>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

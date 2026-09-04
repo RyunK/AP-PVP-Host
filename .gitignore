@@ -1,0 +1,5 @@
+node_modules/
+dist/
+config/formulas.json
+package-lock.json
+.DS_Store
