@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld("host", {
     ipcRenderer.invoke("save-match-settings", settings),
   syncFormulasFromSheet: (sheetConfig) =>
     ipcRenderer.invoke("sync-formulas-from-sheet", sheetConfig),
+  getSheetPresets: () => ipcRenderer.invoke("get-sheet-presets"),
+  addSheetPreset: (preset) => ipcRenderer.invoke("add-sheet-preset", preset),
+  deleteSheetPreset: (index) => ipcRenderer.invoke("delete-sheet-preset", index),
   kickPlayer: (roomCode, playerId) =>
     ipcRenderer.invoke("kick-player", { roomCode, playerId }),
 

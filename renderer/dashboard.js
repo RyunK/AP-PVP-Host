@@ -59,7 +59,6 @@ function fillSettingsForm(settings) {
   settingsForm.turnTimeLimitSec.value = settings.turnTimeLimitSec;
   settingsForm.maxCharactersPerPlayer.value = settings.maxCharactersPerPlayer;
   settingsForm.allowMultiCharacterPerPlayer.checked = settings.allowMultiCharacterPerPlayer;
-  settingsForm.allowAsymmetricBattles.checked = settings.allowAsymmetricBattles;
 }
 
 settingsForm.addEventListener("submit", async (e) => {
@@ -70,7 +69,6 @@ settingsForm.addEventListener("submit", async (e) => {
     turnTimeLimitSec: Number(formData.get("turnTimeLimitSec")),
     maxCharactersPerPlayer: Number(formData.get("maxCharactersPerPlayer")),
     allowMultiCharacterPerPlayer: formData.get("allowMultiCharacterPerPlayer") === "on",
-    allowAsymmetricBattles: formData.get("allowAsymmetricBattles") === "on",
   };
   await window.host.saveMatchSettings(settings);
   settingsToast.textContent = "저장되었습니다.";
@@ -97,6 +95,51 @@ sheetForm.addEventListener("submit", async (e) => {
     syncResult.className = "sync-result is-error";
     syncResult.textContent = `실패: ${err.message}`;
   }
+});
+
+// ---- 수식 프리셋 ----
+const presetRow = document.getElementById("presetRow");
+const addPresetForm = document.getElementById("addPresetForm");
+
+function renderPresets(presets) {
+  presetRow.innerHTML = presets
+    .map(
+      (p, idx) => `
+      <div class="preset-chip">
+        <button type="button" class="preset-btn" data-idx="${idx}">${p.name}</button>
+        ${p.isDefault ? "" : `<button type="button" class="preset-delete" data-idx="${idx}" title="삭제">×</button>`}
+      </div>`
+    )
+    .join("");
+
+  presetRow.querySelectorAll(".preset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const preset = presets[Number(btn.dataset.idx)];
+      sheetForm.spreadsheetId.value = preset.spreadsheetId;
+      sheetForm.sheetName.value = preset.sheetName;
+    });
+  });
+
+  presetRow.querySelectorAll(".preset-delete").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const updated = await window.host.deleteSheetPreset(Number(btn.dataset.idx));
+      renderPresets(updated);
+    });
+  });
+}
+
+addPresetForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(addPresetForm);
+  const preset = {
+    name: formData.get("presetName"),
+    spreadsheetId: formData.get("presetSpreadsheetId"),
+    sheetName: formData.get("presetSheetName"),
+  };
+  const updated = await window.host.addSheetPreset(preset);
+  renderPresets(updated);
+  addPresetForm.reset();
 });
 
 // ---- 참가자 목록 ----
@@ -144,5 +187,9 @@ window.host.onLogLine((line) => appendLog(line));
   if (state.sheetConfig?.spreadsheetId) {
     sheetForm.spreadsheetId.value = state.sheetConfig.spreadsheetId;
   }
+
+  const presets = await window.host.getSheetPresets();
+  renderPresets(presets);
+
   appendLog(`관리자 창 로드됨 (로컬 포트 ${state.localPort})`);
 })();

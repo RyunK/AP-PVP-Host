@@ -115,6 +115,24 @@ ipcMain.handle("sync-formulas-from-sheet", async (_evt, sheetConfig) => {
   return result;
 });
 
+ipcMain.handle("get-sheet-presets", () => store.get("sheetPresets"));
+ 
+ipcMain.handle("add-sheet-preset", (_evt, { name, spreadsheetId, sheetName }) => {
+  const presets = store.get("sheetPresets");
+  presets.push({ name, spreadsheetId, sheetName, isDefault: false });
+  store.set("sheetPresets", presets);
+  return presets;
+});
+ 
+ipcMain.handle("delete-sheet-preset", (_evt, index) => {
+  const presets = store.get("sheetPresets");
+  if (presets[index] && !presets[index].isDefault) {
+    presets.splice(index, 1);
+    store.set("sheetPresets", presets);
+  }
+  return presets;
+});
+
 ipcMain.handle("kick-player", (_evt, { roomCode, playerId }) => {
   if (serverHandle) serverHandle.kickPlayer(roomCode, playerId);
   return true;
