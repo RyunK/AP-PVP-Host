@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PVP 대전</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 1단계: 접속 -->
+    <section id="screen-entry" class="screen is-active">
+      <h1>PVP 대전 접속</h1>
+      <label class="field">
+        <span>닉네임</span>
+        <input type="text" id="nameInput" placeholder="플레이어 이름" maxlength="12" />
+      </label>
+
+      <div class="entry-actions">
+        <button class="btn btn-primary" id="createRoomBtn">새 방 만들기 (호스트)</button>
+        <div class="divider">또는</div>
+        <label class="field">
+          <span>방 코드</span>
+          <input type="text" id="codeInput" placeholder="ABCDE" maxlength="5" style="text-transform:uppercase" />
+        </label>
+        <button class="btn btn-ghost" id="joinRoomBtn">방 참가하기</button>
+      </div>
+      <p class="error" id="entryError"></p>
+    </section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

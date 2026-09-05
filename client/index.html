@@ -7,53 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app">
-    <!-- 1단계: 접속 -->
-    <section id="screen-entry" class="screen is-active">
-      <h1>PVP 대전 접속</h1>
-      <label class="field">
-        <span>닉네임</span>
-        <input type="text" id="nameInput" placeholder="플레이어 이름" maxlength="12" />
-      </label>
-
-      <div class="entry-actions">
-        <button class="btn btn-primary" id="createRoomBtn">새 방 만들기 (호스트)</button>
-        <div class="divider">또는</div>
-        <label class="field">
-          <span>방 코드</span>
-          <input type="text" id="codeInput" placeholder="ABCDE" maxlength="5" style="text-transform:uppercase" />
-        </label>
-        <button class="btn btn-ghost" id="joinRoomBtn">방 참가하기</button>
-      </div>
-      <p class="error" id="entryError"></p>
-    </section>
-
-    <!-- 2단계: 대기실 (캐릭터/팀 설정) -->
-    <section id="screen-lobby" class="screen">
-      <div class="room-header">
-        <span>방 코드</span>
-        <strong id="roomCodeLabel"></strong>
-      </div>
-
-      <h2>내 캐릭터 설정</h2>
-      <p class="hint">최대 인원만큼 캐릭터를 등록하면, 그 캐릭터들을 모두 직접 조작합니다.</p>
-      <div id="characterForm"></div>
-      <button class="btn btn-ghost" id="addCharacterBtn">캐릭터 추가</button>
-      <button class="btn btn-primary" id="saveCharactersBtn">캐릭터 저장</button>
-
-      <h2>팀 배정</h2>
-      <div id="teamBoard" class="team-board"></div>
-
-      <button class="btn btn-primary" id="startBattleBtn" style="display:none">전투 시작 (호스트)</button>
-      <p class="hint" id="lobbyStatus"></p>
-    </section>
-
-    <!-- 3단계: 전투 -->
-    <section id="screen-battle" class="screen">
-      <h2>전투 중 - 턴 <span id="turnNumber">1</span></h2>
-      <div id="myCharacters" class="my-characters"></div>
-      <div id="battleLog" class="battle-log"></div>
-    </section>
+  <div id="app" class="app">
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
