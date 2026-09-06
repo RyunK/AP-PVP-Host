@@ -61,6 +61,7 @@ class RoomManager {
       players: new Map(),
       characters: new Map(),
       teams: { A: [], B: [] },
+      teamNames: { A: "A팀", B: "B팀" },
       turn: { number: 0, pendingActions: new Map() },
       chatHistory: [],
     };
@@ -178,6 +179,17 @@ class RoomManager {
     return created;
   }
 
+  setTeamName(playerId, team, name) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player?.isHost) throw new Error("호스트만 팀 이름을 바꿀 수 있습니다.");
+    if (!["A", "B"].includes(team)) throw new Error("잘못된 팀입니다.");
+
+    const trimmed = (name || "").trim().slice(0, 20);
+    this.room.teamNames[team] = trimmed || (team === "A" ? "A팀" : "B팀");
+    return this.room;
+  }
+
   assignTeam(room, characterId, team) {
     if (!["A", "B"].includes(team)) throw new Error("팀은 A 또는 B여야 합니다.");
     const character = room.characters.get(characterId);
@@ -291,6 +303,7 @@ class RoomManager {
       })),
       characters: [...room.characters.values()],
       teams: room.teams,
+      teamNames: room.teamNames,
       turnNumber: room.turn.number,
       chat: room.chatHistory,
     };

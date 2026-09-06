@@ -109,6 +109,26 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
 }
 .team-chip button { all: unset; cursor: pointer; color: #4fd1c5; font-size: 12px; }
 
+.team-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-strong);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 2px 0;
+  width: 100%;
+}
+.team-name-input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.team-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 8px;
+}
+
 .my-characters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .char-card {
   background: #1b1f26;

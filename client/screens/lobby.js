@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -54,7 +54,7 @@ function onRoomState(state) {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;
   }
-  
+
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));
   updateReadyUI();
   renderTeamBoard();
@@ -151,18 +151,45 @@ function saveCharacters(){
 }
 
 function renderTeamBoard() {
+  const me = roomState.players.find((p) => p.id === myPlayerId);
+  const isHost = me?.isHost;
+
   const teamCol = (team) => {
+    const teamName = roomState.teamNames?.[team] || `${team}팀`;
+    const teamSize = roomState.settings.teamSize;
+
+    const header = isHost
+      ? `<input class="team-name-input" data-team="${team}" value="${escapeHtml(teamName)}" maxlength="20" />`
+      : `<h3>${escapeHtml(teamName)}</h3>`;
+
     const ids = roomState.teams[team] || [];
     const chips = ids
       .map((id) => {
         const c = roomState.characters.find((ch) => ch.id === id);
         if (!c) return "";
-        return `<div class="team-chip"><span>${c.name}</span></div>`;
+        return `<div class="team-chip"><span>${escapeHtml(c.name)}</span></div>`;
       })
       .join("");
-    return `<div class="team-col"><h3>${team}팀 (${ids.length}/${roomState.settings.teamSize})</h3>${chips}</div>`;
+
+    return `
+      <div class="team-col">
+        ${header}
+        <p class="team-count">${ids.length}/${teamSize}</p>
+        ${chips}
+      </div>`;
   };
+
   teamBoard.innerHTML = teamCol("A") + teamCol("B");
+
+  if (isHost) {
+    teamBoard.querySelectorAll(".team-name-input").forEach((input) => {
+      input.addEventListener("change", () => {
+        socket.emit("team:rename", { team: input.dataset.team, name: input.value }, (res) => {
+          if (!res.ok) lobbyStatus.textContent = res.error;
+        });
+      });
+    });
+  }
 
   // 미배정 캐릭터에 대한 배정 버튼
   const unassigned = roomState.characters.filter((c) => !c.team);

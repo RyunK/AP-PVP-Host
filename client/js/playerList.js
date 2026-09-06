@@ -1,4 +1,10 @@
-function escapeHtml(str) {
+
+/**
+ * div 새로 만들어서 str 넣어줌
+ * @param {*} str 
+ * @returns 
+ */
+export function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
   return div.innerHTML;

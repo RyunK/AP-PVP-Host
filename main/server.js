@@ -102,6 +102,16 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
+      socket.on("team:rename", ({ team, name }, cb) => {
+        try {
+          const room = roomManager.setTeamName(socket.data.playerId, team, name);
+          cb({ ok: true });
+          emitRoomState(room);
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
       socket.on("player:ready", ({ ready }, cb) => {
         try {
           const room = roomManager.setReady(socket.data.playerId, ready);
