@@ -31,9 +31,9 @@ function setLink(url) {
   currentLink = url;
   tunnelUrlEl.textContent = url;
   connDot.className = "dot ok";
-  connText.textContent = "연결됨";
+  connText.textContent = "링크 생성됨";
   tunnelHintEl.textContent =
-    "이 링크는 앱을 껐다 켤 때마다 바뀝니다. 매치가 끝나기 전엔 새로고침하지 마세요.";
+    "이 링크는 앱을 껐다 켤 때마다 바뀝니다.";
 }
 
 document.getElementById("copyLinkBtn").addEventListener("click", async () => {
@@ -144,7 +144,8 @@ addPresetForm.addEventListener("submit", async (e) => {
 
 // ---- 참가자 목록 ----
 function renderRooms(rooms) {
-  roomCountEl.textContent = rooms.length;
+  console.log("받은 rooms:", rooms);
+  // roomCountEl.textContent = rooms.length;
   playerCountEl.textContent = rooms.reduce((sum, r) => sum + r.playerCount, 0);
 
   if (rooms.length === 0) {
@@ -156,7 +157,6 @@ function renderRooms(rooms) {
       (r) => `
       <div class="room-row">
         <div>
-          <span class="room-code">${r.code}</span>
           <div class="room-meta">${r.playerCount}명 접속 · 캐릭터 ${r.characterCount}명 · ${phaseLabel(r.phase)}</div>
         </div>
       </div>`
