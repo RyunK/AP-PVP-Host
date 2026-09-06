@@ -27,6 +27,26 @@ class RoomManager {
     return this._addPlayer(this.room, socketId, profile, { isHost });
   }
 
+  /** 클라이언트가 보낸 아바타 값을 검증/정리합니다. 이상하면 안전한 기본값으로 대체. */
+  _normalizeAvatar(avatar) {
+    const DEFAULT = { type: "color", value: "#8b92a0" };
+    if (!avatar || typeof avatar !== "object") return DEFAULT;
+
+    if (avatar.type === "url" && typeof avatar.value === "string" && avatar.value.trim()) {
+      // http(s)로 시작하는 것만 허용 (javascript: 같은 스킴 차단)
+      if (!/^https?:\/\//i.test(avatar.value.trim())) return DEFAULT;
+      return { type: "url", value: avatar.value.trim().slice(0, 500) };
+    }
+
+    if (avatar.type === "color" && typeof avatar.value === "string") {
+      // #으로 시작하는 hex 색상 코드 형태만 허용
+      if (!/^#[0-9a-fA-F]{3,8}$/.test(avatar.value.trim())) return DEFAULT;
+      return { type: "color", value: avatar.value.trim() };
+    }
+
+    return DEFAULT;
+  }
+
   _createRoom(hostSocketId) {
     const settings = this.getMatchSettings();
     return {
@@ -50,7 +70,8 @@ class RoomManager {
       isHost,
       characterIds: [],
       connected: true,        
-      disconnectTimer: null,  
+      disconnectTimer: null, 
+      avatar: this._normalizeAvatar(profile?.avatar),
     });
     if (isHost) room.hostSocketId = socketId;
     return { room, playerId };
@@ -125,6 +146,7 @@ class RoomManager {
         },
         team: null,
         alive: true,
+        avatar: this._normalizeAvatar(def.avatar),
       });
       player.characterIds.push(charId);
       return charId;
