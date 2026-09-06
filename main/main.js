@@ -133,7 +133,7 @@ ipcMain.handle("delete-sheet-preset", (_evt, index) => {
   return presets;
 });
 
-ipcMain.handle("kick-player", (_evt, { roomCode, playerId }) => {
-  if (serverHandle) serverHandle.kickPlayer(roomCode, playerId);
+ipcMain.handle("kick-player", (_evt, { playerId }) => {
+  if (serverHandle) serverHandle.kickPlayer(playerId);
   return true;
 });
