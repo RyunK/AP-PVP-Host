@@ -26,6 +26,29 @@ class RoomManager {
     const isHost = ![...this.room.players.values()].some((p) => p.isHost); // 아무도 없고 호스트도 없으면 내가 호스트
     return this._addPlayer(this.room, socketId, profile, { isHost });
   }
+  /**
+   * 새로고침/재접속 등으로 끊어졌던 플레이어가 같은 playerId로 돌아왔을 때,
+   * 기존 캐릭터/팀/연결 상태를 그대로 이어받게 합니다.
+   */
+  rejoinRoom(playerId, newSocketId) {
+    if (!this.room) {
+      throw new Error("방을 찾을 수 없습니다 (이미 종료되었거나 아직 생성되지 않음).");
+    }
+    const player = this.room.players.get(playerId);
+    if (!player) {
+      throw new Error("이 방에서 플레이어 정보를 찾을 수 없습니다.");
+    }
+
+    if (player.disconnectTimer) {
+      clearTimeout(player.disconnectTimer);
+      player.disconnectTimer = null;
+    }
+    player.socketId = newSocketId;
+    player.connected = true;
+    if (player.isHost) this.room.hostSocketId = newSocketId;
+
+    return { room: this.room, playerId };
+  }
 
   /** 클라이언트가 보낸 아바타 값을 검증/정리합니다. 이상하면 안전한 기본값으로 대체. */
   _normalizeAvatar(avatar) {

@@ -13,23 +13,28 @@ export function init() {
         renderScreen(phase === "battle" || phase === "ended" ? "battle" : "lobby");
       } else {
         clearIdentity(); 
+        setupEntryForm(); // 실패하면 다시 입장할 수 있도록
       }
     });
-    return; // 재접속 시도 중엔 아래 버튼 로직 안 걸어도 됨 (또는 걸어도 무방)
+    return; 
   }
 
-  document.getElementById("enterBtn").addEventListener("click", () => {
-    const name = document.getElementById("nameInput").value.trim();
-    if (!name) return (errorEl.textContent = "닉네임을 입력해주세요.");
+  setupEntryForm();
 
-    const avatar ={
-        type: document.getElementById("avatarType").value ,
-        value: document.getElementById("avatarValue").value
-    }
-    socket.emit("room:enter", { name, avatar }, (res) => {
-        if (!res.ok) return (errorEl.textContent = res.error);
-        saveIdentity({ name, playerId: res.playerId });
-        renderScreen("lobby");
+  function setupEntryForm() {
+    document.getElementById("enterBtn").addEventListener("click", () => {
+        const name = document.getElementById("nameInput").value.trim();
+        if (!name) return (errorEl.textContent = "닉네임을 입력해주세요.");
+
+        const avatar ={
+            type: document.getElementById("avatarType").value ,
+            value: document.getElementById("avatarValue").value
+        }
+        socket.emit("room:enter", { name, avatar }, (res) => {
+            if (!res.ok) return (errorEl.textContent = res.error);
+            saveIdentity({ name, playerId: res.playerId });
+            renderScreen("lobby");
+        });
     });
-  });
+  }
 }

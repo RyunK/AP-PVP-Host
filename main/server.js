@@ -55,6 +55,19 @@ function startServer({ port, onRoomsChanged, onLog }) {
         cb({ ok: true, state: roomManager.serializeRoom(room) });
       });
 
+      socket.on("room:rejoin", ({ playerId }, cb) => {
+        try {
+          const { room } = roomManager.rejoinRoom(playerId, socket.id);
+          socket.join("main");
+          socket.data.playerId = playerId;
+          cb({ ok: true, state: roomManager.serializeRoom(room) });
+          emitRoomState(room);
+          broadcastRooms();
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
       socket.on("characters:set", (characterDefs, cb) => {
         try {
           const room = roomManager.getRoom();
