@@ -102,6 +102,16 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
+      socket.on("player:ready", ({ ready }, cb) => {
+        try {
+          const room = roomManager.setReady(socket.data.playerId, ready);
+          cb({ ok: true });
+          emitRoomState(room);
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
       socket.on("battle:start", (_payload, cb) => {
         try {
           const room = roomManager.getRoom();

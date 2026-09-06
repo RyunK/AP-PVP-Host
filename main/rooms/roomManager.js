@@ -76,6 +76,7 @@ class RoomManager {
       characterIds: [],
       connected: true,        
       disconnectTimer: null, 
+      ready: false,
     });
     if (isHost) room.hostSocketId = socketId;
     return { room, playerId };
@@ -115,6 +116,22 @@ class RoomManager {
       this.room = null;
       this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
     }
+  }
+
+  /**
+   * 플레이어 준비 상태 전환
+   * @param {*} playerId 
+   * @param {*} ready 
+   * @returns 
+   */
+  setReady(playerId, ready) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player) throw new Error("플레이어를 찾을 수 없습니다.");
+    if (player.isHost) throw new Error("호스트는 준비 상태가 필요 없습니다.");
+
+    player.ready = ready;
+    return this.room;
   }
 
   /** 한 플레이어가 여러 캐릭터를 설정할 수 있습니다 (복수 조작 지원) */
@@ -179,6 +196,11 @@ class RoomManager {
   }
 
   startBattle(room) {
+    const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
+    const allReady = nonHostPlayers.every((p) => p.ready);
+    if (!allReady) {
+      throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
+    }
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
     if (aCount === 0 || bCount === 0 || aCount !== bCount) {
@@ -257,7 +279,6 @@ class RoomManager {
 
   serializeRoom(room) {
     return {
-      // code: room.code,
       phase: room.phase,
       settings: room.settings,
       players: [...room.players.values()].map((p) => ({
@@ -266,6 +287,7 @@ class RoomManager {
         isHost: p.isHost,
         characterIds: p.characterIds,
         connected: p.connected,
+        ready: p.ready,
       })),
       characters: [...room.characters.values()],
       teams: room.teams,

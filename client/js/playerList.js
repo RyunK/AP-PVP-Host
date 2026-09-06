@@ -19,9 +19,15 @@ export function renderPlayerList(container, players) {
       <div class="player-chip">
         ${renderAvatar(p.avatar)}
         <span>${escapeHtml(p.name)}</span>
-        ${p.isHost ? '<span class="badge">호스트</span>' : ""}
+        ${p.isHost ? '<span class="badge">호스트</span>' : renderReadyBadge(p.ready)}
         ${!p.connected ? '<span class="badge badge--offline">연결 끊김</span>' : ""}
       </div>`
     )
     .join("");
+}
+
+function renderReadyBadge(ready) {
+  return ready
+    ? '<span class="badge badge--ready">준비 완료</span>'
+    : '<span class="badge badge--waiting">대기중</span>';
 }

@@ -28,20 +28,52 @@ export function init() {
     console.log("room:get-state 응답:", res);
     if (res.ok) onRoomState(res.state);
   });
+  
 
   document.getElementById("addCharacterBtn").addEventListener("click", addCharacterRow);
   document.getElementById("saveCharactersBtn").addEventListener("click", saveCharacters);
   document.getElementById("startBattleBtn").addEventListener("click", startBattle);
+  document.getElementById("readyBtn").addEventListener("click", toggleReady);
 
   mountChat(document.getElementById("chatContainer"), getMyCharacters());
+}
+
+function toggleReady() {
+  const me = roomState?.players?.find((p) => p.id === myPlayerId);
+  const nextReady = !me?.ready;
+  socket.emit("player:ready", { ready: nextReady }, (res) => {
+    if (!res.ok) lobbyStatus.textContent = res.error;
+  });
 }
 
 function onRoomState(state) {
   console.log("전체 roomState:", state);
   roomState = state;
+
+  if (state.phase === "battle" || state.phase === "ended") {
+    renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
+    return;
+  }
+  
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));
+  updateReadyUI();
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
+}
+
+function updateReadyUI() {
+  const me = roomState?.players?.find((p) => p.id === myPlayerId);
+  const startBtn = document.getElementById("startBattleBtn");
+  const readyBtn = document.getElementById("readyBtn");
+
+  if (me?.isHost) {
+    startBtn.style.display = "block";
+    readyBtn.style.display = "none";
+  } else {
+    startBtn.style.display = "none";
+    readyBtn.style.display = "block";
+    readyBtn.textContent = me?.ready ? "준비 취소" : "준비 완료";
+  }
 }
 
 function addCharacterRow() {
