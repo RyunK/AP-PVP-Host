@@ -2,7 +2,7 @@
 import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
-import { mountChat } from "../js/chat.js";
+import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
 import { renderPlayerList } from "../js/playerList.js";
 
 let roomState = null;
@@ -16,7 +16,11 @@ const POSITION_SKILLS = {
 };
 
 function getMyCharacters() {
-  return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
+  console.log("myPlayerId:", myPlayerId);
+  console.log("roomState.characters:", roomState?.characters);
+  const result = (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
+  console.log("필터링 결과:", result);
+  return result;
 }
 
 export function init() {
@@ -25,6 +29,7 @@ export function init() {
 
 
   socket.emit("room:get-state", {}, (res) => {
+    console.log("room:get-state 응답:", res);
     if (res.ok) onRoomState(res.state);
   });
 
@@ -36,16 +41,22 @@ export function init() {
 }
 
 function onRoomState(state) {
+  console.log("전체 roomState:", state);
   roomState = state;
-  if (state.phase === "battle" || state.phase === "ended") {
-    renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
-    return;
-  }
+  // if (state.phase === "battle" || state.phase === "ended") {
+  //   renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
+  //   return;
+  // }
+  updateChatCharacterOptions(getMyCharacters());
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
 }
 
 function addCharacterRow() {
+  if (!roomState) {
+    lobbyStatus.textContent = "방 정보를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요.";
+    return;
+  }
   const max = roomState.settings.maxCharactersPerPlayer || 3;
   if (characterForm.children.length >= max) return;
   const row = document.createElement("div");

@@ -2,7 +2,7 @@
 import { socket } from "../js/socket.js";
 import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
-import { mountChat } from "../js/chat.js";
+import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
 import { renderPlayerList } from "../js/playerList.js";
 
 let roomState = null;
@@ -32,6 +32,7 @@ export function init() {
 
 function onRoomState(state) {
   roomState = state;
+  updateChatCharacterOptions();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
   renderBattle();
 }

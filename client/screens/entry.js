@@ -5,20 +5,6 @@ import { renderScreen } from "../js/router.js";
 export function init() {
   const errorEl = document.getElementById("entryError");
 
-  const identity = loadIdentity();
-  if (identity?.playerId) {
-    socket.emit("room:rejoin", { playerId: identity.playerId }, (res) => {
-      if (res.ok) {
-        const phase = res.state.phase;
-        renderScreen(phase === "battle" || phase === "ended" ? "battle" : "lobby");
-      } else {
-        clearIdentity(); 
-        setupEntryForm(); // 실패하면 다시 입장할 수 있도록
-      }
-    });
-    return; 
-  }
-
   setupEntryForm();
 
   function setupEntryForm() {
