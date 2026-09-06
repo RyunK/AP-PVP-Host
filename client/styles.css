@@ -74,10 +74,18 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
 
 .char-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
-  gap: 8px;
+  position: relative;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20px;
   margin-bottom: 8px;
+
+  padding: 20px 30px;
+  border:  1px solid #0d1113;
+  border-radius: 6px;
+
+  text-align: center;
 }
+
 .char-row input {
   background: #1b1f26;
   border: 1px solid #2f3540;
@@ -85,6 +93,45 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
   padding: 8px 10px;
   color: #e8e6de;
   font-size: 13px;
+}
+
+.remove-row-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: red;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.char-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+.delete-char-btn {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.delete-char-btn:hover {
+  background: var(--danger);
+  color: white;
 }
 
 .team-board { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -109,6 +156,12 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
 }
 .team-chip button { all: unset; cursor: pointer; color: #4fd1c5; font-size: 12px; }
 
+.owner-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 6px;
+}
+
 .team-name-input {
   background: transparent;
   border: none;
@@ -127,6 +180,17 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
   font-size: 12px;
   color: var(--text-muted);
   margin: 2px 0 8px;
+}
+
+.unassigned-board {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-strong);
+}
+.unassigned-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
 }
 
 .my-characters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }

@@ -9,10 +9,11 @@ function randomPlayerId() {
 }
 
 class RoomManager {
-  constructor({ getMatchSettings, onRoomClosed }) {
+  constructor({ getMatchSettings, onRoomClosed, onRoomStateChanged  }) {
     this.room = null;
     this.getMatchSettings = getMatchSettings;
     this.onRoomClosed = onRoomClosed || (() => {});
+    this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
@@ -116,6 +117,8 @@ class RoomManager {
     if (player.isHost || !stillConnected) {
       this.room = null;
       this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
+    } else{
+      this.onRoomStateChanged(room); // 방은 그대로고 사람이 한 명 나간 경우
     }
   }
 
@@ -177,6 +180,31 @@ class RoomManager {
     });
 
     return created;
+  }
+
+  deleteCharacter(requesterId, characterId) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+
+    const character = this.room.characters.get(characterId);
+
+    // console.log("character:", character); 
+    // console.log("전달받은 playerId:", requesterId); 
+    // console.log("character.ownerId:", character?.ownerId); 
+
+    if (!character) throw new Error("캐릭터를 찾을 수 없습니다.");
+    const requester = this.room.players.get(requesterId);
+    const isOwner = character.ownerId === requesterId;
+    const isHost = requester?.isHost;
+    if (!isOwner && !isHost) throw new Error("본인 캐릭터이거나 호스트만 삭제할 수 있습니다.");
+
+    this.room.characters.delete(characterId);
+    this.room.teams.A = this.room.teams.A.filter((id) => id !== characterId);
+    this.room.teams.B = this.room.teams.B.filter((id) => id !== characterId);
+
+    const owner = this.room.players.get(character.ownerId);
+    if (owner) owner.characterIds = owner.characterIds.filter((id) => id !== characterId);
+
+    return this.room;
   }
 
   setTeamName(playerId, team, name) {

@@ -38,6 +38,37 @@ export function init() {
   mountChat(document.getElementById("chatContainer"), getMyCharacters());
 }
 
+function renderMyCharacterList() {
+  const container = document.getElementById("myCharacterList");
+  const myChars = getMyCharacters(roomState, myPlayerId); // 지난번 만든 헬퍼 재사용
+
+  if (myChars.length === 0) {
+    container.innerHTML = '<p class="hint">아직 등록한 캐릭터가 없습니다.</p>';
+    return;
+  }
+
+  container.innerHTML = myChars
+    .map(
+      (c) => `
+      <div class="char-chip">
+        <span>${escapeHtml(c.name)}</span>
+        <button class="delete-char-btn" data-id="${c.id}">삭제</button>
+      </div>`
+    )
+    .join("");
+
+  container.querySelectorAll(".delete-char-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const ok = confirm(`"${btn.previousElementSibling?.textContent || "이 캐릭터"}"를 삭제할까요?`);
+      if (!ok) return;
+
+      socket.emit("character:delete", { characterId: btn.dataset.id }, (res) => {
+        if (!res.ok) lobbyStatus.textContent = res.error;
+      });
+    });
+  });
+}
+
 function toggleReady() {
   const me = roomState?.players?.find((p) => p.id === myPlayerId);
   const nextReady = !me?.ready;
@@ -57,6 +88,8 @@ function onRoomState(state) {
 
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));
   updateReadyUI();
+
+  renderMyCharacterList();
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
 }
@@ -111,12 +144,17 @@ function addCharacterRow() {
     <input type="number" placeholder="정신력" class="c-mnd" />
     <label for="c-luck">행운</label>
     <input type="number" placeholder="행운" class="c-luck" />
+    <button type="button" class="remove-row-btn">✕</button>
   `;
-  characterForm.appendChild(row);
 
-  refreshSkillSelect(row); // 기본 선택된 포지션(아이기스)에 맞춰 스킬 목록 초기 세팅
-  row.querySelector(".c-position").addEventListener("change", () => refreshSkillSelect(row));
-}
+  row.querySelector(".remove-row-btn").addEventListener("click", () => {
+      row.remove();
+    });
+    characterForm.appendChild(row);
+
+    refreshSkillSelect(row); // 기본 선택된 포지션(아이기스)에 맞춰 스킬 목록 초기 세팅
+    row.querySelector(".c-position").addEventListener("change", () => refreshSkillSelect(row));
+  }
 
 function buildSkillOptions(position) {
   const skills = POSITION_SKILLS[position] || [];
@@ -166,8 +204,14 @@ function renderTeamBoard() {
     const chips = ids
       .map((id) => {
         const c = roomState.characters.find((ch) => ch.id === id);
+        const owner = roomState.players.find((p) => p.id === c.ownerId);
         if (!c) return "";
-        return `<div class="team-chip"><span>${escapeHtml(c.name)}</span></div>`;
+        return `
+        <div class="team-chip">
+          <span>${escapeHtml(c.name)}</span>
+          <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
+        </div>
+        `;
       })
       .join("");
 
@@ -181,6 +225,9 @@ function renderTeamBoard() {
 
   teamBoard.innerHTML = teamCol("A") + teamCol("B");
 
+  /**
+   * 호스트면 팀 이름 바꿀 수 있음.
+   */
   if (isHost) {
     teamBoard.querySelectorAll(".team-name-input").forEach((input) => {
       input.addEventListener("change", () => {
@@ -192,36 +239,45 @@ function renderTeamBoard() {
   }
 
   // 미배정 캐릭터에 대한 배정 버튼
+  const unassignedBoard = document.getElementById("unassignedBoard");
   const unassigned = roomState.characters.filter((c) => !c.team);
-  if (unassigned.length > 0) {
-    const picker = document.createElement("div");
-    picker.style.marginTop = "8px";
-    picker.innerHTML = unassigned
-      .map(
-        (c) => `
-        <div class="team-chip">
-          <span>${c.name} (미배정)</span>
-          <span>
-            <button data-char="${c.id}" data-team="A">A팀</button>
-            <button data-char="${c.id}" data-team="B">B팀</button>
-          </span>
-        </div>`
-      )
-      .join("");
-    teamBoard.appendChild(picker);
 
-    picker.querySelectorAll("button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        socket.emit(
-          "team:assign",
-          { characterId: btn.dataset.char, team: btn.dataset.team },
-          (res) => {
-            if (!res.ok) lobbyStatus.textContent = res.error;
-          }
-        );
-      });
-    });
+  if (unassigned.length === 0) {
+    unassignedBoard.innerHTML = "";
+    return;
   }
+
+  unassignedBoard.innerHTML = `
+    <h3 class="unassigned-title">미배정 캐릭터</h3>
+    ${unassigned
+      .map((c) => {
+        const owner = roomState.players.find((p) => p.id === c.ownerId);
+        const teamAName = roomState.teamNames?.A || "A팀";
+        const teamBName = roomState.teamNames?.B || "B팀";
+        return `
+          <div class="team-chip">
+            <span>${escapeHtml(c.name)}</span>
+            <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
+            <span>
+              <button data-char="${c.id}" data-team="A">${escapeHtml(teamAName)}</button>
+              <button data-char="${c.id}" data-team="B">${escapeHtml(teamBName)}</button>
+            </span>
+          </div>`;
+      })
+      .join("")}
+  `;
+
+  unassignedBoard.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      socket.emit(
+        "team:assign",
+        { characterId: btn.dataset.char, team: btn.dataset.team },
+        (res) => {
+          if (!res.ok) lobbyStatus.textContent = res.error;
+        }
+      );
+    });
+  });
 }
 
 function startBattle(){

@@ -23,6 +23,10 @@ function startServer({ port, onRoomsChanged, onLog }) {
       onRoomClosed: (reason) => {
        io.to("main").emit("room:closed", { reason });
      },
+     onRoomStateChanged: (room) => {
+        io.to("main").emit("room:state", roomManager.serializeRoom(room));
+        broadcastRooms();
+      },
    });
 
     function broadcastRooms() {
@@ -84,6 +88,16 @@ function startServer({ port, onRoomsChanged, onLog }) {
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           const created = roomManager.setCharacters(room, socket.data.playerId, characterDefs);
           cb({ ok: true, characterIds: created });
+          emitRoomState(room);
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
+      socket.on("character:delete", ({ characterId }, cb) => {
+        try {
+          const room = roomManager.deleteCharacter(socket.data.playerId, characterId);
+          cb({ ok: true });
           emitRoomState(room);
         } catch (err) {
           cb({ ok: false, error: err.message });
