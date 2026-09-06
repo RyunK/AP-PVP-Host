@@ -73,6 +73,8 @@ class RoomManager {
   }
 
   _removePlayerPermanently(room, playerId) {
+    if(!room) return;
+
     const player = room.players.get(playerId);
     if (!player) return;
 
