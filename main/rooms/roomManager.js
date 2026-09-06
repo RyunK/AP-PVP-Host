@@ -4,52 +4,41 @@ const crypto = require("crypto");
 const RECONNECT_GRACE_MS = 30_000; // 30초
 const { resolveSkillAction } = require("../engine/damageCalc");
 
-function randomRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 헷갈리는 문자 제외
-  let code = "";
-  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
-
 function randomPlayerId() {
   return `p_${crypto.randomBytes(6).toString("hex")}`;
 }
 
 class RoomManager {
   constructor({ getMatchSettings, onRoomClosed }) {
-    this.rooms = new Map(); // code -> room
+    this.room = null;
     this.getMatchSettings = getMatchSettings;
     this.onRoomClosed = onRoomClosed || (() => {});
   }
 
-  createRoom(hostSocketId, hostProfile) {
-    let code;
-    do {
-      code = randomRoomCode();
-    } while (this.rooms.has(code));
-
-    const settings = this.getMatchSettings();
-    const room = {
-      code,
-      hostSocketId,
-      createdAt: Date.now(),
-      phase: "lobby", // lobby -> team_setup -> battle -> ended
-      settings: { ...settings },
-      players: new Map(), // playerId -> { id, socketId, name, characterIds: [] }
-      characters: new Map(), // characterId -> { id, ownerId, name, stats, team, alive }
-      teams: { A: [], B: [] }, // characterId 배열
-      turn: { number: 0, pendingActions: new Map() },
-    };
-
-    this.rooms.set(code, room);
-    return this._addPlayer(room, hostSocketId, hostProfile, { isHost: true });
+   /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
+  enterRoom(socketId, profile) {
+    if (!this.room) {
+      this.room = this._createRoom(socketId);
+    }
+    if (this.room.phase === "battle") {
+      throw new Error("이미 전투가 시작된 방입니다.");
+    }
+    const isHost = ![...this.room.players.values()].some((p) => p.isHost); // 아무도 없고 호스트도 없으면 내가 호스트
+    return this._addPlayer(this.room, socketId, profile, { isHost });
   }
 
-  joinRoom(code, socketId, profile) {
-    const room = this.rooms.get(code);
-    if (!room) throw new Error("존재하지 않는 방 코드입니다.");
-    if (room.phase === "battle") throw new Error("이미 전투가 시작된 방입니다.");
-    return this._addPlayer(room, socketId, profile, { isHost: false });
+  _createRoom(hostSocketId) {
+    const settings = this.getMatchSettings();
+    return {
+      hostSocketId,
+      createdAt: Date.now(),
+      phase: "lobby",
+      settings: { ...settings },
+      players: new Map(),
+      characters: new Map(),
+      teams: { A: [], B: [] },
+      turn: { number: 0, pendingActions: new Map() },
+    };
   }
 
   _addPlayer(room, socketId, profile, { isHost }) {
@@ -63,24 +52,24 @@ class RoomManager {
       connected: true,        
       disconnectTimer: null,  
     });
+    if (isHost) room.hostSocketId = socketId;
     return { room, playerId };
   }
 
   leavePlayer(socketId) {
-    for (const room of this.rooms.values()) {
-      const player = [...room.players.values()].find(
-        (p) => p.socketId === socketId && p.connected
-      );
-      if (!player) continue;
+    if (!this.room) return null;
 
-      player.connected = false;
-      player.disconnectTimer = setTimeout(() => {
-        this._removePlayerPermanently(room, player.id);
-      }, RECONNECT_GRACE_MS);
+    const player = [...this.room.players.values()].find(
+      (p) => p.socketId === socketId && p.connected
+    );
+    if (!player) return null;
 
-      return { room, playerId: player.id, temporarilyDisconnected: true };
-    }
-    return null;
+    player.connected = false;
+    player.disconnectTimer = setTimeout(() => {
+      this._removePlayerPermanently(this.room, player.id);
+    }, RECONNECT_GRACE_MS);
+
+    return { room: this.room, playerId: player.id, temporarilyDisconnected: true };
   }
 
   _removePlayerPermanently(room, playerId) {
@@ -96,8 +85,8 @@ class RoomManager {
 
     const stillConnected = [...room.players.values()].some((p) => p.connected);
     if (player.isHost || !stillConnected) {
-      this.rooms.delete(room.code);
-      this.onRoomClosed(room.code, "재접속하지 않아 방이 종료되었습니다.");
+      this.room = null;
+      this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
     }
   }
 
@@ -238,7 +227,7 @@ class RoomManager {
 
   serializeRoom(room) {
     return {
-      code: room.code,
+      // code: room.code,
       phase: room.phase,
       settings: room.settings,
       players: [...room.players.values()].map((p) => ({
@@ -254,16 +243,18 @@ class RoomManager {
   }
 
   listSummaries() {
-    return [...this.rooms.values()].map((room) => ({
-      code: room.code,
-      phase: room.phase,
-      playerCount: room.players.size,
-      characterCount: room.characters.size,
-    }));
+    if (!this.room) return [];
+    return [
+      {
+        phase: this.room.phase,
+        playerCount: [...this.room.players.values()].filter((p) => p.connected).length,
+        characterCount: this.room.characters.size,
+      },
+    ];
   }
 
-  getRoom(code) {
-    return this.rooms.get(code);
+  getRoom(code="") {
+    return this.room;
   }
 }
 

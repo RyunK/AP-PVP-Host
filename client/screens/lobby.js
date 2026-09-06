@@ -22,7 +22,7 @@ export function init() {
     if (res.ok) onRoomState(res.state);
   });
 
-  document.getElementById("roomCodeLabel").textContent = loadIdentity()?.roomCode || "";
+  // document.getElementById("roomCodeLabel").textContent = loadIdentity()?.roomCode || "";
   document.getElementById("addCharacterBtn").addEventListener("click", addCharacterRow);
   document.getElementById("saveCharactersBtn").addEventListener("click", saveCharacters);
   document.getElementById("startBattleBtn").addEventListener("click", startBattle);

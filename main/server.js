@@ -20,8 +20,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
     let currentSettings = store.get("matchSettings");
     const roomManager = new RoomManager({
       getMatchSettings: () => currentSettings,
-      onRoomClosed: (code, reason) => {
-       io.to(code).emit("room:closed", { reason });
+      onRoomClosed: (reason) => {
+       io.to("main").emit("room:closed", { reason });
      },
    });
 
@@ -30,32 +30,18 @@ function startServer({ port, onRoomsChanged, onLog }) {
     }
 
     function emitRoomState(room) {
-      io.to(room.code).emit("room:state", roomManager.serializeRoom(room));
+      io.to("main").emit("room:state", roomManager.serializeRoom(room));
     }
 
     io.on("connection", (socket) => {
       onLog?.(`플레이어 연결됨: ${socket.id}`);
 
-      socket.on("room:create", (profile, cb) => {
+      socket.on("room:enter", (profile, cb) => {
         try {
-          const { room, playerId } = roomManager.createRoom(socket.id, profile);
-          socket.join(room.code);
+          const { room, playerId } = roomManager.enterRoom(socket.id, profile);
+          socket.join("main"); // socket.io room 이름은 아무 문자열이나 상관없음, 고정값 사용
           socket.data.playerId = playerId;
-          socket.data.roomCode = room.code;
-          cb({ ok: true, code: room.code, playerId, state: roomManager.serializeRoom(room) });
-          broadcastRooms();
-        } catch (err) {
-          cb({ ok: false, error: err.message });
-        }
-      });
-
-      socket.on("room:join", ({ code, profile }, cb) => {
-        try {
-          const { room, playerId } = roomManager.joinRoom(code.toUpperCase(), socket.id, profile);
-          socket.join(room.code);
-          socket.data.playerId = playerId;
-          socket.data.roomCode = room.code;
-          cb({ ok: true, code: room.code, playerId, state: roomManager.serializeRoom(room) });
+          cb({ ok: true, playerId, state: roomManager.serializeRoom(room) });
           emitRoomState(room);
           broadcastRooms();
         } catch (err) {
@@ -64,14 +50,14 @@ function startServer({ port, onRoomsChanged, onLog }) {
       });
 
       socket.on("room:get-state", (_payload, cb) => {
-        const room = roomManager.getRoom(socket.data.roomCode);
+        const room = roomManager.getRoom();
         if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });
         cb({ ok: true, state: roomManager.serializeRoom(room) });
       });
 
       socket.on("characters:set", (characterDefs, cb) => {
         try {
-          const room = roomManager.getRoom(socket.data.roomCode);
+          const room = roomManager.getRoom();
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           const created = roomManager.setCharacters(room, socket.data.playerId, characterDefs);
           cb({ ok: true, characterIds: created });
@@ -83,7 +69,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("team:assign", ({ characterId, team }, cb) => {
         try {
-          const room = roomManager.getRoom(socket.data.roomCode);
+          const room = roomManager.getRoom();
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           roomManager.assignTeam(room, characterId, team);
           cb({ ok: true });
@@ -95,7 +81,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("battle:start", (_payload, cb) => {
         try {
-          const room = roomManager.getRoom(socket.data.roomCode);
+          const room = roomManager.getRoom();
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           if (room.hostSocketId !== socket.id) throw new Error("호스트만 전투를 시작할 수 있습니다.");
           roomManager.startBattle(room);
@@ -108,15 +94,15 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("action:submit", ({ characterId, action }, cb) => {
         try {
-          const room = roomManager.getRoom(socket.data.roomCode);
+          const room = roomManager.getRoom();
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           const result = roomManager.submitAction(room, characterId, action);
           cb({ ok: true, waiting: !result.resolved });
           if (result.resolved) {
-            io.to(room.code).emit("turn:resolved", result);
+            io.to("main").emit("turn:resolved", result);
             emitRoomState(room);
           } else {
-            io.to(room.code).emit("turn:waiting", { waitingFor: result.waitingFor });
+            io.to("main").emit("turn:waiting", { waitingFor: result.waitingFor });
           }
         } catch (err) {
           cb({ ok: false, error: err.message });
