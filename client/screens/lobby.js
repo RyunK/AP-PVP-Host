@@ -11,6 +11,9 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 
+const teamBoard = document.getElementById("teamBoard");
+const unassignedBoard = document.getElementById("unassignedBoard");
+
 // 포지션별로 고를 수 있는 선택 스킬 목록
 const POSITION_SKILLS = {
   "아이기스": ["엄호", "수호"],
@@ -36,6 +39,27 @@ export function init() {
   document.getElementById("readyBtn").addEventListener("click", toggleReady);
 
   mountChat(document.getElementById("chatContainer"), getMyCharacters());
+
+  teamBoard.addEventListener("click", handleBoardClick);
+  unassignedBoard.addEventListener("click", handleBoardClick);
+}
+
+function handleBoardClick(e) {
+  const nameEl = e.target.closest(".char-name");
+  if (nameEl) {
+    showCharacterInfo(nameEl.dataset.char);
+    return;
+  }
+  const teamBtn = e.target.closest("[data-team]");
+  if (teamBtn && teamBtn.dataset.char) {
+    socket.emit(
+      "team:assign",
+      { characterId: teamBtn.dataset.char, team: teamBtn.dataset.team },
+      (res) => {
+        if (!res.ok) lobbyStatus.textContent = res.error;
+      }
+    );
+  }
 }
 
 function renderMyCharacterList() {
@@ -204,11 +228,12 @@ function renderTeamBoard() {
     const chips = ids
       .map((id) => {
         const c = roomState.characters.find((ch) => ch.id === id);
+        if (!c) return "";
         const owner = roomState.players.find((p) => p.id === c.ownerId);
         if (!c) return "";
         return `
         <div class="team-chip">
-          <span>${escapeHtml(c.name)}</span>
+          <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
           <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
         </div>
         `;
@@ -256,7 +281,7 @@ function renderTeamBoard() {
         const teamBName = roomState.teamNames?.B || "B팀";
         return `
           <div class="team-chip">
-            <span>${escapeHtml(c.name)}</span>
+            <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
             <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
             <span>
               <button data-char="${c.id}" data-team="A">${escapeHtml(teamAName)}</button>
@@ -278,10 +303,81 @@ function renderTeamBoard() {
       );
     });
   });
+
+  // teamBoard.querySelectorAll(".char-name").forEach((el) => {
+  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
+  // });
+
+  // unassignedBoard.querySelectorAll(".char-name").forEach((el) => {
+  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
+  // });
 }
 
 function startBattle(){
   socket.emit("battle:start", {}, (res) => {
     if (!res.ok) lobbyStatus.textContent = res.error;
+  });
+}
+
+function showCharacterInfo(characterId) {
+  const c = roomState.characters.find((ch) => ch.id === characterId);
+  if (!c) return;
+
+  const owner = roomState.players.find((p) => p.id === c.ownerId);
+  const me = roomState.players.find((p) => p.id === myPlayerId);
+  const isOwner = c.ownerId === myPlayerId;
+  const isHost = me?.isHost;
+  const canDelete = isOwner || isHost; // 삭제 권한만 이렇게 판단
+
+  const teamAName = roomState.teamNames?.A || "A팀";
+  const teamBName = roomState.teamNames?.B || "B팀";
+
+  const modal = document.getElementById("charInfoModal");
+  modal.innerHTML = `
+    <div class="modal-box">
+      <h3>${escapeHtml(c.name)}</h3>
+      <p class="hint">소유자: ${escapeHtml(owner?.name || "알 수 없음")}</p>
+      <p>포지션: ${escapeHtml(c.position || "-")} · 스킬: ${escapeHtml(c.skill || "-")}</p>
+      <p>HP: ${c.stats.hp}</p>
+      <p>체력(스탯) ${c.stats.hp_stat} · 민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}</p>
+
+      <div class="modal-actions">
+        <span class="hint">팀 이동:</span>
+        <button data-modal-team="A">${escapeHtml(teamAName)}</button>
+        <button data-modal-team="B">${escapeHtml(teamBName)}</button>
+        ${canDelete ? '<button id="modalDeleteBtn" class="danger">삭제</button>' : ""}
+      </div>
+      <button id="modalCloseBtn">닫기</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+
+  modal.querySelectorAll("[data-modal-team]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      socket.emit(
+        "team:assign",
+        { characterId: c.id, team: btn.dataset.modalTeam },
+        (res) => {
+          if (!res.ok) return alert(res.error);
+          modal.style.display = "none";
+        }
+      );
+    });
+  });
+
+  const deleteBtn = document.getElementById("modalDeleteBtn");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", () => {
+      const ok = confirm(`"${c.name}"를 삭제할까요?`);
+      if (!ok) return;
+      socket.emit("character:delete", { characterId: c.id }, (res) => {
+        if (!res.ok) return alert(res.error);
+        modal.style.display = "none";
+      });
+    });
+  }
+
+  document.getElementById("modalCloseBtn").addEventListener("click", () => {
+    modal.style.display = "none";
   });
 }
