@@ -49,6 +49,16 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
+      socket.on("chat:send", ({ text, speakAs }, cb) => {
+        try {
+          const message = roomManager.postChatMessage(socket.data.playerId, text, speakAs);
+          io.to("main").emit("chat:message", message);
+          cb({ ok: true });
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
       socket.on("room:get-state", (_payload, cb) => {
         const room = roomManager.getRoom();
         if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });

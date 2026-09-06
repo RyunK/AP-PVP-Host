@@ -82,6 +82,7 @@ class RoomManager {
       characters: new Map(),
       teams: { A: [], B: [] },
       turn: { number: 0, pendingActions: new Map() },
+      chatHistory: [],
     };
   }
 
@@ -161,12 +162,15 @@ class RoomManager {
         id: charId,
         ownerId: playerId,
         name: def.name || `캐릭터${idx + 1}`,
+        position: def.position || "아이기스",
+        skill: def.skill  || "엄호",
         stats: {
-          hp: def.hp ?? 100,
-          maxHp: def.hp ?? 100,
-          atk: def.atk ?? 10,
-          def: def.def ?? 5,
-          power: def.power ?? 10,
+          hp: def.hp || 1,
+          hp_stat: def.hp_stat || 1,
+          power: def.power || 1,
+          dex: def.dex || 1,
+          mnd: def.mnd || 1,
+          luck: def.luck || 1,
         },
         team: null,
         alive: true,
@@ -281,12 +285,15 @@ class RoomManager {
       players: [...room.players.values()].map((p) => ({
         id: p.id,
         name: p.name,
+        avatar: p.avatar,
         isHost: p.isHost,
         characterIds: p.characterIds,
+        connected: p.connected,
       })),
       characters: [...room.characters.values()],
       teams: room.teams,
       turnNumber: room.turn.number,
+      chat: room.chatHistory,
     };
   }
 
@@ -303,6 +310,43 @@ class RoomManager {
 
   getRoom(code="") {
     return this.room;
+  }
+
+  /**
+   * 메시지를 전송하는 메서드
+   * @param {*} playerId 
+   * @param {*} text 
+   * @param {*} speakAs 
+   * @returns 
+   */
+  postChatMessage(playerId, text, speakAs) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player) throw new Error("플레이어를 찾을 수 없습니다.");
+
+    const trimmed = (text || "").trim();
+    if (!trimmed) throw new Error("빈 메시지는 보낼 수 없습니다.");
+
+    let displayName = player.name;
+    if (speakAs && speakAs !== "player") {
+      const character = this.room.characters.get(speakAs);
+      if (!character || character.ownerId !== playerId) {
+        throw new Error("본인 소유 캐릭터로만 말할 수 있습니다.");
+      }
+      displayName = character.name;
+    }
+
+    const message = {
+      id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      displayName,
+      text: trimmed.slice(0, 300),
+      timestamp: Date.now(),
+    };
+
+    this.room.chatHistory.push(message);
+    if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
+
+    return message;
   }
 }
 

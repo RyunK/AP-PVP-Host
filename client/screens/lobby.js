@@ -2,6 +2,8 @@
 import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
+import { mountChat } from "../js/chat.js";
+import { renderPlayerList } from "../js/playerList.js";
 
 let roomState = null;
 const myPlayerId = loadIdentity()?.playerId;
@@ -13,6 +15,10 @@ const POSITION_SKILLS = {
   "카두케우스": ["성호", "환희", "낙화"],
 };
 
+function getMyCharacters() {
+  return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
+}
+
 export function init() {
   socket.off("room:state", onRoomState); // 중복 등록 방지
   socket.on("room:state", onRoomState);
@@ -22,10 +28,11 @@ export function init() {
     if (res.ok) onRoomState(res.state);
   });
 
-  // document.getElementById("roomCodeLabel").textContent = loadIdentity()?.roomCode || "";
   document.getElementById("addCharacterBtn").addEventListener("click", addCharacterRow);
   document.getElementById("saveCharactersBtn").addEventListener("click", saveCharacters);
   document.getElementById("startBattleBtn").addEventListener("click", startBattle);
+
+  mountChat(document.getElementById("chatContainer"), getMyCharacters());
 }
 
 function onRoomState(state) {
@@ -35,6 +42,7 @@ function onRoomState(state) {
     return;
   }
   renderTeamBoard();
+  renderPlayerList(document.getElementById("playerListContainer"), state.players);
 }
 
 function addCharacterRow() {
@@ -102,7 +110,9 @@ function saveCharacters(){
   socket.emit("characters:set", defs, (res) => {
     if (!res.ok) return (lobbyStatus.textContent = res.error);
     lobbyStatus.textContent = "캐릭터가 저장되었습니다. 아래에서 팀을 배정하세요.";
+    renderTeamBoard();
   });
+
 }
 
 function renderTeamBoard() {
