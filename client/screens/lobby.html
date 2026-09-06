@@ -1,34 +1,20 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PVP 대전</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="app">
-    <!-- 2단계: 대기실 (캐릭터/팀 설정) -->
-    <section id="screen-lobby" class="screen">
-      <div class="room-header">
-        <span>방 코드</span>
-        <strong id="roomCodeLabel"></strong>
-      </div>
 
-      <h2>내 캐릭터 설정</h2>
-      <p class="hint">최대 인원만큼 캐릭터를 등록하면, 그 캐릭터들을 모두 직접 조작합니다.</p>
-      <div id="characterForm"></div>
-      <button class="btn btn-ghost" id="addCharacterBtn">캐릭터 추가</button>
-      <button class="btn btn-primary" id="saveCharactersBtn">캐릭터 저장</button>
+<!-- 대기실 (캐릭터/팀 설정) -->
+<section id="screen-lobby">
+  <div class="room-header">
+    <span>방 코드</span>
+    <strong id="roomCodeLabel"></strong>
+  </div>
 
-      <h2>팀 배정</h2>
-      <div id="teamBoard" class="team-board"></div>
+  <h2>내 캐릭터 설정</h2>
+  <p class="hint">최대 인원만큼 캐릭터를 등록하면, 그 캐릭터들을 모두 직접 조작합니다.</p>
+  <div id="characterForm"></div>
+  <button class="btn btn-ghost" id="addCharacterBtn">캐릭터 추가</button>
+  <button class="btn btn-primary" id="saveCharactersBtn">캐릭터 저장</button>
 
-      <button class="btn btn-primary" id="startBattleBtn" style="display:none">전투 시작 (호스트)</button>
-      <p class="hint" id="lobbyStatus"></p>
-    </section>
+  <h2>팀 배정</h2>
+  <div id="teamBoard" class="team-board"></div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="game.js"></script>
-</body>
-</html>
+  <button class="btn btn-primary" id="startBattleBtn">전투 시작 (호스트)</button>
+  <p class="hint" id="lobbyStatus"></p>
+</section>

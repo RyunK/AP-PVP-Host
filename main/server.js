@@ -18,7 +18,12 @@ function startServer({ port, onRoomsChanged, onLog }) {
     app.get("/health", (_req, res) => res.json({ ok: true }));
 
     let currentSettings = store.get("matchSettings");
-    const roomManager = new RoomManager({ getMatchSettings: () => currentSettings });
+    const roomManager = new RoomManager({
+      getMatchSettings: () => currentSettings,
+      onRoomClosed: (code, reason) => {
+       io.to(code).emit("room:closed", { reason });
+     },
+   });
 
     function broadcastRooms() {
       onRoomsChanged?.(roomManager.listSummaries());
@@ -56,6 +61,12 @@ function startServer({ port, onRoomsChanged, onLog }) {
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
+      });
+
+      socket.on("room:get-state", (_payload, cb) => {
+        const room = roomManager.getRoom(socket.data.roomCode);
+        if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });
+        cb({ ok: true, state: roomManager.serializeRoom(room) });
       });
 
       socket.on("characters:set", (characterDefs, cb) => {

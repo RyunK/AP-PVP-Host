@@ -1,22 +1,6 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PVP 대전</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="app">
-    <!-- 3단계: 전투 -->
-    <section id="screen-battle" class="screen">
-      <h2>전투 중 - 턴 <span id="turnNumber">1</span></h2>
-      <div id="myCharacters" class="my-characters"></div>
-      <div id="battleLog" class="battle-log"></div>
-    </section>
-  </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="game.js"></script>
-</body>
-</html>
+<section id="screen-battle">
+  <h2>전투 중 - 턴 <span id="turnNumber">1</span></h2>
+  <div id="myCharacters" class="my-characters"></div>
+  <div id="battleLog" class="battle-log"></div>
+</section>

@@ -1,7 +1,7 @@
-// 인메모리 방 관리자. 매치가 끝나면 사라지는 캐주얼 게임 특성상 DB 없이 메모리로 충분합니다.
-// 호스트(Electron 앱을 실행 중인 사람)가 서버이자 유일한 "진실의 소스"이고,
-// 클라이언트(플레이어 브라우저)는 액션만 보내고 결과는 항상 서버 계산을 받아 렌더링합니다.
-
+// 메모리에만 저장, 방 관리자이자
+// 호스트만이 항상 진실, 클라이언트는 호스트에게 요청을 보내고 받기만 함.
+const crypto = require("crypto");
+const RECONNECT_GRACE_MS = 30_000; // 30초
 const { resolveSkillAction } = require("../engine/damageCalc");
 
 function randomRoomCode() {
@@ -11,10 +11,15 @@ function randomRoomCode() {
   return code;
 }
 
+function randomPlayerId() {
+  return `p_${crypto.randomBytes(6).toString("hex")}`;
+}
+
 class RoomManager {
-  constructor({ getMatchSettings }) {
+  constructor({ getMatchSettings, onRoomClosed }) {
     this.rooms = new Map(); // code -> room
     this.getMatchSettings = getMatchSettings;
+    this.onRoomClosed = onRoomClosed || (() => {});
   }
 
   createRoom(hostSocketId, hostProfile) {
@@ -48,37 +53,52 @@ class RoomManager {
   }
 
   _addPlayer(room, socketId, profile, { isHost }) {
-    const playerId = `p_${socketId}`;
+    const playerId = randomPlayerId();
     room.players.set(playerId, {
       id: playerId,
       socketId,
       name: profile?.name || "이름없음",
       isHost,
       characterIds: [],
+      connected: true,        
+      disconnectTimer: null,  
     });
     return { room, playerId };
   }
 
   leavePlayer(socketId) {
     for (const room of this.rooms.values()) {
-      const player = [...room.players.values()].find((p) => p.socketId === socketId);
+      const player = [...room.players.values()].find(
+        (p) => p.socketId === socketId && p.connected
+      );
       if (!player) continue;
 
-      // 해당 플레이어의 캐릭터도 정리
-      for (const charId of player.characterIds) {
-        room.characters.delete(charId);
-        room.teams.A = room.teams.A.filter((id) => id !== charId);
-        room.teams.B = room.teams.B.filter((id) => id !== charId);
-      }
-      room.players.delete(player.id);
+      player.connected = false;
+      player.disconnectTimer = setTimeout(() => {
+        this._removePlayerPermanently(room, player.id);
+      }, RECONNECT_GRACE_MS);
 
-      if (player.isHost || room.players.size === 0) {
-        this.rooms.delete(room.code);
-        return { roomClosed: true, code: room.code };
-      }
-      return { roomClosed: false, room };
+      return { room, playerId: player.id, temporarilyDisconnected: true };
     }
     return null;
+  }
+
+  _removePlayerPermanently(room, playerId) {
+    const player = room.players.get(playerId);
+    if (!player) return;
+
+    for (const charId of player.characterIds) {
+      room.characters.delete(charId);
+      room.teams.A = room.teams.A.filter((id) => id !== charId);
+      room.teams.B = room.teams.B.filter((id) => id !== charId);
+    }
+    room.players.delete(playerId);
+
+    const stillConnected = [...room.players.values()].some((p) => p.connected);
+    if (player.isHost || !stillConnected) {
+      this.rooms.delete(room.code);
+      this.onRoomClosed(room.code, "재접속하지 않아 방이 종료되었습니다.");
+    }
   }
 
   /** 한 플레이어가 여러 캐릭터를 설정할 수 있습니다 (복수 조작 지원) */

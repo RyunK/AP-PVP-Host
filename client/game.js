@@ -21,37 +21,6 @@ function showScreen(name) {
 let myPlayerId = null;
 let roomState = null;
 
-// ---------------------------------------------------------------------
-// 1단계: 접속 (방 생성 / 참가)
-// ---------------------------------------------------------------------
-
-const entryError = document.getElementById("entryError");
-
-document.getElementById("createRoomBtn").addEventListener("click", () => {
-  const name = document.getElementById("nameInput").value.trim();
-  if (!name) return (entryError.textContent = "닉네임을 입력해주세요.");
-
-  socket.emit("room:create", { name }, (res) => {
-    if (!res.ok) return (entryError.textContent = res.error);
-    myPlayerId = res.playerId;
-    roomState = res.state;
-    enterLobby();
-  });
-});
-
-document.getElementById("joinRoomBtn").addEventListener("click", () => {
-  const name = document.getElementById("nameInput").value.trim();
-  const code = document.getElementById("codeInput").value.trim().toUpperCase();
-  if (!name) return (entryError.textContent = "닉네임을 입력해주세요.");
-  if (!code) return (entryError.textContent = "방 코드를 입력해주세요.");
-
-  socket.emit("room:join", { code, profile: { name } }, (res) => {
-    if (!res.ok) return (entryError.textContent = res.error);
-    myPlayerId = res.playerId;
-    roomState = res.state;
-    enterLobby();
-  });
-});
 
 // ---------------------------------------------------------------------
 // 2단계: 대기실 (캐릭터 / 팀 설정)
