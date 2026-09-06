@@ -1,5 +1,6 @@
-import { loadIdentity } from "../js/state.js";
+import { socket } from "../js/socket.js";
 
+import { loadIdentity, clearIdentity } from "../js/state.js";
 
 const app = document.getElementById("app");
 

@@ -5,8 +5,11 @@ import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
 import { renderPlayerList } from "../js/playerList.js";
 
+import { getMyPlayerId } from "../js/state.js";
+import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
+
 let roomState = null;
-const myPlayerId = loadIdentity()?.playerId;
+const myPlayerId = getMyPlayerId();
 
 // 포지션별로 고를 수 있는 선택 스킬 목록
 const POSITION_SKILLS = {
@@ -15,13 +18,6 @@ const POSITION_SKILLS = {
   "카두케우스": ["성호", "환희", "낙화"],
 };
 
-function getMyCharacters() {
-  console.log("myPlayerId:", myPlayerId);
-  console.log("roomState.characters:", roomState?.characters);
-  const result = (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
-  console.log("필터링 결과:", result);
-  return result;
-}
 
 export function init() {
   socket.off("room:state", onRoomState); // 중복 등록 방지
@@ -43,11 +39,7 @@ export function init() {
 function onRoomState(state) {
   console.log("전체 roomState:", state);
   roomState = state;
-  // if (state.phase === "battle" || state.phase === "ended") {
-  //   renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
-  //   return;
-  // }
-  updateChatCharacterOptions(getMyCharacters());
+  updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
 }

@@ -63,17 +63,14 @@ export function mountChat(container, myCharacters = []) {
   input.addEventListener("keydown", (e) => e.key === "Enter" && send());
 }
 
-export function updateChatCharacterOptions(myCharacters = []) {
-  console.log("updateChatCharacterOptions 호출됨:", myCharacters); // ← 임시
+export function updateChatCharacterOptions(myCharacters = [], myPlayerName = "") {
   const select = document.getElementById("speakAsSelect");
-  console.log("select 요소:", select); // ← 임시
   if (!select) return;
   const currentValue = select.value;
   select.innerHTML = `
-    <option value="player">내 닉네임으로</option>
+    <option value="player">${escapeHtml(myPlayerName) || "내 닉네임"}(으)로</option>
     ${myCharacters.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}(으)로</option>`).join("")}
   `;
-  // 이전에 선택했던 값이 여전히 유효하면 유지
   if ([...select.options].some((o) => o.value === currentValue)) {
     select.value = currentValue;
   }

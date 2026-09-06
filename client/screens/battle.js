@@ -5,11 +5,18 @@ import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
 import { renderPlayerList } from "../js/playerList.js";
 
+import { getMyPlayerId } from "../js/state.js";
+import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
+
 let roomState = null;
-const myPlayerId = loadIdentity()?.playerId;
+const myPlayerId = getMyPlayerId();
 
 function getMyCharacters() {
   return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
+}
+
+function getMyPlayerName() {
+  return roomState?.players?.find((p) => p.id === myPlayerId)?.name || "";
 }
 
 export function init() {
@@ -32,7 +39,7 @@ export function init() {
 
 function onRoomState(state) {
   roomState = state;
-  updateChatCharacterOptions();
+  updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
   renderBattle();
 }
