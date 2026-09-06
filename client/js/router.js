@@ -1,3 +1,7 @@
+import { socket } from "../js/socket.js";
+
+import { loadIdentity, clearIdentity } from "../js/state.js";
+
 const app = document.getElementById("app");
 
 export async function renderScreen(screenName, params = {}) {
@@ -19,10 +23,27 @@ function getScreenFromUrl() {
   return params.get("screen") || "entry";
 }
 
-// 페이지가 열리자마자 URL의 ?screen= 값(없으면 entry)으로 화면을 그림
-renderScreen(getScreenFromUrl());
-
 // 브라우저 뒤로가기/앞으로가기 시에도 그에 맞는 화면을 다시 그림
 window.addEventListener("popstate", () => {
   renderScreen(getScreenFromUrl());
 });
+
+async function start() {
+  const identity = loadIdentity();
+
+  if (identity?.playerId) {
+    const res = await new Promise((resolve) =>
+      socket.emit("room:rejoin", { playerId: identity.playerId }, resolve)
+    );
+    if (res.ok) {
+      const phase = res.state.phase;
+      renderScreen(phase === "battle" || phase === "ended" ? "battle" : "lobby");
+      return;
+    }
+    clearIdentity();
+  }
+
+  renderScreen("entry"); // 재접속 대상이 없으면 그냥 entry로 (URL은 무시)
+}
+
+start();

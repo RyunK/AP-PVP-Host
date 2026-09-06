@@ -9,10 +9,11 @@ function randomPlayerId() {
 }
 
 class RoomManager {
-  constructor({ getMatchSettings, onRoomClosed }) {
+  constructor({ getMatchSettings, onRoomClosed, onRoomStateChanged  }) {
     this.room = null;
     this.getMatchSettings = getMatchSettings;
     this.onRoomClosed = onRoomClosed || (() => {});
+    this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
@@ -26,6 +27,30 @@ class RoomManager {
     const isHost = ![...this.room.players.values()].some((p) => p.isHost); // 아무도 없고 호스트도 없으면 내가 호스트
     return this._addPlayer(this.room, socketId, profile, { isHost });
   }
+  /**
+   * 새로고침/재접속 등으로 끊어졌던 플레이어가 같은 playerId로 돌아왔을 때,
+   * 기존 캐릭터/팀/연결 상태를 그대로 이어받게 합니다.
+   */
+  rejoinRoom(playerId, newSocketId) {
+    if (!this.room) {
+      throw new Error("방을 찾을 수 없습니다 (이미 종료되었거나 아직 생성되지 않음).");
+    }
+    const player = this.room.players.get(playerId);
+    if (!player) {
+      throw new Error("이 방에서 플레이어 정보를 찾을 수 없습니다.");
+    }
+
+    if (player.disconnectTimer) {
+      clearTimeout(player.disconnectTimer);
+      player.disconnectTimer = null;
+    }
+    player.socketId = newSocketId;
+    player.connected = true;
+    if (player.isHost) this.room.hostSocketId = newSocketId;
+
+    return { room: this.room, playerId };
+  }
+
 
   _createRoom(hostSocketId) {
     const settings = this.getMatchSettings();
@@ -37,7 +62,9 @@ class RoomManager {
       players: new Map(),
       characters: new Map(),
       teams: { A: [], B: [] },
+      teamNames: { A: "A팀", B: "B팀" },
       turn: { number: 0, pendingActions: new Map() },
+      chatHistory: [],
     };
   }
 
@@ -50,7 +77,8 @@ class RoomManager {
       isHost,
       characterIds: [],
       connected: true,        
-      disconnectTimer: null,  
+      disconnectTimer: null, 
+      ready: false,
     });
     if (isHost) room.hostSocketId = socketId;
     return { room, playerId };
@@ -89,7 +117,25 @@ class RoomManager {
     if (player.isHost || !stillConnected) {
       this.room = null;
       this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
+    } else{
+      this.onRoomStateChanged(room); // 방은 그대로고 사람이 한 명 나간 경우
     }
+  }
+
+  /**
+   * 플레이어 준비 상태 전환
+   * @param {*} playerId 
+   * @param {*} ready 
+   * @returns 
+   */
+  setReady(playerId, ready) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player) throw new Error("플레이어를 찾을 수 없습니다.");
+    if (player.isHost) throw new Error("호스트는 준비 상태가 필요 없습니다.");
+
+    player.ready = ready;
+    return this.room;
   }
 
   /** 한 플레이어가 여러 캐릭터를 설정할 수 있습니다 (복수 조작 지원) */
@@ -116,12 +162,15 @@ class RoomManager {
         id: charId,
         ownerId: playerId,
         name: def.name || `캐릭터${idx + 1}`,
+        position: def.position || "아이기스",
+        skill: def.skill  || "엄호",
         stats: {
-          hp: def.hp ?? 100,
-          maxHp: def.hp ?? 100,
-          atk: def.atk ?? 10,
-          def: def.def ?? 5,
-          power: def.power ?? 10,
+          hp: def.hp || 1,
+          hp_stat: def.hp_stat || 1,
+          power: def.power || 1,
+          dex: def.dex || 1,
+          mnd: def.mnd || 1,
+          luck: def.luck || 1,
         },
         team: null,
         alive: true,
@@ -131,6 +180,42 @@ class RoomManager {
     });
 
     return created;
+  }
+
+  deleteCharacter(requesterId, characterId) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+
+    const character = this.room.characters.get(characterId);
+
+    // console.log("character:", character); 
+    // console.log("전달받은 playerId:", requesterId); 
+    // console.log("character.ownerId:", character?.ownerId); 
+
+    if (!character) throw new Error("캐릭터를 찾을 수 없습니다.");
+    const requester = this.room.players.get(requesterId);
+    const isOwner = character.ownerId === requesterId;
+    const isHost = requester?.isHost;
+    if (!isOwner && !isHost) throw new Error("본인 캐릭터이거나 호스트만 삭제할 수 있습니다.");
+
+    this.room.characters.delete(characterId);
+    this.room.teams.A = this.room.teams.A.filter((id) => id !== characterId);
+    this.room.teams.B = this.room.teams.B.filter((id) => id !== characterId);
+
+    const owner = this.room.players.get(character.ownerId);
+    if (owner) owner.characterIds = owner.characterIds.filter((id) => id !== characterId);
+
+    return this.room;
+  }
+
+  setTeamName(playerId, team, name) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player?.isHost) throw new Error("호스트만 팀 이름을 바꿀 수 있습니다.");
+    if (!["A", "B"].includes(team)) throw new Error("잘못된 팀입니다.");
+
+    const trimmed = (name || "").trim().slice(0, 20);
+    this.room.teamNames[team] = trimmed || (team === "A" ? "A팀" : "B팀");
+    return this.room;
   }
 
   assignTeam(room, characterId, team) {
@@ -151,6 +236,11 @@ class RoomManager {
   }
 
   startBattle(room) {
+    const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
+    const allReady = nonHostPlayers.every((p) => p.ready);
+    if (!allReady) {
+      throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
+    }
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
     if (aCount === 0 || bCount === 0 || aCount !== bCount) {
@@ -229,7 +319,6 @@ class RoomManager {
 
   serializeRoom(room) {
     return {
-      // code: room.code,
       phase: room.phase,
       settings: room.settings,
       players: [...room.players.values()].map((p) => ({
@@ -237,10 +326,14 @@ class RoomManager {
         name: p.name,
         isHost: p.isHost,
         characterIds: p.characterIds,
+        connected: p.connected,
+        ready: p.ready,
       })),
       characters: [...room.characters.values()],
       teams: room.teams,
+      teamNames: room.teamNames,
       turnNumber: room.turn.number,
+      chat: room.chatHistory,
     };
   }
 
@@ -257,6 +350,43 @@ class RoomManager {
 
   getRoom(code="") {
     return this.room;
+  }
+
+  /**
+   * 메시지를 전송하는 메서드
+   * @param {*} playerId 
+   * @param {*} text 
+   * @param {*} speakAs 
+   * @returns 
+   */
+  postChatMessage(playerId, text, speakAs) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+    const player = this.room.players.get(playerId);
+    if (!player) throw new Error("플레이어를 찾을 수 없습니다.");
+
+    const trimmed = (text || "").trim();
+    if (!trimmed) throw new Error("빈 메시지는 보낼 수 없습니다.");
+
+    let displayName = player.name;
+    if (speakAs && speakAs !== "player") {
+      const character = this.room.characters.get(speakAs);
+      if (!character || character.ownerId !== playerId) {
+        throw new Error("본인 소유 캐릭터로만 말할 수 있습니다.");
+      }
+      displayName = character.name;
+    }
+
+    const message = {
+      id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      displayName,
+      text: trimmed.slice(0, 300),
+      timestamp: Date.now(),
+    };
+
+    this.room.chatHistory.push(message);
+    if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
+
+    return message;
   }
 }
 

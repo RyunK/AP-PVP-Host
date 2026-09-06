@@ -2,9 +2,22 @@
 import { socket } from "../js/socket.js";
 import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
+import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
+import { renderPlayerList } from "../js/playerList.js";
+
+import { getMyPlayerId } from "../js/state.js";
+import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 let roomState = null;
-const myPlayerId = loadIdentity()?.playerId;
+const myPlayerId = getMyPlayerId();
+
+function getMyCharacters() {
+  return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
+}
+
+function getMyPlayerName() {
+  return roomState?.players?.find((p) => p.id === myPlayerId)?.name || "";
+}
 
 export function init() {
   socket.off("room:state", onRoomState);
@@ -20,10 +33,14 @@ export function init() {
   socket.emit("room:get-state", {}, (res) => {
     if (res.ok) onRoomState(res.state);
   });
+
+  mountChat(document.getElementById("chatContainer"), getMyCharacters());
 }
 
 function onRoomState(state) {
   roomState = state;
+  updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
+  renderPlayerList(document.getElementById("playerListContainer"), state.players);
   renderBattle();
 }
 
