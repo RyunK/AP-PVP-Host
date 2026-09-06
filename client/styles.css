@@ -24,7 +24,9 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
   color: #8b92a0;
   margin-bottom: 14px;
 }
-.field input {
+.field input,
+.field select 
+{
   background: #1b1f26;
   border: 1px solid #2f3540;
   border-radius: 8px;
@@ -32,7 +34,7 @@ h2 { font-size: 16px; color: #4fd1c5; margin: 28px 0 8px; }
   color: #e8e6de;
   font-size: 15px;
 }
-.field input:focus { outline: 2px solid #4fd1c5; outline-offset: 1px; }
+.field input:focus, .field select:focus { outline: 2px solid #4fd1c5; outline-offset: 1px; }
 
 .btn {
   cursor: pointer;

@@ -6,6 +6,16 @@
     <input type="text" id="nameInput" placeholder="플레이어 이름" maxlength="12" />
   </label>
 
+  <label class="field">
+    <span>인장</span>
+    <select id="avatarType">
+      <option value="default">기본값</option>
+      <option value="color">색상</option>
+      <option value="url">이미지 링크</option>
+    </select>
+    <input type="text" id="avatarValue" placeholder="이미지 링크 혹은 #색상코드" />
+  </label>
+
   <div class="entry-actions">
     <button class="btn btn-primary" id="enterBtn">방 참가하기</button>
   </div>

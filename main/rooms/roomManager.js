@@ -31,6 +31,7 @@ class RoomManager {
   _normalizeAvatar(avatar) {
     const DEFAULT = { type: "color", value: "#8b92a0" };
     if (!avatar || typeof avatar !== "object") return DEFAULT;
+    if (avatar.type == "default" || !avatar.type || !avatar.value) return DEFAULT;
 
     if (avatar.type === "url" && typeof avatar.value === "string" && avatar.value.trim()) {
       // http(s)로 시작하는 것만 허용 (javascript: 같은 스킴 차단)
