@@ -125,6 +125,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 20px;
+  min-height: 0;
 }
 
 .chat-container h3, .player-list-container h3 {
