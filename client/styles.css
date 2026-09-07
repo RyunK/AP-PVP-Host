@@ -24,6 +24,8 @@
   --accent-text-on: #F1F1F1; /* 포인트색 배경 위에 올라가는 텍스트 */
   --danger: #e2574c;
   --danger-hover: #d1483b;
+  --secondary: #5340fa;
+  
 
   /* 폰트 */
   --font-sans: -apple-system, "Segoe UI", "Pretendard", Inter, sans-serif;

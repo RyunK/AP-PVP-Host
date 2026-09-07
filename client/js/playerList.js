@@ -12,13 +12,13 @@ export function escapeHtml(str) {
 
 
 export function renderPlayerList(container, players) {
-  container.innerHTML = players
+  const h3 = '<h3>플레이어 목록</h3>';
+  container.innerHTML = h3 + players
     .map(
       (p) => `
-      <h3>플레이어 목록</h3>
       <div class="player-chip">
         <span>${escapeHtml(p.name)}</span>
-        ${p.isHost ? '<span class="badge">호스트</span>' : renderReadyBadge(p.ready)}
+        ${p.isHost ? '<span class="badge--host">호스트</span>' : renderReadyBadge(p.ready)}
         ${!p.connected ? '<span class="badge badge--offline">연결 끊김</span>' : ""}
       </div>`
     )
