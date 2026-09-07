@@ -14,7 +14,7 @@ function escapeHtml(str) {
 function renderLog() {
   if (!logEl) return;
   logEl.innerHTML = messages
-    .map((m) => `<div><strong>${escapeHtml(m.displayName)}</strong>: ${escapeHtml(m.text)}</div>`)
+    .map((m) => `<div class="chat-message"><strong>${escapeHtml(m.displayName)}</strong>: ${escapeHtml(m.text)}</div>`)
     .join("");
   logEl.scrollTop = logEl.scrollHeight;
 }
@@ -36,6 +36,7 @@ socket.on("room:state", (state) => {
 
 export function mountChat(container, myCharacters = []) {
   container.innerHTML = `
+    <h3>채팅</h3>
     <div class="chat-log" id="chatLog"></div>
     <div class="chat-input-row">
       <select id="speakAsSelect">
@@ -43,7 +44,7 @@ export function mountChat(container, myCharacters = []) {
         ${myCharacters.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}(으)로</option>`).join("")}
       </select>
       <input type="text" id="chatInput" placeholder="메시지 입력..." maxlength="300" />
-      <button id="chatSendBtn">보내기</button>
+      <button id="chatSendBtn" class="btn btn-primary">전송</button>
     </div>
   `;
   logEl = document.getElementById("chatLog");
