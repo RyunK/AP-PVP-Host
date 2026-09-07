@@ -18,7 +18,7 @@ export function renderPlayerList(container, players) {
       (p) => `
       <div class="player-chip">
         <span>${escapeHtml(p.name)}</span>
-        ${p.isHost ? '<span class="badge--host">호스트</span>' : renderReadyBadge(p.ready)}
+        ${p.isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(p.ready)}
         ${!p.connected ? '<span class="badge badge--offline">연결 끊김</span>' : ""}
       </div>`
     )

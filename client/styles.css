@@ -89,6 +89,44 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .btn-danger { background: var(--danger); color: var(--accent-text-on); }
 .btn-danger:hover { background: var(--danger-hover); }
 
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin: 0px 5px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge--online {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.badge--offline {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger);
+}
+
+.badge--host {
+  background: color-mix(in srgb, var(--secondary) 20%, transparent);
+  color: var(--secondary);
+}
+
+.badge--ready {
+  background: var(--accent);
+  color: var(--accent-text-on);
+}
+
+.badge--waiting {
+  background: var(--bg-btn-ghost);
+  color: var(--text-muted);
+}
+
 .divider { text-align: center; color: var(--text-muted); font-size: 12px; margin: 14px 0; }
 .error { color: var(--danger); font-size: 13px; min-height: 18px; }
 .hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.6; }

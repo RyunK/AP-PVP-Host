@@ -68,8 +68,8 @@ function showMyInfo(myPlayerId, myPlayerName) {
   
   document.getElementById("myInfoLabel").innerHTML = `
   ${myPlayerName} 
-  ${isHost ? '<span class="badge">호스트</span>' : renderReadyBadge(me?.ready)}
-  ${!me?.connected ? '<span class="badge badge--offline">🔴</span>' : '<span class="badge badge--online">🟢</span>'}
+  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
+  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
   
   `;
 }
