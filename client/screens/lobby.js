@@ -340,14 +340,17 @@ function showCharacterInfo(characterId) {
       <p>포지션: ${escapeHtml(c.position || "-")} · 스킬: ${escapeHtml(c.skill || "-")}</p>
       <p>HP: ${c.stats.hp}</p>
       <p>체력(스탯) ${c.stats.hp_stat} · 민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}</p>
-
+        
+      <span class="hint">팀 이동</span>
       <div class="modal-actions">
-        <span class="hint">팀 이동:</span>
-        <button data-modal-team="A">${escapeHtml(teamAName)}</button>
-        <button data-modal-team="B">${escapeHtml(teamBName)}</button>
-        ${canDelete ? '<button id="modalDeleteBtn" class="danger">삭제</button>' : ""}
+          <button class="btn btn-primary" data-modal-team="A">${escapeHtml(teamAName)}</button>
+          <button class="btn btn-primary" data-modal-team="B">${escapeHtml(teamBName)}</button>
       </div>
-      <button id="modalCloseBtn">닫기</button>
+      <div class="modal-actions">
+          ${canDelete ? '<button id="modalDeleteBtn" class="btn btn-danger">삭제</button>' : ""}
+          <button id="modalCloseBtn" class="btn btn-ghost">닫기</button>
+      </div>
+      
     </div>
   `;
   modal.style.display = "flex";
