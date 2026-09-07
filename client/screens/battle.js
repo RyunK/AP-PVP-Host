@@ -11,14 +11,6 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 
-function getMyCharacters() {
-  return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);
-}
-
-function getMyPlayerName() {
-  return roomState?.players?.find((p) => p.id === myPlayerId)?.name || "";
-}
-
 export function init() {
   socket.off("room:state", onRoomState);
   socket.off("turn:resolved", onTurnResolved);
@@ -42,6 +34,8 @@ function onRoomState(state) {
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
   renderBattle();
+  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  
 }
 
 function onTurnResolved(payload) {
@@ -76,6 +70,18 @@ const myCharactersEl = document.getElementById("myCharacters");
 const battleLogEl = document.getElementById("battleLog");
 const turnNumberEl = document.getElementById("turnNumber");
 
+function showMyInfo(myPlayerId, myPlayerName) {
+  const me = roomState.players.find((p) => p.id === myPlayerId);
+  const isHost = me?.isHost;
+  
+  document.getElementById("myInfoLabel").innerHTML = `
+  ${myPlayerName} 
+  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
+  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
+  
+  `;
+}
+
 function renderBattle() {
   turnNumberEl.textContent = roomState.turnNumber;
   const myChars = roomState.characters.filter((c) => c.ownerId === myPlayerId);
@@ -91,7 +97,7 @@ function renderBattle() {
       }
       return `
         <div class="char-card" data-char="${c.id}">
-          <strong>${c.name}</strong> (${c.stats.hp}/${c.stats.maxHp})
+          <strong>${c.name}</strong> (${c.stats.hp}/${100 + (c.stats.hp_stat * 5)})
           <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
           <select class="action-type">
             <option value="attack">공격</option>

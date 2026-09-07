@@ -92,12 +92,13 @@ class RoomManager {
     );
     if (!player) return null;
 
+    const playerName = player.name;
     player.connected = false;
     player.disconnectTimer = setTimeout(() => {
       this._removePlayerPermanently(this.room, player.id);
     }, RECONNECT_GRACE_MS);
 
-    return { room: this.room, playerId: player.id, temporarilyDisconnected: true };
+    return { room: this.room, playerId: player.id, temporarilyDisconnected: true, playerName: playerName };
   }
 
   _removePlayerPermanently(room, playerId) {
