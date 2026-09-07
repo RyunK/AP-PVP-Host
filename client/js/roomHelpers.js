@@ -1,4 +1,3 @@
-// client/js/roomHelpers.js
 
 export function getMyCharacters(roomState, myPlayerId) {
   return (roomState?.characters || []).filter((c) => c.ownerId === myPlayerId);

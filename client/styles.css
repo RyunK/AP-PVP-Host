@@ -22,6 +22,7 @@
   --accent-hover: #647EFF;
   --accent-text-on: #F1F1F1; /* 포인트색 배경 위에 올라가는 텍스트 */
   --danger: #e2574c;
+  --danger-hover: #d1483b;
 
   /* 폰트 */
   --font-sans: -apple-system, "Segoe UI", "Pretendard", Inter, sans-serif;
@@ -83,6 +84,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .btn-ghost { background: var(--bg-btn-ghost); color: var(--text); }
 .btn-ghost:hover { background: var(--bg-btn-ghost-hover); }
 .btn-danger { background: var(--danger); color: var(--accent-text-on); }
+.btn-danger:hover { background: var(--danger-hover); }
 
 .divider { text-align: center; color: var(--text-muted); font-size: 12px; margin: 14px 0; }
 .error { color: var(--danger); font-size: 13px; min-height: 18px; }

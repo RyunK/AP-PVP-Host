@@ -62,9 +62,21 @@ function handleBoardClick(e) {
   }
 }
 
+function showMyInfo(myPlayerId, myPlayerName) {
+  const me = roomState.players.find((p) => p.id === myPlayerId);
+  const isHost = me?.isHost;
+  
+  document.getElementById("myInfoLabel").innerHTML = `
+  ${myPlayerName} 
+  ${isHost ? '<span class="badge">호스트</span>' : renderReadyBadge(me?.ready)}
+  ${!me?.connected ? '<span class="badge badge--offline">🔴</span>' : '<span class="badge badge--online">🟢</span>'}
+  
+  `;
+}
+
 function renderMyCharacterList() {
   const container = document.getElementById("myCharacterList");
-  const myChars = getMyCharacters(roomState, myPlayerId); // 지난번 만든 헬퍼 재사용
+  const myChars = getMyCharacters(roomState, myPlayerId);
 
   if (myChars.length === 0) {
     container.innerHTML = '<p class="hint">아직 등록한 캐릭터가 없습니다.</p>';
@@ -116,6 +128,8 @@ function onRoomState(state) {
   renderMyCharacterList();
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
+  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+
 }
 
 function updateReadyUI() {
@@ -234,7 +248,7 @@ function renderTeamBoard() {
         return `
         <div class="team-chip">
           <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
-          <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
+          <span class="owner-tag"> 오너 : ${escapeHtml(owner?.name || "알 수 없음")}</span>
         </div>
         `;
       })
@@ -282,7 +296,7 @@ function renderTeamBoard() {
         return `
           <div class="team-chip">
             <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
-            <span class="owner-tag">${escapeHtml(owner?.name || "알 수 없음")}</span>
+            <span class="owner-tag"> 오너 : ${escapeHtml(owner?.name || "알 수 없음")}</span>
             <span>
               <button data-char="${c.id}" data-team="A">${escapeHtml(teamAName)}</button>
               <button data-char="${c.id}" data-team="B">${escapeHtml(teamBName)}</button>
@@ -336,9 +350,9 @@ function showCharacterInfo(characterId) {
   modal.innerHTML = `
     <div class="modal-box">
       <h3>${escapeHtml(c.name)}</h3>
-      <p class="hint">소유자: ${escapeHtml(owner?.name || "알 수 없음")}</p>
+      <p class="hint">오너 : ${escapeHtml(owner?.name || "알 수 없음")}</p>
       <p>포지션: ${escapeHtml(c.position || "-")} · 스킬: ${escapeHtml(c.skill || "-")}</p>
-      <p>HP: ${c.stats.hp}</p>
+      <p>HP: ${c.stats.hp} / ${100 + (c.stats.hp_stat*5)}</p>
       <p>체력(스탯) ${c.stats.hp_stat} · 민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}</p>
         
       <span class="hint">팀 이동</span>
