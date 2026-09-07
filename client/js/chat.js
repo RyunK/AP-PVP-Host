@@ -14,27 +14,38 @@ function escapeHtml(str) {
 function renderLog() {
   if (!logEl) return;
   logEl.innerHTML = messages
-    .map((m) => `<div class="chat-message"><strong>${escapeHtml(m.displayName)}</strong>: ${escapeHtml(m.text)}</div>`)
+    .map((m) => {
+      if(m.system) {
+        return `<div class="chat-message system-message">${escapeHtml(m.text)} 
+        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+      } else if (!m.displayName) {
+        return `<div class="chat-message system-message"> 잘못된 메시지입니다. 
+        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+      } else {
+        return `<div class="chat-message"><strong>${escapeHtml(m.displayName)}</strong>: ${escapeHtml(m.text)} 
+        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+      }
+    })
     .join("");
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-// 모듈이 로드되는 순간 딱 한 번만 등록 — 어느 화면에 있든 메시지를 놓치지 않음
+// 모듈이 로드될 때 등록
 socket.on("chat:message", (msg) => {
   messages.push(msg);
-  if (messages.length > 100) messages.shift();
+  // if (messages.length > 100) messages.shift();
   renderLog();
 });
 
 // room:state에 실려오는 기록으로 최초 1회 동기화 (새로고침 후 기록 복구용)
 socket.on("room:state", (state) => {
-  if (messages.length === 0 && Array.isArray(state.chat)) {
+  if (messages.length < 1 && Array.isArray(state.chat)) {
     messages.push(...state.chat);
     renderLog();
   }
 });
 
-export function mountChat(container, myCharacters = []) {
+export function mountChat(container, myCharacters = [], newChats=[]) {
   container.innerHTML = `
     <h3>채팅</h3>
     <div class="chat-log" id="chatLog"></div>
@@ -48,6 +59,13 @@ export function mountChat(container, myCharacters = []) {
     </div>
   `;
   logEl = document.getElementById("chatLog");
+
+  if (newChats.length > 0) {
+    messages.length = 0; // 새로고침 후 기록 복구 시 기존 메시지 초기화
+    messages.push(...newChats);
+    // messages = [...newChats]; // 새로고침 후 기록 복구 시 기존 메시지 초기화
+  }
+
   renderLog();
 
   const input = document.getElementById("chatInput");

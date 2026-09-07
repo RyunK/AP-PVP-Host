@@ -25,7 +25,7 @@ export function renderPlayerList(container, players) {
     .join("");
 }
 
-function renderReadyBadge(ready) {
+export function renderReadyBadge(ready) {
   return ready
     ? '<span class="badge badge--ready">준비 완료</span>'
     : '<span class="badge badge--waiting">대기중</span>';

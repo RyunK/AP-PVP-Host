@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -38,7 +38,7 @@ export function init() {
   document.getElementById("startBattleBtn").addEventListener("click", startBattle);
   document.getElementById("readyBtn").addEventListener("click", toggleReady);
 
-  mountChat(document.getElementById("chatContainer"), getMyCharacters());
+  // mountChat(document.getElementById("chatContainer"), getMyCharacters());
 
   teamBoard.addEventListener("click", handleBoardClick);
   unassignedBoard.addEventListener("click", handleBoardClick);
@@ -121,6 +121,8 @@ function onRoomState(state) {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;
   }
+  
+  mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
 
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));
   updateReadyUI();
@@ -130,6 +132,7 @@ function onRoomState(state) {
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
+  
 }
 
 function updateReadyUI() {

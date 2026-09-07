@@ -37,6 +37,11 @@ function startServer({ port, onRoomsChanged, onLog }) {
       io.to("main").emit("room:state", roomManager.serializeRoom(room));
     }
 
+    function sendSysMessage(text) {
+      const message = roomManager.postSysMessage(text);
+      io.to("main").emit("chat:message", message);
+    };
+
     io.on("connection", (socket) => {
       onLog?.(`플레이어 연결됨: ${socket.id}`);
 
@@ -47,6 +52,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           socket.data.playerId = playerId;
           cb({ ok: true, playerId, state: roomManager.serializeRoom(room) });
           emitRoomState(room);
+          sendSysMessage(`${profile.name}님이 입장했습니다.`);
           broadcastRooms();
         } catch (err) {
           cb({ ok: false, error: err.message });
@@ -63,6 +69,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
+      
+
       socket.on("room:get-state", (_payload, cb) => {
         const room = roomManager.getRoom();
         if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });
@@ -77,6 +85,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           cb({ ok: true, state: roomManager.serializeRoom(room) });
           emitRoomState(room);
           broadcastRooms();
+          sendSysMessage(`${room.players.get(playerId).name}님이 재접속했습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -89,6 +98,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const created = roomManager.setCharacters(room, socket.data.playerId, characterDefs);
           cb({ ok: true, characterIds: created });
           emitRoomState(room);
+          sendSysMessage(`캐릭터 ${created.map((id) => room.characters.get(id).name).join(", ")}가 추가되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -99,6 +109,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const room = roomManager.deleteCharacter(socket.data.playerId, characterId);
           cb({ ok: true });
           emitRoomState(room);
+          sendSysMessage(`캐릭터 ${room.characters.get(characterId).name}가 삭제되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -111,6 +122,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           roomManager.assignTeam(room, characterId, team);
           cb({ ok: true });
           emitRoomState(room);
+          // sendSysMessage(`캐릭터 ${room.characters.get(characterId).name}의 팀이 ${team}으로 변경되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -121,6 +133,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const room = roomManager.setTeamName(socket.data.playerId, team, name);
           cb({ ok: true });
           emitRoomState(room);
+          // sendSysMessage(`팀 ${team}의 이름이 ${name}으로 변경되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -144,6 +157,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           roomManager.startBattle(room);
           cb({ ok: true });
           emitRoomState(room);
+          sendSysMessage(`전투가 시작되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -173,6 +187,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           io.to(result.code).emit("room:closed", { reason: "호스트 또는 마지막 플레이어가 나갔습니다." });
         } else if (result?.room) {
           emitRoomState(result.room);
+          sendSysMessage(`${result.playerName}님이 나갔습니다.`);
         }
         broadcastRooms();
       });

@@ -375,12 +375,13 @@ class RoomManager {
       }
       displayName = character.name;
     }
-
+    
     const message = {
       id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       displayName,
       text: trimmed.slice(0, 300),
       timestamp: Date.now(),
+      system: false,
     };
 
     this.room.chatHistory.push(message);
@@ -388,6 +389,30 @@ class RoomManager {
 
     return message;
   }
+
+  /**
+   * 시스템 메시지를 전송하는 메서드
+   * @param {*} message 
+   * @returns 
+   */
+  postSysMessage(message) {
+      if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+      const sysMessage = {
+        id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        displayName: "시스템",
+        text: message,
+        timestamp: Date.now(),
+        system: true,
+      };
+
+      this.room.chatHistory.push(sysMessage);
+      if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
+
+      return sysMessage;
+  }
 }
+
+
+
 
 module.exports = { RoomManager };
