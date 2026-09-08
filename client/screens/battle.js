@@ -91,13 +91,14 @@ function renderBattle() {
 
   myCharactersEl.innerHTML = myChars
     .map((c) => {
-      const hpPct = Math.max(0, Math.round((c.stats.hp / c.stats.maxHp) * 100));
+      const maxHp = 100 + (c.stats.hp_stat * 5);
+      const hpPct = Math.max(0, Math.round((c.stats.hp / maxHp) * 100));
       if (!c.alive) {
         return `<div class="char-card"><strong>${c.name}</strong> — 전투불능</div>`;
       }
       return `
         <div class="char-card" data-char="${c.id}">
-          <strong>${c.name}</strong> (${c.stats.hp}/${100 + (c.stats.hp_stat * 5)})
+          <strong>${c.name}</strong> (${c.stats.hp}/${maxHp})
           <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
           <select class="action-type">
             <option value="attack">공격</option>
