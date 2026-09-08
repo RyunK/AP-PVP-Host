@@ -7,15 +7,19 @@ const { RoomManager } = require("./rooms/roomManager");
 const { reload: reloadFormulaCache } = require("./engine/formulaLoader");
 const store = require("./store");
 
+
+
 function startServer({ port, onRoomsChanged, onLog }) {
   return new Promise((resolve) => {
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, { cors: { origin: "*" } });
-
     // 플레이어는 이 서버가 내려주는 client/ 정적 페이지를 브라우저로 열기만 하면 됩니다.
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
+
+    // app.use(express.static(path.join(__dirname, 'public')));
+    // app.use('/build', express.static(path.join(__dirname, '..',  'build')));
 
     let currentSettings = store.get("matchSettings");
     const roomManager = new RoomManager({

@@ -94,6 +94,11 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .hint { color: var(--text-muted); font-size: 12.5px; line-height: 1.6; }
 
 
+.screen-entry{
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 .lobby-layout {
   display: flex;
   gap: 24px;
