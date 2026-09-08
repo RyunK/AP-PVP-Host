@@ -13,6 +13,7 @@ const myPlayerId = getMyPlayerId();
 
 const teamBoard = document.getElementById("teamBoard");
 const unassignedBoard = document.getElementById("unassignedBoard");
+const characterAlert = document.getElementById("characterAlert");
 
 // 포지션별로 고를 수 있는 선택 스킬 목록
 const POSITION_SKILLS = {
@@ -176,26 +177,47 @@ function addCharacterRow() {
     <label for="c-hp">현재체력</label>
     <input type="number" placeholder="현재체력" class="c-hp" />
     <label for="c-hp-stat">체력(스탯)</label>
-    <input type="number" placeholder="체력(스탯)" class="c-hp-stat"/>
+    <input type="number" placeholder="체력(스탯)" class="c-hp-stat" value="0" />
     <label for="c-power">이능력</label>
-    <input type="number" placeholder="이능력" class="c-power" />
+    <input type="number" placeholder="이능력" class="c-power" value="1" />
     <label for="c-dex">민첩</label>
-    <input type="number" placeholder="민첩" class="c-dex" />
+    <input type="number" placeholder="민첩" class="c-dex" value="1" />
     <label for="c-mnd">정신력</label>
-    <input type="number" placeholder="정신력" class="c-mnd" />
+    <input type="number" placeholder="정신력" class="c-mnd" value="1" />
     <label for="c-luck">행운</label>
-    <input type="number" placeholder="행운" class="c-luck" />
+    <input type="number" placeholder="행운" class="c-luck" value="1" />
+    <label class="hint stat-summary" style="grid-column: 3 / -1;">최대체력: 100 | 스탯합: 0</label>
     <button type="button" class="remove-row-btn">✕</button>
   `;
 
   row.querySelector(".remove-row-btn").addEventListener("click", () => {
       row.remove();
-    });
-    characterForm.appendChild(row);
+  });
+  characterForm.appendChild(row);
 
-    refreshSkillSelect(row); // 기본 선택된 포지션(아이기스)에 맞춰 스킬 목록 초기 세팅
-    row.querySelector(".c-position").addEventListener("change", () => refreshSkillSelect(row));
-  }
+  refreshSkillSelect(row); // 기본 선택된 포지션(아이기스)에 맞춰 스킬 목록 초기 세팅
+  row.querySelector(".c-position").addEventListener("change", () => refreshSkillSelect(row));
+
+  row.querySelectorAll('input[type="number"]').forEach((input) => {
+    input.addEventListener("input", () => updateStatSummary(row));
+  });
+  updateStatSummary(row); // 처음 만들어졌을 때(빈 값 기준) 한 번 표시
+}
+
+function updateStatSummary(row) {
+  const getVal = (selector) => Number(row.querySelector(selector).value) || 0;
+
+  const hpStat = getVal(".c-hp-stat");
+  const power = getVal(".c-power");
+  const dex = getVal(".c-dex");
+  const mnd = getVal(".c-mnd");
+  const luck = getVal(".c-luck");
+
+  const maxHp = 100 + hpStat * 5;
+  const statSum = hpStat + power + dex + mnd + luck;
+
+  row.querySelector(".stat-summary").textContent = `최대체력: ${maxHp} | 스탯합: ${statSum}`;
+}
 
 function buildSkillOptions(position) {
   const skills = POSITION_SKILLS[position] || [];
@@ -209,12 +231,33 @@ function refreshSkillSelect(row) {
 }
 
 function saveCharacters(){
+  const rows = [...characterForm.querySelectorAll(".char-row")];
+
+  for (const row of rows) {
+    if (!row.querySelector(".c-name").value.trim()) {
+      characterAlert.textContent = "캐릭터 이름을 입력해주세요.";
+      return;
+    }
+    if (!row.querySelector(".c-position").value.trim()) {
+      characterAlert.textContent = "캐릭터 포지션을 선택해주세요.";
+      return;
+    }
+    if (!row.querySelector(".c-skill").value.trim()) {
+      characterAlert.textContent = "캐릭터 스킬을 선택해주세요.";
+      return;
+    }
+    if (!row.querySelector(".c-hp").value.trim()) {
+      characterAlert.textContent = "캐릭터 현재체력을 입력해주세요.";
+      return;
+    }
+  }
+
   const defs = [...characterForm.querySelectorAll(".char-row")].map((row) => ({
     name: row.querySelector(".c-name").value.trim() || "이름없음",
     position: row.querySelector(".c-position").value.trim() || "아이기스",
     skill: row.querySelector(".c-skill").value.trim()  || "엄호",
     hp: Number(row.querySelector(".c-hp").value) || 1,
-    hp_stat: Number(row.querySelector(".c-hp-stat").value) || 1,
+    hp_stat: Number(row.querySelector(".c-hp-stat").value) || 0,
     power: Number(row.querySelector(".c-power").value) || 1,
     dex: Number(row.querySelector(".c-dex").value) || 1,
     mnd: Number(row.querySelector(".c-mnd").value) || 1,
@@ -222,8 +265,10 @@ function saveCharacters(){
   }));
 
   socket.emit("characters:set", defs, (res) => {
-    if (!res.ok) return (lobbyStatus.textContent = res.error);
-    lobbyStatus.textContent = "캐릭터가 저장되었습니다. 아래에서 팀을 배정하세요.";
+    if (!res.ok) return (characterAlert.textContent = res.error);
+    characterAlert.classList.remove("warning");
+    characterAlert.classList.add("alert");
+    characterAlert.textContent = "캐릭터가 저장되었습니다. 아래에서 팀을 배정하세요.";
     renderTeamBoard();
   });
 
