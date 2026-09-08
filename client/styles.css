@@ -426,7 +426,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 }
 .char-card .hp-bar {
   height: 6px;
-  background: var(--border);
+  background: color-mix(in srgb, var(--secondary) 20%, transparent);
   border-radius: 4px;
   overflow: hidden;
   margin: 8px 0 10px;
