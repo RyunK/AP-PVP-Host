@@ -7,8 +7,21 @@
         <strong id="myInfoLabel"></strong>
       </div>
 
-      <h2>전투 중 - 라운드 <span id="turnNumber">1</span> | <span id="currentTurn">A팀</span>의 순서 | <span id="turnTimer">00:00</span></h2>
+      <div class="battle-header">
+        <h2>전투 중 - 라운드 <span id="turnNumber">1</span> | <span id="currentTurn">A팀</span>의 순서 | <span id="turnTimer">00:00</span></h2>
+        <span id="phaseLabel"></span>
+      </div>
       <div id="myCharacters" class="my-characters"></div>
+      <h2>전체 현황</h2>
+      <div id="rosterBoard"></div> <!-- 요구사항 1: 모든 캐릭터 스탯/HP -->
+
+      <h2>우리 팀 행동</h2>
+      <div id="myTeamActions"></div> <!-- 요구사항 2: 실시간 draft + confirmed -->
+
+      <h2>상대 팀 행동</h2>
+      <div id="enemyTeamActions"></div> <!-- 요구사항 3: confirmed만 -->
+
+      <div id="myActionPanel"></div> <!-- 내 캐릭터 액션 선택 UI -->
       <div id="battleLog" class="battle-log"></div>
     </div>
 

@@ -82,6 +82,74 @@ function showMyInfo(myPlayerId, myPlayerName) {
   `;
 }
 
+let liveDrafts = new Map(); // characterId -> {skillName, targetId} (team:${team} room에서 실시간 수신)
+
+export function init() {
+  socket.off("battle:state", onBattleState);
+  socket.off("battle:draft", onBattleDraft);
+  socket.off("round:resolved", onRoundResolved);
+
+  socket.on("battle:state", onBattleState);
+  socket.on("battle:draft", onBattleDraft);
+  socket.on("round:resolved", onRoundResolved);
+
+  socket.emit("room:get-state", {}, (res) => {
+    if (res.ok) onBattleState(res.state);
+  });
+}
+
+function onBattleState(state) {
+  roomState = state;
+  renderRoster();       // 요구사항 1
+  renderMyTeamActions(); // 요구사항 2
+  renderEnemyActions();  // 요구사항 3
+  renderMyActionPanel();
+}
+
+function onBattleDraft({ characterId, skillName, targetId }) {
+  liveDrafts.set(characterId, { skillName, targetId });
+  renderMyTeamActions(); // 실시간 갱신
+}
+
+function onRoundResolved(roundLog) {
+  liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+  // TODO: roundLog.events가 나중에 채워지면 여기서 battleLog에 출력
+}
+
+
+function renderMyTeamActions() {
+  const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
+  const teamChars = roomState.characters.filter((c) => c.team === myTeam);
+  const confirmedMap = new Map(roomState.turn?.confirmed || []);
+
+  document.getElementById("myTeamActions").innerHTML = teamChars
+    .map((c) => {
+      const confirmed = confirmedMap.get(c.id);
+      const draft = liveDrafts.get(c.id);
+      const status = confirmed
+        ? `확정: ${confirmed.skillName}`
+        : draft
+        ? `(선언 중) ${draft.skillName}`
+        : "대기 중";
+      return `<div>${escapeHtml(c.name)} - ${escapeHtml(status)}</div>`;
+    })
+    .join("");
+}
+
+function renderEnemyActions() {
+  const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
+  const enemyTeam = myTeam === "A" ? "B" : "A";
+  const enemyChars = roomState.characters.filter((c) => c.team === enemyTeam);
+  const confirmedMap = new Map(roomState.turn?.confirmed || []);
+
+  document.getElementById("enemyTeamActions").innerHTML = enemyChars
+    .map((c) => {
+      const confirmed = confirmedMap.get(c.id);
+      return `<div>${escapeHtml(c.name)} - ${confirmed ? `확정: ${escapeHtml(confirmed.skillName)}` : "미확정"}</div>`;
+    })
+    .join("");
+}
+
 function renderBattle() {
   turnNumberEl.textContent = roomState.turnNumber;
   const myChars = roomState.characters.filter((c) => c.ownerId === myPlayerId);

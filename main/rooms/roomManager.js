@@ -3,6 +3,7 @@
 const crypto = require("crypto");
 const RECONNECT_GRACE_MS = 30_000; // 30초
 const { resolveSkillAction } = require("../engine/damageCalc");
+const { BattleManager } = require("./battleManager");
 
 function randomPlayerId() {
   return `p_${crypto.randomBytes(6).toString("hex")}`;
@@ -11,6 +12,7 @@ function randomPlayerId() {
 class RoomManager {
   constructor({ getMatchSettings, onRoomClosed, onRoomStateChanged  }) {
     this.room = null;
+    this.battle = null;
     this.getMatchSettings = getMatchSettings;
     this.onRoomClosed = onRoomClosed || (() => {});
     this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
@@ -239,83 +241,31 @@ class RoomManager {
   startBattle(room) {
     const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
     const allReady = nonHostPlayers.every((p) => p.ready);
-    if (!allReady) {
-      throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
-    }
+    if (!allReady) throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
+
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
     if (aCount === 0 || bCount === 0 || aCount !== bCount) {
-      throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다 (예: 3:3, 2:2, 1:1).");
+      throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다.");
     }
+
     room.phase = "battle";
-    room.turn = { number: 1, pendingActions: new Map() };
+    this.battle = new BattleManager(room);
+    this.battle.start();
   }
 
-  /** 액션을 큐에 넣고, 생존한 모든 캐릭터의 액션이 모이면 턴을 계산합니다 */
-  submitAction(room, characterId, action) {
-    if (room.phase !== "battle") throw new Error("전투 중이 아닙니다.");
-    const actor = room.characters.get(characterId);
-    if (!actor || !actor.alive) throw new Error("행동할 수 없는 캐릭터입니다.");
-
-    room.turn.pendingActions.set(characterId, action);
-
-    const aliveCharIds = [...room.characters.values()]
-      .filter((c) => c.alive)
-      .map((c) => c.id);
-    const allSubmitted = aliveCharIds.every((id) => room.turn.pendingActions.has(id));
-
-    if (!allSubmitted) {
-      return { resolved: false, waitingFor: aliveCharIds.filter((id) => !room.turn.pendingActions.has(id)) };
-    }
-
-    const turnResult = this._resolveTurn(room);
-    return { resolved: true, ...turnResult };
+  draftAction(playerId, characterId, skillName, targetId) {
+    if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
+    return this.battle.draftAction(playerId, characterId, skillName, targetId);
   }
 
-  _resolveTurn(room) {
-    const events = [];
-    for (const [characterId, action] of room.turn.pendingActions.entries()) {
-      const actor = room.characters.get(characterId);
-      if (!actor || !actor.alive) continue;
-      const target = action.targetId ? room.characters.get(action.targetId) : null;
+  confirmAction(playerId, characterId, skillName, targetId) {
+    if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
+    return this.battle.confirmAction(playerId, characterId, skillName, targetId);
+  }
 
-      // action은 이제 { skillName, targetId } 형태입니다 (예: skillName: "엄호").
-      // 실제 주사위/피해 계산 공식은 아직 미구현(TODO)이라, 지금은 에러 없이
-      // "todo" 이벤트만 기록하고 다음 턴으로 넘어갑니다. HP는 아직 변하지 않습니다.
-      let result;
-      try {
-        result = resolveSkillAction({
-          actorStats: actor.stats,
-          targetStats: target ? target.stats : {},
-          skillName: action.skillName,
-        });
-      } catch (err) {
-        result = { type: "error", message: err.message };
-      }
-
-      if (result.type === "damage" && target) {
-        target.stats.hp = Math.max(0, target.stats.hp - result.amount);
-        if (target.stats.hp === 0) target.alive = false;
-      }
-      if (result.type === "heal" && target) {
-        target.stats.hp = Math.min(target.stats.maxHp, target.stats.hp + result.amount);
-      }
-
-      events.push({ actorId: characterId, targetId: action.targetId, ...result });
-    }
-
-    const aWiped = room.teams.A.every((id) => !room.characters.get(id)?.alive);
-    const bWiped = room.teams.B.every((id) => !room.characters.get(id)?.alive);
-
-    room.turn = { number: room.turn.number + 1, pendingActions: new Map() };
-
-    let winner = null;
-    if (aWiped && !bWiped) winner = "B";
-    if (bWiped && !aWiped) winner = "A";
-    if (aWiped && bWiped) winner = "draw";
-    if (winner) room.phase = "ended";
-
-    return { events, winner, nextTurn: room.turn.number };
+  getPlayerTeams(playerId) {
+    return this.battle ? this.battle.getPlayerTeams(playerId) : [];
   }
 
   serializeRoom(room) {
@@ -334,6 +284,7 @@ class RoomManager {
       teams: room.teams,
       teamNames: room.teamNames,
       turnNumber: room.turn.number,
+      turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
     };
   }

@@ -46,6 +46,18 @@ function startServer({ port, onRoomsChanged, onLog }) {
       io.to("main").emit("chat:message", message);
     };
 
+    function syncPlayerTeamRooms(playerId) {
+      const room = roomManager.getRoom();
+      if (!room) return;
+      const player = room.players.get(playerId);
+      const socket = io.sockets.sockets.get(player?.socketId);
+      if (!socket) return;
+      const myTeams = roomManager.getPlayerTeams(playerId);
+      ["A", "B"].forEach((t) => {
+        myTeams.includes(t) ? socket.join(`team:${t}`) : socket.leave(`team:${t}`);
+      });
+    }
+
     io.on("connection", (socket) => {
       onLog?.(`플레이어 연결됨: ${socket.id}`);
 
@@ -153,31 +165,23 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("battle:start", (_payload, cb) => {
+      socket.on("action:draft", ({ characterId, skillName, targetId }, cb) => {
         try {
-          const room = roomManager.getRoom();
-          if (!room) throw new Error("방을 찾을 수 없습니다.");
-          if (room.hostSocketId !== socket.id) throw new Error("호스트만 전투를 시작할 수 있습니다.");
-          roomManager.startBattle(room);
+          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId);
           cb({ ok: true });
-          emitRoomState(room);
-          sendSysMessage(`전투가 시작되었습니다.`);
+          io.to(`team:${team}`).emit("battle:draft", { characterId, skillName, targetId });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
       });
 
-      socket.on("action:submit", ({ characterId, action }, cb) => {
+      socket.on("action:confirm", ({ characterId, skillName, targetId }, cb) => {
         try {
-          const room = roomManager.getRoom();
-          if (!room) throw new Error("방을 찾을 수 없습니다.");
-          const result = roomManager.submitAction(room, characterId, action);
-          cb({ ok: true, waiting: !result.resolved });
-          if (result.resolved) {
-            io.to("main").emit("turn:resolved", result);
-            emitRoomState(room);
-          } else {
-            io.to("main").emit("turn:waiting", { waitingFor: result.waitingFor });
+          const result = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId);
+          cb({ ok: true });
+          io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
+          if (result.roundComplete) {
+            io.to("main").emit("round:resolved", result.roundLog);
           }
         } catch (err) {
           cb({ ok: false, error: err.message });
