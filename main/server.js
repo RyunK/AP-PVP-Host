@@ -48,7 +48,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function sendBattleMessage(text) {
       const message = roomManager.postBattleMessage(text);
-      io.to(roomCode).emit("chat:message", message);
+      io.to("main").emit("chat:message", message);
     }
 
     function syncPlayerTeamRooms(playerId) {
@@ -198,15 +198,23 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("action:confirm", ({ characterId, skillName, targetId, value }, cb) => {
         try {
-          const result = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
+          const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
           cb({ ok: true });
+          const firstTeam = result.roundLog?.firstTeam;
+          const secondTeam = firstTeam == "A"? "B" : "A";
 
+          let skillLabel = skillName;
+          if(skillName == "침식") skillLabel += `(${value})`
 
           io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
-          sendBattleMessage(`캐릭터 ${roomManager.getRoom().characters.get(characterId).name}의 행동이 확정되었습니다.`);
+          sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
+
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
-            
+            sendBattleMessage(`${secondTeam} 선언 확인. 정산을 시작합니다.`);
+          } else if (result.phaseComplete){
+            sendBattleMessage(`${firstTeam} 선언 확인. 후공 페이즈를 개시합니다.`);
+            sendBattleMessage(`${secondTeam}, 선언하십시오.`);
           }
         } catch (err) {
           cb({ ok: false, error: err.message });

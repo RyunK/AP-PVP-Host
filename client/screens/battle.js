@@ -165,6 +165,8 @@ function renderRoster() {
               <span class="hint">${c.stats.hp}/${maxHp}</span>
             </td>
             <td>${c.stats.hp_stat}</td>
+            <td>${c.position}</td>
+            <td>${c.skill}</td>
             <td>${c.stats.dex}</td>
             <td>${c.stats.mnd}</td>
             <td>${c.stats.luck}</td>
@@ -181,6 +183,8 @@ function renderRoster() {
           <tr>
             <th>이름</th>
             <th>HP</th>
+            <th>포지션</th>
+            <th>선택스킬</th>
             <th>체력</th>
             <th>민첩</th>
             <th>정신력</th>

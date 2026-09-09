@@ -19,18 +19,26 @@ class BattleManager {
 
     const dexA = maxDex("A");
     const dexB = maxDex("B");
-    if (dexA !== dexB) return dexA > dexB ? "A" : "B";
+    if (dexA !== dexB) return { team: (dexA > dexB ? "A" : "B")};
 
     let rollA, rollB;
     do {
       rollA = 1 + Math.floor(Math.random() * 100);
       rollB = 1 + Math.floor(Math.random() * 100);
     } while (rollA === rollB);
-    return rollA > rollB ? "A" : "B";
+    return {team: (rollA > rollB ? "A" : "B"), rollA, rollB};
   }
 
   _startRound(prevFirstTeam) {
-    const firstTeam = prevFirstTeam ? (prevFirstTeam === "A" ? "B" : "A") : this._decideFirstTeamByDex();
+    let decidedFirstTeam
+    let firstTeam
+
+    if(!prevFirstTeam){
+      decidedFirstTeam = this._decideFirstTeamByDex();
+      firstTeam = prevFirstTeam ? (prevFirstTeam === "A" ? "B" : "A") : decidedFirstTeam.team;
+    }else{
+      firstTeam =  (prevFirstTeam === "A" ? "B" : "A");
+    }
 
     return {
       round: (this.room.turn?.round ?? 0) + 1,
@@ -41,6 +49,7 @@ class BattleManager {
       draft: new Map(),
       vanguardResult: null,
       rearguardResult: null,
+      decidedFirstTeam,
     };
   }
 
