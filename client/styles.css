@@ -83,11 +83,11 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   margin-bottom: 10px;
 }
 .btn-primary { background: var(--accent); color: var(--accent-text-on); }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:not(:disabled):hover { background: var(--accent-hover); }
 .btn-ghost { background: var(--bg-btn-ghost); color: var(--text); }
-.btn-ghost:hover { background: var(--bg-btn-ghost-hover); }
+.btn-ghost:not(:disabled):hover { background: var(--bg-btn-ghost-hover); }
 .btn-danger { background: var(--danger); color: var(--accent-text-on); }
-.btn-danger:hover { background: var(--danger-hover); }
+.btn-danger:not(:disabled):hover { background: var(--danger-hover); }
 
 
 .badge {
