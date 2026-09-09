@@ -9,6 +9,7 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
+let orderChecked = false;
 
 export function init() {
   socket.off("room:state", onRoomState);
@@ -49,6 +50,82 @@ function onBattleState(state) {
   // 캐릭터들 스탯 상황
   renderRoster();
 
+  // 1라운드 지금 막 시작했다면 순서 확인
+  renderOrderCheck()
+}
+
+const ORDER_CHECK_DURATION_MS = 10_000;
+let orderCheckIntervalId = null;
+
+function renderOrderCheck() {
+  if (orderChecked) return;
+  if (
+    !roomState ||
+    roomState.turn.phase != "orderCheck" ||
+    roomState.turn.round > 1 ||
+    roomState.turn.decidedFirstTeam.length <= 0
+  ) return;
+
+  orderChecked = true; // 다시 안 그리게 잠금 (재렌더링 시 모달이 또 뜨는 것 방지)
+
+  const modal = document.querySelector(".alert-modal");
+  const dexA = maxDex("A");
+  const dexB = maxDex("B");
+  const isTie = dexA === dexB;
+
+  const teamAName = roomState.teamNames?.A || "A팀";
+  const teamBName = roomState.teamNames?.B || "B팀";
+  const firstTeamName = roomState.teamNames?.[roomState.turn.firstTeam] || roomState.turn.firstTeam;
+
+  const diceRow = isTie
+    ? `
+      <p class="hint">1d100 결과</p>
+      <p>${escapeHtml(teamAName)}: ${roomState.turn.decidedFirstTeam[0]} · ${escapeHtml(teamBName)}: ${roomState.turn.decidedFirstTeam[1]}</p>`
+    : "";
+
+  modal.innerHTML = `
+    <div class="alert-modal-box">
+      <h2>선공 판정</h2>
+      <p>${escapeHtml(teamAName)} 최고 민첩: ${dexA} · ${escapeHtml(teamBName)} 최고 민첩: ${dexB}</p>
+      ${diceRow}
+      <p class="order-result"><strong>${escapeHtml(firstTeamName)}</strong>이(가) 선공합니다.</p>
+      <p class="hint" id="orderCheckCountdown"></p>
+    </div>
+  `;
+  modal.style.display = "flex";
+
+  startOrderCheckCountdown();
+}
+
+function maxDex(team) {
+  const chars = roomState.characters.filter((c) => c.team === team && c.alive);
+  return Math.max(0, ...chars.map((c) => c.stats.dex));
+}
+
+function startOrderCheckCountdown() {
+  const countdownEl = document.getElementById("orderCheckCountdown");
+  const startTime = roomState.turn.startTime;
+
+  function tick() {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, ORDER_CHECK_DURATION_MS - elapsed);
+    const secondsLeft = Math.ceil(remaining / 1000);
+
+    countdownEl.textContent = `${secondsLeft}초 뒤 전투를 시작합니다...`;
+
+    if (remaining <= 0) {
+      clearInterval(orderCheckIntervalId);
+      orderCheckIntervalId = null;
+      document.querySelector(".alert-modal").style.display = "none";
+
+      socket.emit("orderCheck:ended", {}, (res) => {
+        if (!res.ok) battleStatus.textContent = res.error;
+      });
+    }
+  }
+
+  tick(); // 첫 화면에 바로 반영 (1초 기다리지 않고)
+  orderCheckIntervalId = setInterval(tick, 1000);
 }
 
 function onTurnResolved(payload) {
@@ -205,6 +282,19 @@ function renderBattle() {
   turnNumberEl.textContent = turn?.round ?? 0;
   let nowTurnTeam = turn?.actingTeam ?? "-";
   nowTurnEl.textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
+  switch(turn?.phase){
+    case "vanguard": 
+      phaseLabelEl.textContent = "선공";
+      return;
+    case "rearguard": 
+      phaseLabelEl.textContent = "후공";
+      return;
+    case "calculating": 
+      phaseLabelEl.textContent = "정산";
+      return;
+    default:
+      phaseLabelEl.textContent = "-";
+  }
   phaseLabelEl.textContent = turn?.phase === "vanguard" ? "선공" : turn?.phase === "rearguard" ? "후공" : "-";
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const myTeams = myCharacters.map((c) => c.team);

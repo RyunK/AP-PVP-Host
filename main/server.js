@@ -178,9 +178,19 @@ function startServer({ port, onRoomsChanged, onLog }) {
           roomManager.startBattle(room);
           cb({ ok: true });
           emitRoomState(room);
-          // sendSysMessage(`전투가 시작되었습니다.`);
           sendBattleMessage("SYSTEM LOADING...");
           // sendBattleMessage("전투를 시작합니다.");
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
+      socket.on("orderCheck:ended", ({}, cb) => {
+        try {
+          roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId, value);
+          cb({ ok: true });
+          emitRoomState(room);
+          // io.to(`main`).emit("battle:draft", { characterId, skillName, targetId, value });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }

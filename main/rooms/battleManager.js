@@ -8,10 +8,17 @@ class BattleManager {
     this.room = room; // roomManager가 들고 있는 그 room 객체를 그대로 참조 (복사 아님)
   }
 
+  setTimestamp(){
+    this.room.turn.startTime = new Date().getTime();
+  }
+
   start() {
     this.room.turn = this._startRound(null);
+    this.setTimestamp();
     return this.room.turn;
   }
+
+  
 
   _decideFirstTeamByDex() {
     const maxDex = (team) =>
@@ -44,12 +51,14 @@ class BattleManager {
       round: (this.room.turn?.round ?? 0) + 1,
       firstTeam,
       actingTeam: firstTeam,
-      phase: "vanguard",
+      // phase: "vanguard",
+      phase: "orderCheck",
       phaseActions: new Map(),
       draft: new Map(),
       vanguardResult: null,
       rearguardResult: null,
       decidedFirstTeam,
+      startTime:null,
     };
   }
 
@@ -120,6 +129,11 @@ class BattleManager {
     return [...teams];
   }
 
+  endOrderCheck(){
+    this.turn.phase = "vanguard";
+    this.startTime();
+  }
+
   /** roomManager.serializeRoom이 room.turn을 공개용으로 변환할 때 씀 */
   serializeTurn() {
     const turn = this.room.turn;
@@ -130,6 +144,8 @@ class BattleManager {
       actingTeam: turn.actingTeam,
       phase: turn.phase,
       confirmed: [...turn.phaseActions.entries()],
+      decidedFirstTeam : [turn.decidedFirstTeam?.rollA, turn.decidedFirstTeam?.rollB],
+      startTime: turn.startTime,
     };
   }
 }

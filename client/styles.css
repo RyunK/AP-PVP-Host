@@ -527,3 +527,22 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 /* .roster-name-cell .char-name:hover { color: var(--text); text-decoration: none; } */
 .roster-hp-cell { min-width: 80px; }
 .roster-hp-cell .hp-bar { margin-bottom: 4px; }
+
+.alert-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  text-align: center;
+}
+.alert-modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 40px;
+  min-width: 320px;
+}
+.order-result { font-size: 18px; margin: 16px 0; }

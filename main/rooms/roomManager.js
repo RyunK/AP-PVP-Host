@@ -254,6 +254,10 @@ class RoomManager {
     this.battle.start();
   }
 
+  endOrderCheck(){
+    this.battle.endOrderCheck();
+  }
+
   draftAction(playerId, characterId, skillName, targetId, value) {
     if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
     return this.battle.draftAction(playerId, characterId, skillName, targetId, value);
