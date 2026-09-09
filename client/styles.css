@@ -441,16 +441,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   gap: 15px;
 }
 
-.char-card .hp-bar {
-  height: 8px;
-  background: color-mix(in srgb, var(--secondary) 20%, transparent);
-  border-radius: 4px;
-  overflow: hidden;
-  /* margin: 8px 0 10px; */
-  width: 100%;
-  max-width: 200px;
-}
-.char-card .hp-fill { height: 100%; background: var(--accent); }
+
 .char-card select, .char-card input {
   width: 100%;
   margin-bottom: 0;
@@ -484,16 +475,48 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 }
 
 .roster-team { margin-bottom: 16px; }
-.roster-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+
+#rosterBoard h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--text-muted);
 }
-.roster-card.is-dead { opacity: 0.5; }
-.roster-card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
+
+.hp-bar {
+  height: 6px;
+  background: color-mix(in srgb, var(--secondary) 20%, transparent);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: auto;
+  /* width: 100%; */
+  width: 80px;
 }
+.hp-fill { height: 100%; background: var(--accent); }
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 13px;
+  text-align: center;
+}
+.roster-table th {
+  /* text-align: left; */
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 11.5px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.roster-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.roster-table tr.is-dead { opacity: 0.5; }
+
+/* .roster-name-cell { display: flex; align-items: center; gap: 2px; } */
+.roster-name-cell .char-name { text-decoration: none; cursor: default;  pointer-events: none;}
+/* .roster-name-cell .char-name:hover { color: var(--text); text-decoration: none; } */
+.roster-hp-cell { min-width: 80px; }
+.roster-hp-cell .hp-bar { margin-bottom: 4px; }

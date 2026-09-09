@@ -1,4 +1,3 @@
-// client/screens/battle.js
 import { socket } from "../js/socket.js";
 import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
@@ -49,10 +48,7 @@ function onBattleState(state) {
 
   // 캐릭터들 스탯 상황
   renderRoster();
-  
-  // 선언 상황 확인
-  renderMyTeamActions();
-  renderEnemyActions();
+
 }
 
 function onTurnResolved(payload) {
@@ -141,40 +137,6 @@ function onRoundResolved(roundLog) {
 }
 
 
-function renderMyTeamActions() {
-  // const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
-  const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
-  const myTeams = myCharacters.map((c) => c.team);
-  const teamChars = roomState.characters.filter((c) => myTeams.includes(c.team));
-  const confirmedMap = new Map(roomState.turn?.confirmed || []);
-
-  document.getElementById("myTeamActions").innerHTML = teamChars
-    .map((c) => {
-      const confirmed = confirmedMap.get(c.id);
-      const draft = liveDrafts.get(c.id);
-      const status = confirmed
-        ? `확정: ${confirmed.skillName}`
-        : draft
-        ? `(선언 중) ${draft.skillName}`
-        : "대기 중";
-      return `<div>${escapeHtml(c.name)} - ${escapeHtml(status)}</div>`;
-    })
-    .join("");
-}
-
-function renderEnemyActions() {
-  const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
-  const enemyTeam = myTeam === "A" ? "B" : "A";
-  const enemyChars = roomState.characters.filter((c) => c.team === enemyTeam);
-  const confirmedMap = new Map(roomState.turn?.confirmed || []);
-
-  document.getElementById("enemyTeamActions").innerHTML = enemyChars
-    .map((c) => {
-      const confirmed = confirmedMap.get(c.id);
-      return `<div>${escapeHtml(c.name)} - ${confirmed ? `확정: ${escapeHtml(confirmed.skillName)}` : "미확정"}</div>`;
-    })
-    .join("");
-}
 
 /**
  * 캐릭터 정보 렌더링
@@ -184,31 +146,54 @@ function renderRoster() {
   const teamAName = roomState.teamNames?.A || "A팀";
   const teamBName = roomState.teamNames?.B || "B팀";
 
-  const renderTeamRoster = (team, teamName) => {
+  const renderTeamTable = (team, teamName) => {
     const chars = roomState.characters.filter((c) => c.team === team);
-    const cards = chars
+
+    const rows = chars
       .map((c) => {
-        const hpPct = Math.max(0, Math.round((c.stats.hp / c.stats.maxHp) * 100));
+        const maxHp = 100 + c.stats.hp_stat * 5;
+        const hpPct = Math.max(0, Math.round((c.stats.hp / maxHp) * 100));
         const owner = roomState.players.find((p) => p.id === c.ownerId);
         return `
-          <div class="roster-card ${c.alive ? "" : "is-dead"}">
-            <div class="roster-card-header">
+          <tr class="${c.alive ? "" : "is-dead"}">
+            <td class="roster-name-cell">
               <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
               <span class="owner-tag">${escapeHtml(owner?.name || "")}</span>
-            </div>
-            <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
-            <div class="hint">HP ${c.stats.hp}/${c.stats.maxHp}</div>
-            <div class="hint">
-              민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}
-            </div>
-            ${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}
-          </div>`;
+            </td>
+            <td class="roster-hp-cell">
+              <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
+              <span class="hint">${c.stats.hp}/${maxHp}</span>
+            </td>
+            <td>${c.stats.hp_stat}</td>
+            <td>${c.stats.dex}</td>
+            <td>${c.stats.mnd}</td>
+            <td>${c.stats.luck}</td>
+            <td>${c.stats.power}</td>
+            <td>${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}</td>
+          </tr>`;
       })
       .join("");
-    return `<div class="roster-team"><h3>${escapeHtml(teamName)}</h3>${cards}</div>`;
+
+    return `
+      <h3>${escapeHtml(teamName)}</h3>
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>HP</th>
+            <th>체력</th>
+            <th>민첩</th>
+            <th>정신력</th>
+            <th>행운</th>
+            <th>이능력</th>
+            <th>남은 스킬</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
   };
 
-  container.innerHTML = renderTeamRoster("A", teamAName) + renderTeamRoster("B", teamBName);
+  container.innerHTML = renderTeamTable("A", teamAName) + renderTeamTable("B", teamBName);
 }
 
 function renderBattle() {
@@ -235,7 +220,6 @@ function renderBattle() {
   `;
 
   attachActionCardHandlers();
-  // attachDraftHandlers();
 }
 
 function renderActionCard(c, confirmedMap, isMyTeamActing) {
@@ -290,21 +274,6 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
     </div>`;
 }
 
-// function attachActionCardHandlers() {
-//   myCharactersEl.querySelectorAll(".submit-action:not([disabled])").forEach((btn) => {
-//     btn.addEventListener("click", () => {
-//       const card = btn.closest(".char-card");
-//       const characterId = card.dataset.char;
-//       const skillName = card.querySelector(".action-type").value;
-//       const targetId = card.querySelector(".action-target").value;
-//       const value = card.querySelector(".action-value").value;
-
-//       socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
-//         if (!res.ok) return (battleStatus.textContent = res.error);
-//       });
-//     });
-//   });
-// }
 
 function attachCardHandlers(card) {
   const submitBtn = card.querySelector(".submit-action:not([disabled])");
@@ -342,19 +311,3 @@ function attachCardHandlers(card) {
 function attachActionCardHandlers() {
   myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
 }
-
-// function attachDraftHandlers() {
-//   myCharactersEl.querySelectorAll(".action-type, .action-target, .action-value").forEach((input) => {
-//     input.addEventListener("change", () => {
-//       const card = input.closest(".char-card");
-//       const characterId = card.dataset.char;
-//       const skillName = card.querySelector(".action-type").value;
-//       const targetId = card.querySelector(".action-target").value;
-//       const value = card.querySelector(".action-value").value;
-
-//       socket.emit("action:draft", { characterId, skillName, targetId, value }, (res) => {
-//         if (!res.ok) return (battleStatus.textContent = res.error);
-//       });
-//     });
-//   });
-// }
