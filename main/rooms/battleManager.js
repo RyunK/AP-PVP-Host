@@ -14,6 +14,7 @@ class BattleManager {
 
   start() {
     this.room.turn = this._startRound(null);
+    this.room.turn.phase = "orderCheck"
     this.setTimestamp();
     return this.room.turn;
   }
@@ -52,7 +53,7 @@ class BattleManager {
       firstTeam,
       actingTeam: firstTeam,
       // phase: "vanguard",
-      phase: "orderCheck",
+      phase: "vanguard",
       phaseActions: new Map(),
       draft: new Map(),
       vanguardResult: null,
@@ -130,8 +131,8 @@ class BattleManager {
   }
 
   endOrderCheck(){
-    this.turn.phase = "vanguard";
-    this.startTime();
+    this.room.turn.phase = "vanguard";
+    this.setTimestamp();
   }
 
   /** roomManager.serializeRoom이 room.turn을 공개용으로 변환할 때 씀 */

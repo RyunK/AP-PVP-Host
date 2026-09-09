@@ -39,6 +39,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function emitRoomState(room) {
       io.to("main").emit("room:state", roomManager.serializeRoom(room));
+      // console.log("emitRoomState" + room.turn.phase)
+
     }
 
     function sendSysMessage(text) {
@@ -185,12 +187,22 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("orderCheck:ended", ({}, cb) => {
+      socket.on("orderCheck:ended", (cb) => {
         try {
-          roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId, value);
+          const firstTeam = roomManager.getRoom().turn.firstTeam;
+          const room = roomManager.getRoom();
+          const beforePhase = room.turn.phase;
+          roomManager.endOrderCheck();
+          const afterPhase = room.turn.phase;
+
           cb({ ok: true });
-          emitRoomState(room);
-          // io.to(`main`).emit("battle:draft", { characterId, skillName, targetId, value });
+          emitRoomState(roomManager.getRoom());
+          
+          if(beforePhase == "orderCheck" && afterPhase == "vanguard"){
+            sendBattleMessage("전투를 시작합니다.");
+            sendBattleMessage(`${room.teamNames[firstTeam]}, 선언하십시오.`);
+          }
+          
         } catch (err) {
           cb({ ok: false, error: err.message });
         }

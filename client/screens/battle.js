@@ -117,10 +117,12 @@ function startOrderCheckCountdown() {
       clearInterval(orderCheckIntervalId);
       orderCheckIntervalId = null;
       document.querySelector(".alert-modal").style.display = "none";
-
-      socket.emit("orderCheck:ended", {}, (res) => {
+      
+      // console.log("테스트1")
+      socket.emit("orderCheck:ended",  (res) => {
         if (!res.ok) battleStatus.textContent = res.error;
       });
+      // console.log("테스트2")
     }
   }
 
