@@ -424,16 +424,35 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   border-radius: 10px;
   padding: 14px;
 }
+
+.char-card-row{
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.char-card-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.char-card-default-row{
+  justify-content: space-between;
+  /* align-items: center; */
+  gap: 15px;
+}
+
 .char-card .hp-bar {
-  height: 6px;
+  height: 8px;
   background: color-mix(in srgb, var(--secondary) 20%, transparent);
   border-radius: 4px;
   overflow: hidden;
-  margin: 8px 0 10px;
+  /* margin: 8px 0 10px; */
+  width: 100%;
+  max-width: 200px;
 }
 .char-card .hp-fill { height: 100%; background: var(--accent); }
-.char-card select { width: 100%; margin-bottom: 8px; }
-.char-card select, .char-card button {
+.char-card select { width: 100%; margin-bottom: 0; }
+.char-card select {
   background: var(--bg-page);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
@@ -441,7 +460,13 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   color: var(--text);
   font-size: 13px;
 }
-.char-card button { width: 100%; cursor: pointer; }
+
+.char-card .btn{
+  padding: 8px 10px;
+  max-width: 120px;
+  font-size: 13px;
+  margin: 0;
+}
 
 .battle-log {
   background: var(--bg-log);

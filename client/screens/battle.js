@@ -55,10 +55,22 @@ function onRoomState(state) {
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
 
-
-  renderBattle();
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
   
+}
+
+function onBattleState(state) {
+  roomState = state;
+
+  // 전반적인 전투 갱신
+  renderBattle();
+
+  // 캐릭터들 스탯 상황
+  renderRoster();
+  
+  // 선언 상황 확인
+  renderMyTeamActions();
+  renderEnemyActions();
 }
 
 function onTurnResolved(payload) {
@@ -92,6 +104,8 @@ function onRoomClosed({ reason }) {
 const myCharactersEl = document.getElementById("myCharacters");
 const battleLogEl = document.getElementById("battleLog");
 const turnNumberEl = document.getElementById("turnNumber");
+const nowTurnEl = document.getElementById("nowTurn");
+const turnTimerEl = document.getElementById("turnTimer");
 
 function showMyInfo(myPlayerId, myPlayerName) {
   const me = roomState.players.find((p) => p.id === myPlayerId);
@@ -107,16 +121,7 @@ function showMyInfo(myPlayerId, myPlayerName) {
 
 let liveDrafts = new Map(); // characterId -> {skillName, targetId} (team:${team} room에서 실시간 수신)
 
-function onBattleState(state) {
-  roomState = state;
 
-  // 캐릭터들 스탯 상황
-  renderRoster();
-  
-  // 선언 상황 확인
-  renderMyTeamActions();
-  renderEnemyActions();
-}
 
 function onBattleDraft({ characterId, skillName, targetId }) {
   liveDrafts.set(characterId, { skillName, targetId });
@@ -195,7 +200,9 @@ function renderRoster() {
 }
 
 function renderBattle() {
-  turnNumberEl.textContent = roomState.turnNumber;
+  turnNumberEl.textContent = roomState.turn.round ?? 0;
+  nowTurnEl.textContent = roomState.turn.actingTeam ?? 0;
+  
   const myChars = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const enemies = roomState.characters.filter(
     (c) => c.ownerId !== myPlayerId && c.alive
@@ -210,16 +217,22 @@ function renderBattle() {
       }
       return `
         <div class="char-card" data-char="${c.id}">
-          <strong>${c.name}</strong> (${c.stats.hp}/${maxHp})
-          <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
-          <select class="action-type">
-            <option value="attack">공격</option>
-            <option value="heal">회복</option>
-          </select>
-          <select class="action-target">
-            ${enemies.map((e) => `<option value="${e.id}">${e.name}</option>`).join("")}
-          </select>
-          <button class="submit-action">행동 제출</button>
+          <div class="char-card-row char-card-name-row">
+            <strong>${c.name}</strong>   
+            <span class="hint">(${c.stats.hp}/${maxHp})</span>
+          </div>
+
+          <div class="char-card-row char-card-default-row">
+            <select class="action-type">
+              <option value="attack">공격</option>
+              <option value="heal">회복</option>
+            </select>
+            <select class="action-target">
+              ${enemies.map((e) => `<option value="${e.id}">${e.name}</option>`).join("")}
+            </select>
+            <button class="btn btn-primary submit-action">선언 확정</button>
+          </div>
+          
         </div>`;
     })
     .join("");

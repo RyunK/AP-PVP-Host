@@ -169,7 +169,7 @@ class RoomManager {
         skill: def.skill  || "엄호",
         stats: {
           hp: def.hp || 1,
-          hp_stat: def.hp_stat || 1,
+          hp_stat: def.hp_stat || 0,
           power: def.power || 1,
           dex: def.dex || 1,
           mnd: def.mnd || 1,
