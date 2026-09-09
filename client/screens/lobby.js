@@ -366,13 +366,6 @@ function renderTeamBoard() {
     });
   });
 
-  // teamBoard.querySelectorAll(".char-name").forEach((el) => {
-  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
-  // });
-
-  // unassignedBoard.querySelectorAll(".char-name").forEach((el) => {
-  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
-  // });
 }
 
 function startBattle(){

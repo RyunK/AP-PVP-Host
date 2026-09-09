@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -11,28 +11,51 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 
+// export function init() {
+//   socket.off("room:state", onRoomState);
+//   socket.off("turn:resolved", onTurnResolved);
+//   socket.off("turn:waiting", onTurnWaiting);
+//   socket.off("room:closed", onRoomClosed);
+
+//   socket.on("room:state", onRoomState);
+//   socket.on("turn:resolved", onTurnResolved);
+//   socket.on("turn:waiting", onTurnWaiting);
+//   socket.on("room:closed", onRoomClosed);
+
+//   socket.emit("room:get-state", {}, (res) => {
+//     if (res.ok) onRoomState(res.state);
+//   });
+
+//   mountChat(document.getElementById("chatContainer"), getMyCharacters());
+// }
+
 export function init() {
   socket.off("room:state", onRoomState);
-  socket.off("turn:resolved", onTurnResolved);
-  socket.off("turn:waiting", onTurnWaiting);
-  socket.off("room:closed", onRoomClosed);
+  socket.off("battle:state", onBattleState);
+  socket.off("battle:draft", onBattleDraft);
+  socket.off("round:resolved", onRoundResolved);
 
   socket.on("room:state", onRoomState);
-  socket.on("turn:resolved", onTurnResolved);
-  socket.on("turn:waiting", onTurnWaiting);
-  socket.on("room:closed", onRoomClosed);
+  socket.on("battle:state", onBattleState);
+  socket.on("battle:draft", onBattleDraft);
+  socket.on("round:resolved", onRoundResolved);
 
   socket.emit("room:get-state", {}, (res) => {
-    if (res.ok) onRoomState(res.state);
+    if (res.ok){
+      onBattleState(res.state);
+      onRoomState(res.state);
+    } 
   });
-
-  mountChat(document.getElementById("chatContainer"), getMyCharacters());
 }
 
 function onRoomState(state) {
   roomState = state;
+  
+  mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
+
+
   renderBattle();
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
   
@@ -84,26 +107,15 @@ function showMyInfo(myPlayerId, myPlayerName) {
 
 let liveDrafts = new Map(); // characterId -> {skillName, targetId} (team:${team} room에서 실시간 수신)
 
-export function init() {
-  socket.off("battle:state", onBattleState);
-  socket.off("battle:draft", onBattleDraft);
-  socket.off("round:resolved", onRoundResolved);
-
-  socket.on("battle:state", onBattleState);
-  socket.on("battle:draft", onBattleDraft);
-  socket.on("round:resolved", onRoundResolved);
-
-  socket.emit("room:get-state", {}, (res) => {
-    if (res.ok) onBattleState(res.state);
-  });
-}
-
 function onBattleState(state) {
   roomState = state;
-  renderRoster();       // 요구사항 1
-  renderMyTeamActions(); // 요구사항 2
-  renderEnemyActions();  // 요구사항 3
-  renderMyActionPanel();
+
+  // 캐릭터들 스탯 상황
+  renderRoster();
+  
+  // 선언 상황 확인
+  renderMyTeamActions();
+  renderEnemyActions();
 }
 
 function onBattleDraft({ characterId, skillName, targetId }) {
@@ -148,6 +160,38 @@ function renderEnemyActions() {
       return `<div>${escapeHtml(c.name)} - ${confirmed ? `확정: ${escapeHtml(confirmed.skillName)}` : "미확정"}</div>`;
     })
     .join("");
+}
+
+function renderRoster() {
+  const container = document.getElementById("rosterBoard");
+  const teamAName = roomState.teamNames?.A || "A팀";
+  const teamBName = roomState.teamNames?.B || "B팀";
+
+  const renderTeamRoster = (team, teamName) => {
+    const chars = roomState.characters.filter((c) => c.team === team);
+    const cards = chars
+      .map((c) => {
+        const hpPct = Math.max(0, Math.round((c.stats.hp / c.stats.maxHp) * 100));
+        const owner = roomState.players.find((p) => p.id === c.ownerId);
+        return `
+          <div class="roster-card ${c.alive ? "" : "is-dead"}">
+            <div class="roster-card-header">
+              <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
+              <span class="owner-tag">${escapeHtml(owner?.name || "")}</span>
+            </div>
+            <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
+            <div class="hint">HP ${c.stats.hp}/${c.stats.maxHp}</div>
+            <div class="hint">
+              민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}
+            </div>
+            ${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}
+          </div>`;
+      })
+      .join("");
+    return `<div class="roster-team"><h3>${escapeHtml(teamName)}</h3>${cards}</div>`;
+  };
+
+  container.innerHTML = renderTeamRoster("A", teamAName) + renderTeamRoster("B", teamBName);
 }
 
 function renderBattle() {

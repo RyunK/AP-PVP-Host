@@ -454,3 +454,18 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   color: var(--text-dim);
   line-height: 1.7;
 }
+
+.roster-team { margin-bottom: 16px; }
+.roster-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.roster-card.is-dead { opacity: 0.5; }
+.roster-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}

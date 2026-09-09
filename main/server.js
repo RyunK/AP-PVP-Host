@@ -114,7 +114,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const created = roomManager.setCharacters(room, socket.data.playerId, characterDefs);
           cb({ ok: true, characterIds: created });
           emitRoomState(room);
-          sendSysMessage(`캐릭터 ${created.map((id) => room.characters.get(id).name).join(", ")}가 추가되었습니다.`);
+          sendSysMessage(`캐릭터 ${created.map((id) => room.characters.get(id).name).join(", ")}가 저장되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -160,6 +160,20 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const room = roomManager.setReady(socket.data.playerId, ready);
           cb({ ok: true });
           emitRoomState(room);
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
+      socket.on("battle:start", (_payload, cb) => {
+        try {
+          const room = roomManager.getRoom();
+          if (!room) throw new Error("방을 찾을 수 없습니다.");
+          if (room.hostSocketId !== socket.id) throw new Error("호스트만 전투를 시작할 수 있습니다.");
+          roomManager.startBattle(room);
+          cb({ ok: true });
+          emitRoomState(room);
+          sendSysMessage(`전투가 시작되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
