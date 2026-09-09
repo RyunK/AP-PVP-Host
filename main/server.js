@@ -46,6 +46,11 @@ function startServer({ port, onRoomsChanged, onLog }) {
       io.to("main").emit("chat:message", message);
     };
 
+    function sendBattleMessage(text) {
+      const message = roomManager.postBattleMessage(text);
+      io.to(roomCode).emit("chat:message", message);
+    }
+
     function syncPlayerTeamRooms(playerId) {
       const room = roomManager.getRoom();
       if (!room) return;
@@ -173,7 +178,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
           roomManager.startBattle(room);
           cb({ ok: true });
           emitRoomState(room);
-          sendSysMessage(`전투가 시작되었습니다.`);
+          // sendSysMessage(`전투가 시작되었습니다.`);
+          sendBattleMessage("SYSTEM LOADING...");
+          sendBattleMessage("전투를 시작합니다.");
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -193,9 +200,13 @@ function startServer({ port, onRoomsChanged, onLog }) {
         try {
           const result = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
           cb({ ok: true });
+
+
           io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
+          sendBattleMessage(`캐릭터 ${roomManager.getRoom().characters.get(characterId).name}의 행동이 확정되었습니다.`);
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
+            
           }
         } catch (err) {
           cb({ ok: false, error: err.message });

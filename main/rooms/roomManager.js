@@ -261,6 +261,11 @@ class RoomManager {
 
   confirmAction(playerId, characterId, skillName, targetId, value) {
     if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
+    // 스킬 사용자의 이름과 대상의 이름을 함께 가져와서 메시지를 전송
+    const room = this.getRoom();
+    p_name = room.characters.get(characterId)?.name || "알 수 없음";
+    t_name = room.characters.get(targetId)?.name || "알 수 없음";
+    this.postBattleMessage(`캐릭터 ${p_name}가 스킬 ${skillName}을(를) 캐릭터 ${t_name}에게 사용했습니다.`);
     return this.battle.confirmAction(playerId, characterId, skillName, targetId, value);
   }
 
@@ -334,6 +339,7 @@ class RoomManager {
       text: trimmed.slice(0, 300),
       timestamp: Date.now(),
       system: false,
+      battleMessage: false,
     };
 
     this.room.chatHistory.push(message);
@@ -355,6 +361,29 @@ class RoomManager {
         text: message,
         timestamp: Date.now(),
         system: true,
+        battleMessage: false, // 전투 관련 메시지임을 표시
+      };
+
+      this.room.chatHistory.push(sysMessage);
+      if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
+
+      return sysMessage;
+  }
+
+  /**
+   * 전투시 메시지를 전송하는 메서드
+   * @param {*} message 
+   * @returns 
+   */
+  postBattleMessage(message) {
+      if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+      const sysMessage = {
+        id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        displayName: "[System]",
+        text: message,
+        timestamp: Date.now(),
+        system: false,
+        battleMessage: true, // 전투 관련 메시지임을 표시
       };
 
       this.room.chatHistory.push(sysMessage);
