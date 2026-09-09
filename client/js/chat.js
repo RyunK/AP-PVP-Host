@@ -17,13 +17,24 @@ function renderLog() {
     .map((m) => {
       if(m.system) {
         return `<div class="chat-message system-message">${escapeHtml(m.text)} 
-        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+        <span class="chat-timestamp">
+        ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
+        </span> </div>`;
+      }else if(m.battleMessage){
+        return `<div class="chat-message battle-message">[NECTAR] ${escapeHtml(m.text)} 
+        <span class="chat-timestamp">
+        ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
+        </span> </div>`;
       } else if (!m.displayName) {
-        return `<div class="chat-message system-message"> 잘못된 메시지입니다. 
-        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+        return `<div class="chat-message system-message">(알 수 없음)</strong>: ${escapeHtml(m.text)} 
+        <span class="chat-timestamp">
+        ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
+        </span> </div>`;
       } else {
         return `<div class="chat-message"><strong>${escapeHtml(m.displayName)}</strong>: ${escapeHtml(m.text)} 
-        <span class="chat-timestamp">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}</span> </div>`;
+        <span class="chat-timestamp">
+        ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
+        </span> </div>`;
       }
     })
     .join("");

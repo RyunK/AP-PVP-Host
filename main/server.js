@@ -180,7 +180,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           emitRoomState(room);
           // sendSysMessage(`전투가 시작되었습니다.`);
           sendBattleMessage("SYSTEM LOADING...");
-          sendBattleMessage("전투를 시작합니다.");
+          // sendBattleMessage("전투를 시작합니다.");
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
