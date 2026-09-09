@@ -254,14 +254,14 @@ class RoomManager {
     this.battle.start();
   }
 
-  draftAction(playerId, characterId, skillName, targetId) {
+  draftAction(playerId, characterId, skillName, targetId, value) {
     if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
-    return this.battle.draftAction(playerId, characterId, skillName, targetId);
+    return this.battle.draftAction(playerId, characterId, skillName, targetId, value);
   }
 
-  confirmAction(playerId, characterId, skillName, targetId) {
+  confirmAction(playerId, characterId, skillName, targetId, value) {
     if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
-    return this.battle.confirmAction(playerId, characterId, skillName, targetId);
+    return this.battle.confirmAction(playerId, characterId, skillName, targetId, value);
   }
 
   getPlayerTeams(playerId) {

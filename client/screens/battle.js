@@ -11,24 +11,6 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 
-// export function init() {
-//   socket.off("room:state", onRoomState);
-//   socket.off("turn:resolved", onTurnResolved);
-//   socket.off("turn:waiting", onTurnWaiting);
-//   socket.off("room:closed", onRoomClosed);
-
-//   socket.on("room:state", onRoomState);
-//   socket.on("turn:resolved", onTurnResolved);
-//   socket.on("turn:waiting", onTurnWaiting);
-//   socket.on("room:closed", onRoomClosed);
-
-//   socket.emit("room:get-state", {}, (res) => {
-//     if (res.ok) onRoomState(res.state);
-//   });
-
-//   mountChat(document.getElementById("chatContainer"), getMyCharacters());
-// }
-
 export function init() {
   socket.off("room:state", onRoomState);
   socket.off("battle:state", onBattleState);
@@ -102,9 +84,10 @@ function onRoomClosed({ reason }) {
 }
 
 const myCharactersEl = document.getElementById("myCharacters");
-const battleLogEl = document.getElementById("battleLog");
+// const battleLogEl = document.getElementById("battleLog");
 const turnNumberEl = document.getElementById("turnNumber");
 const nowTurnEl = document.getElementById("nowTurn");
+const phaseLabelEl = document.getElementById("phaseLabel");
 const turnTimerEl = document.getElementById("turnTimer");
 
 function showMyInfo(myPlayerId, myPlayerName) {
@@ -119,13 +102,37 @@ function showMyInfo(myPlayerId, myPlayerName) {
   `;
 }
 
-let liveDrafts = new Map(); // characterId -> {skillName, targetId} (team:${team} room에서 실시간 수신)
+let liveDrafts = new Map(); // characterId -> {skillName, targetId, value} (team:${team} room에서 실시간 수신)
 
 
 
-function onBattleDraft({ characterId, skillName, targetId }) {
-  liveDrafts.set(characterId, { skillName, targetId });
-  renderMyTeamActions(); // 실시간 갱신
+function onBattleDraft({ characterId, skillName, targetId, value }) {
+  liveDrafts.set(characterId, { skillName, targetId, value });
+  const c = roomState.characters.find((ch) => ch.id === characterId);
+  if (!c || c.ownerId === myPlayerId) return;
+
+  updateSingleCard(characterId);
+}
+
+function updateSingleCard(characterId) {
+  const oldCard = myCharactersEl.querySelector(`.char-card[data-char="${characterId}"]`);
+  if (!oldCard) return; // 지금 화면에 안 보이는 캐릭터(다른 팀 차례 등)면 무시
+
+  const turn = roomState.turn;
+  const c = roomState.characters.find((ch) => ch.id === characterId);
+  if (!c) return;
+
+  const confirmedMap = new Map(turn?.confirmed || []);
+  const myCharacters = roomState.characters.filter((ch) => ch.ownerId === myPlayerId);
+  const myTeams = myCharacters.map((ch) => ch.team);
+  const isMyTeamActing = myTeams.includes(turn?.actingTeam);
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = renderActionCard(c, confirmedMap, isMyTeamActing).trim();
+  const newCard = wrapper.firstElementChild;
+
+  oldCard.replaceWith(newCard);
+  attachCardHandlers(newCard); // 새로 생긴 카드에만 이벤트 다시 연결
 }
 
 function onRoundResolved(roundLog) {
@@ -135,8 +142,10 @@ function onRoundResolved(roundLog) {
 
 
 function renderMyTeamActions() {
-  const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
-  const teamChars = roomState.characters.filter((c) => c.team === myTeam);
+  // const myTeam = getMyCharacters(roomState, myPlayerId)[0]?.team;
+  const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
+  const myTeams = myCharacters.map((c) => c.team);
+  const teamChars = roomState.characters.filter((c) => myTeams.includes(c.team));
   const confirmedMap = new Map(roomState.turn?.confirmed || []);
 
   document.getElementById("myTeamActions").innerHTML = teamChars
@@ -167,6 +176,9 @@ function renderEnemyActions() {
     .join("");
 }
 
+/**
+ * 캐릭터 정보 렌더링
+ */
 function renderRoster() {
   const container = document.getElementById("rosterBoard");
   const teamAName = roomState.teamNames?.A || "A팀";
@@ -204,16 +216,14 @@ function renderBattle() {
   turnNumberEl.textContent = turn?.round ?? 0;
   let nowTurnTeam = turn?.actingTeam ?? "-";
   nowTurnEl.textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
-
+  phaseLabelEl.textContent = turn?.phase === "vanguard" ? "선공" : turn?.phase === "rearguard" ? "후공" : "-";
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const myTeams = myCharacters.map((c) => c.team);
 
-  // console.log("myTeam:", myTeam, "myCharacter:", myCharacter);
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
 
   // "이번 페이즈에 행동 차례인 팀"의 캐릭터만 카드로 보여줌.
   const actingTeamChars = roomState.characters.filter((c) => c.team === turn?.actingTeam);
-  // const enemies = roomState.characters.filter((c) => c.team !== myTeam && c.alive);
 
   const confirmedMap = new Map(turn?.confirmed || []);
   const totalActing = actingTeamChars.filter((c) => c.alive).length;
@@ -225,9 +235,10 @@ function renderBattle() {
   `;
 
   attachActionCardHandlers();
+  // attachDraftHandlers();
 }
 
-function renderActionCard(c,  confirmedMap, isMyTeamActing) {
+function renderActionCard(c, confirmedMap, isMyTeamActing) {
   if (!c.alive) {
     return `<div class="char-card"><strong>${escapeHtml(c.name)}</strong> — 전투불능</div>`;
   }
@@ -236,15 +247,24 @@ function renderActionCard(c,  confirmedMap, isMyTeamActing) {
   const confirmed = confirmedMap.get(c.id);
   const maxHp = 100 + c.stats.hp_stat * 5;
 
+  // 실시간 행동중인 데이터가 있는가?
+  let drafted;
+  if(!confirmed && liveDrafts.has(c.id) && isMyTeamActing ) {
+    drafted = liveDrafts.get(c.id);
+  }
+
   // 내 캐릭터가 아니면 모든 입력을 잠금. 이미 확정됐어도 잠금.
   const disabled = !isMine || !!confirmed ? "disabled" : "";
+  
+  const realdata = confirmed || drafted;
 
   const targetOptions = roomState.characters
     .filter((e) => e.alive)
-    .map((e) => `<option value="${e.id}" ${confirmed?.targetId === e.id ? "selected" : ""}>${escapeHtml(e.name)}</option>`)
+    .map((e) => `<option value="${e.id}" ${realdata?.targetId === e.id ? "selected" : ""}>${escapeHtml(e.name)}</option>`)
     .join("");
   
   const btnText = confirmed ? "확정됨" : disabled ? "선언 중..." : "선언 확정";
+
 
   return `
     <div class="char-card" data-char="${c.id}">
@@ -252,15 +272,16 @@ function renderActionCard(c,  confirmedMap, isMyTeamActing) {
         <strong>${escapeHtml(c.name)}</strong>
         <span class="hint">(${c.stats.hp}/${maxHp})</span>
         ${confirmed ? '<span class="badge badge--ready">확정됨</span>' : ""}
-        ${!isMyTeamActing ? '<span class="badge badge--waiting">상대팀</span>' : ""}
-        ${!isMine && isMyTeamActing ? '<span class="badge badge--waiting">팀원</span>' : ""}
+        ${!isMyTeamActing ? '<span class="badge badge--waiting">적군</span>' : ""}
+        ${!isMine && isMyTeamActing ? '<span class="badge badge--waiting">아군</span>' : ""}
       </div>
 
       <div class="char-card-row char-card-default-row">
         <select class="action-type" ${disabled}>
-          <option value="attack" ${confirmed?.skillName === "attack" ? "selected" : ""}>공격</option>
-          <option value="heal" ${confirmed?.skillName === "heal" ? "selected" : ""}>회복</option>
+          <option value="attack" ${realdata?.skillName === "attack" ? "selected" : ""}>공격</option>
+          <option value="heal" ${realdata?.skillName === "heal" ? "selected" : ""}>회복</option>
         </select>
+        <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ''}" ${disabled} style="width: 100px;" />
         <select class="action-target" ${disabled}>${targetOptions}</select>
         <button class="btn btn-${confirmed || disabled ? "ghost" : "primary"} submit-action" ${disabled}>
           ${btnText}
@@ -269,24 +290,71 @@ function renderActionCard(c,  confirmedMap, isMyTeamActing) {
     </div>`;
 }
 
-function attachActionCardHandlers() {
-  myCharactersEl.querySelectorAll(".submit-action:not([disabled])").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const card = btn.closest(".char-card");
+// function attachActionCardHandlers() {
+//   myCharactersEl.querySelectorAll(".submit-action:not([disabled])").forEach((btn) => {
+//     btn.addEventListener("click", () => {
+//       const card = btn.closest(".char-card");
+//       const characterId = card.dataset.char;
+//       const skillName = card.querySelector(".action-type").value;
+//       const targetId = card.querySelector(".action-target").value;
+//       const value = card.querySelector(".action-value").value;
+
+//       socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
+//         if (!res.ok) return (battleStatus.textContent = res.error);
+//       });
+//     });
+//   });
+// }
+
+function attachCardHandlers(card) {
+  const submitBtn = card.querySelector(".submit-action:not([disabled])");
+  if (submitBtn) {
+    submitBtn.addEventListener("click", () => {
       const characterId = card.dataset.char;
       const skillName = card.querySelector(".action-type").value;
       const targetId = card.querySelector(".action-target").value;
+      const value = card.querySelector(".action-value").value;
 
-      socket.emit("action:confirm", { characterId, skillName, targetId }, (res) => {
-        if (!res.ok) return (battleStatus.textContent = res.error);
+      socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
+        if (!res.ok) battleStatus.textContent = res.error;
       });
     });
-  });
+  }
+
+  card.querySelectorAll(".action-type:not([disabled]), .action-target:not([disabled]), .action-value:not([disabled])")
+    .forEach((el) => {
+      el.addEventListener("input", () => {
+        const characterId = card.dataset.char;
+        socket.emit("action:draft", {
+          characterId,
+          skillName: card.querySelector(".action-type").value,
+          targetId: card.querySelector(".action-target").value,
+          value: card.querySelector(".action-value").value,
+        }, 
+        (res) => {
+          if (!res.ok) return (battleStatus.textContent = res.error);
+        }
+      );
+      });
+    });
 }
 
-function logLine(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  battleLogEl.appendChild(div);
-  battleLogEl.scrollTop = battleLogEl.scrollHeight;
+function attachActionCardHandlers() {
+  myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
 }
+
+// function attachDraftHandlers() {
+//   myCharactersEl.querySelectorAll(".action-type, .action-target, .action-value").forEach((input) => {
+//     input.addEventListener("change", () => {
+//       const card = input.closest(".char-card");
+//       const characterId = card.dataset.char;
+//       const skillName = card.querySelector(".action-type").value;
+//       const targetId = card.querySelector(".action-target").value;
+//       const value = card.querySelector(".action-value").value;
+
+//       socket.emit("action:draft", { characterId, skillName, targetId, value }, (res) => {
+//         if (!res.ok) return (battleStatus.textContent = res.error);
+//       });
+//     });
+//   });
+// }

@@ -179,19 +179,19 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("action:draft", ({ characterId, skillName, targetId }, cb) => {
+      socket.on("action:draft", ({ characterId, skillName, targetId, value }, cb) => {
         try {
-          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId);
+          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId, value);
           cb({ ok: true });
-          io.to(`team:${team}`).emit("battle:draft", { characterId, skillName, targetId });
+          io.to(`main`).emit("battle:draft", { characterId, skillName, targetId, value });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
       });
 
-      socket.on("action:confirm", ({ characterId, skillName, targetId }, cb) => {
+      socket.on("action:confirm", ({ characterId, skillName, targetId, value }, cb) => {
         try {
-          const result = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId);
+          const result = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
           cb({ ok: true });
           io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
           if (result.roundComplete) {

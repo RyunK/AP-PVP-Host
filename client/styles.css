@@ -451,8 +451,11 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   max-width: 200px;
 }
 .char-card .hp-fill { height: 100%; background: var(--accent); }
-.char-card select { width: 100%; margin-bottom: 0; }
-.char-card select {
+.char-card select, .char-card input {
+  width: 100%;
+  margin-bottom: 0;
+}
+.char-card select, .char-card input {
   background: var(--bg-page);
   border: 1px solid var(--border-strong);
   border-radius: 6px;

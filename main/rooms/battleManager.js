@@ -44,16 +44,16 @@ class BattleManager {
     };
   }
 
-  draftAction(playerId, characterId, skillName, targetId) {
+  draftAction(playerId, characterId, skillName, targetId, value) {
     this._assertCanAct(playerId, characterId);
-    this.room.turn.draft.set(characterId, { skillName, targetId });
+    this.room.turn.draft.set(characterId, { skillName, targetId, value });
     return this.room.turn.actingTeam;
   }
 
-  confirmAction(playerId, characterId, skillName, targetId) {
+  confirmAction(playerId, characterId, skillName, targetId, value) {
     this._assertCanAct(playerId, characterId);
 
-    this.room.turn.phaseActions.set(characterId, { skillName, targetId });
+    this.room.turn.phaseActions.set(characterId, { skillName, targetId, value });
     this.room.turn.draft.delete(characterId);
 
     const actingChars = this.room.teams[this.room.turn.actingTeam].filter(
