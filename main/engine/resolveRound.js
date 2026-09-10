@@ -1,27 +1,44 @@
-const { executeSkill } = require("./skillHandlers");
+// const { executeSkill } = require("./skillHandlers");
+const fs = require("fs/promises");
+const path = require("path");
+// const characterHandler = require("./resolver/participantHandler.js");
+const { Participant } = require("./resolver/participant.js");
 
+const RULE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
 /**
- * 한 라운드(선공+후공)의 확정된 액션들을 순서대로 실행해 HP 등을 실제로 변경하고,
- * 화면에 보여줄 이벤트 로그를 만들어 반환합니다.
+ * 전달하면 전투 관련 계산해서 로그 전달해줌
  *
  * @param {Map} characters  room.characters (id -> character 객체, 여기서 직접 변경됨)
- * @param {Array} vanguard  [[characterId, {skillName, targetIds, value}], ...]
- * @param {Array} rearguard 위와 동일한 형태
+ * @param {Map} vanguard  [characterId -> {skillName, targetIds, value}, ...]
+ * @param {Map} rearguard 위와 동일한 형태
  */
-function resolveRound({ characters, vanguard, rearguard }) {
-  const events = [];
+async function resolveRound({ characters, vanguard, rearguard }) {
+    const events = [];    
 
-  // 선공 먼저, 그다음 후공. 각 페이즈 안에서는 그냥 확정된 순서대로 처리합니다.
-  // (동시 판정이 필요하면 여기서 정렬 기준을 추가하면 됩니다 - 예: 민첩 높은 순)
-  for (const [actorId, action] of [...vanguard, ...rearguard]) {
-    const actor = characters.get(actorId);
-    if (!actor || !actor.alive) continue; // 이미 죽었으면 행동 무효
+    // 스킬 수식 다 가져오기
+    const data = await fs.readFile(RULE_PATH, "utf-8");
+    const obj = JSON.parse(data);
+    const skillTable = obj["skillTable"];
+    const criticalTable = obj["criticalTable"];
+    // console.log(skillTable);
+    // console.log(criticalTable);
 
-    const result = executeSkill({ characters, actorId: actor, action });
-    events.push(...result.events);
-  }
+    // 캐릭터 객체 만들기
+    let c_map = new Map();
+    vanguard.forEach((c_act, cid) => {
+        const c = characters.get(cid);
+        const skillType = skillTable[c_act.skillName]["types"];
+        let participant = new Participant( c, c_act, skillType)
+        c_map.set(cid, participant);
+    });
 
-  return { events };
+
+    // 판정값 계산하기
+    
+    // 체력 계산하기
+
+    return { events };
 }
+
 
 module.exports = { resolveRound };

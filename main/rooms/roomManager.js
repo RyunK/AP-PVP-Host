@@ -168,6 +168,7 @@ class RoomManager {
         name: def.name || `캐릭터${idx + 1}`,
         position: def.position || "아이기스",
         skill: def.skill  || "엄호",
+        skillCount : 0,
         stats: {
           hp: def.hp || 1,
           hp_stat: def.hp_stat || 0,
