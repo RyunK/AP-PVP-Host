@@ -14,7 +14,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, { cors: { origin: "*" } });
-    // 플레이어는 이 서버가 내려주는 client/ 정적 페이지를 브라우저로 열기만 하면 됩니다.
+
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
 
@@ -39,6 +39,12 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function emitRoomState(room) {
       io.to("main").emit("room:state", roomManager.serializeRoom(room));
+      // console.log("emitRoomState" + room.turn.phase)
+
+    }
+
+    function emitBattleState(room) {
+      io.to("main").emit("battle:state", roomManager.serializeRoom(room));
       // console.log("emitRoomState" + room.turn.phase)
 
     }
@@ -197,10 +203,13 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
           cb({ ok: true });
           emitRoomState(roomManager.getRoom());
-          
-          if(beforePhase == "orderCheck" && afterPhase == "vanguard"){
+          emitBattleState(roomManager.getRoom())
+
+          if(beforePhase == "orderCheck" && afterPhase == "vanguard" && !room.onceChecker){
+            sendBattleMessage("LOADING COMPLETE. 초기 순서 확인됨.");
             sendBattleMessage("전투를 시작합니다.");
             sendBattleMessage(`${room.teamNames[firstTeam]}, 선언하십시오.`);
+            room.onceChecker = true;
           }
           
         } catch (err) {
@@ -228,7 +237,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
           let skillLabel = skillName;
           if(skillName == "침식") skillLabel += `(${value})`
 
-          io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
+          emitBattleState(roomManager.serializeRoom(roomManager.getRoom()))
+          // io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
           sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
 
           if (result.roundComplete) {
