@@ -63,19 +63,16 @@ class BattleManager {
     };
   }
 
-  draftAction(playerId, characterId, skillName, targetId, value) {
+  draftAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
-    this.room.turn.draft.set(characterId, { skillName, targetId, value });
+    this.room.turn.draft.set(characterId, { skillName, targetIds, value });
     return this.room.turn.actingTeam;
   }
 
-  confirmAction(playerId, characterId, skillName, targetId, value) {
-    // const character = this.room.characters.get(characterId);
-    // console.log(character.team);
-    // console.log(this.room.turn.actingTeam);
+  confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
 
-    this.room.turn.phaseActions.set(characterId, { skillName, targetId, value });
+    this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
     this.room.turn.draft.delete(characterId);
 
     const actingChars = this.room.teams[this.room.turn.actingTeam].filter(

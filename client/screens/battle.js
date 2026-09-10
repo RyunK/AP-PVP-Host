@@ -210,8 +210,8 @@ let liveDrafts = new Map(); // characterId -> {skillName, targetId, value} (team
 
 
 
-function onBattleDraft({ characterId, skillName, targetId, value }) {
-  liveDrafts.set(characterId, { skillName, targetId, value });
+function onBattleDraft({ characterId, skillName, targetIds, value }) {
+  liveDrafts.set(characterId, { skillName, targetIds, value });
   const c = roomState.characters.find((ch) => ch.id === characterId);
   if (!c || c.ownerId === myPlayerId) return;
 
@@ -375,6 +375,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
   const realdata = confirmed || drafted;
   const selectedTargetIds = realdata?.targetIds || []; // ← 배열로 변경
 
+  // Id to Name
   const selectedNames = selectedTargetIds
     .map((id) => roomState.characters.find((e) => e.id === id)?.name)
     .filter(Boolean);

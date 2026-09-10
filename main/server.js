@@ -218,19 +218,19 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("action:draft", ({ characterId, skillName, targetId, value }, cb) => {
+      socket.on("action:draft", ({ characterId, skillName, targetIds, value }, cb) => {
         try {
-          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetId, value);
+          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetIds, value);
           cb({ ok: true });
-          io.to(`main`).emit("battle:draft", { characterId, skillName, targetId, value });
+          io.to(`main`).emit("battle:draft", { characterId, skillName, targetIds, value });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
       });
 
-      socket.on("action:confirm", ({ characterId, skillName, targetId, value }, cb) => {
+      socket.on("action:confirm", ({ characterId, skillName, targetIds, value }, cb) => {
         try {
-          const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
+          const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetIds, value);
           // console.log(result);
           cb({ ok: true });
           const firstTeam = result.roundLog?.firstTeam;
