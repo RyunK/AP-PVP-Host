@@ -364,24 +364,44 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
   const confirmed = confirmedMap.get(c.id);
   const maxHp = 100 + c.stats.hp_stat * 5;
 
-  // 실시간 행동중인 데이터가 있는가?
   let drafted;
-  if(!confirmed && liveDrafts.has(c.id) && isMyTeamActing ) {
+  if (!confirmed && liveDrafts.has(c.id) && isMyTeamActing) {
     drafted = liveDrafts.get(c.id);
   }
 
-  // 내 캐릭터가 아니면 모든 입력을 잠금. 이미 확정됐어도 잠금.
-  const disabled = !isMine || !!confirmed ? "disabled" : "";
-  
-  const realdata = confirmed || drafted;
+  const disabled = !isMine || !!confirmed;
+  const disabledAttr = disabled ? "disabled" : "";
 
-  const targetOptions = roomState.characters
-    .filter((e) => e.alive)
-    .map((e) => `<option value="${e.id}" ${realdata?.targetId === e.id ? "selected" : ""}>${escapeHtml(e.name)}</option>`)
-    .join("");
-  
+  const realdata = confirmed || drafted;
+  const selectedTargetIds = realdata?.targetIds || []; // ← 배열로 변경
+
+  const selectedNames = selectedTargetIds
+    .map((id) => roomState.characters.find((e) => e.id === id)?.name)
+    .filter(Boolean);
+  const targetSummary = selectedNames.length > 0
+    ? selectedNames.map((n) => `(${escapeHtml(n)})`).join(" ")
+    : "대상 선택";
+
   const btnText = confirmed ? "확정됨" : disabled ? "선언 중..." : "선언 확정";
 
+  // 팀별로 그룹핑해서 체크박스 목록 생성
+  const teamAName = roomState.teamNames?.A || "A팀";
+  const teamBName = roomState.teamNames?.B || "B팀";
+  const buildGroup = (team, teamName) => {
+    const chars = roomState.characters.filter((e) => e.team === team && e.alive);
+    if (chars.length === 0) return "";
+    const items = chars
+      .map(
+        (e) => `
+        <label class="target-option">
+          <input type="checkbox" class="target-checkbox" value="${e.id}"
+            ${selectedTargetIds.includes(e.id) ? "checked" : ""} ${disabledAttr} />
+          ${escapeHtml(e.name)}${e.id === c.id ? " (나)" : ""}
+        </label>`
+      )
+      .join("");
+    return `<div class="target-group"><div class="target-group-title">${escapeHtml(teamName)}</div>${items}</div>`;
+  };
 
   return `
     <div class="char-card" data-char="${c.id}">
@@ -394,13 +414,21 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
       </div>
 
       <div class="char-card-row char-card-default-row">
-        <select class="action-type" ${disabled}>
+        <select class="action-type" ${disabledAttr}>
           <option value="attack" ${realdata?.skillName === "attack" ? "selected" : ""}>공격</option>
           <option value="heal" ${realdata?.skillName === "heal" ? "selected" : ""}>회복</option>
         </select>
-        <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ''}" ${disabled} style="width: 100px;" />
-        <select class="action-target" ${disabled}>${targetOptions}</select>
-        <button class="btn btn-${confirmed || disabled ? "ghost" : "primary"} submit-action" ${disabled}>
+        <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
+
+        <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
+          <button type="button" class="target-multiselect-toggle" ${disabledAttr}>${targetSummary}</button>
+          <div class="target-multiselect-panel" style="display:none;">
+            ${buildGroup("A", teamAName)}
+            ${buildGroup("B", teamBName)}
+          </div>
+        </div>
+
+        <button class="btn btn-${confirmed || disabled ? "ghost" : "primary"} submit-action" ${disabledAttr}>
           ${btnText}
         </button>
       </div>
@@ -408,43 +436,125 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
 }
 
 
+// function attachCardHandlers(card) {
+//   const submitBtn = card.querySelector(".submit-action:not([disabled])");
+//   const battleStatus = document.getElementById("battleStatus");
+//   if (submitBtn) {
+//     submitBtn.addEventListener("click", () => {
+//       const characterId = card.dataset.char;
+//       const skillName = card.querySelector(".action-type").value;
+//       const targetId = card.querySelector(".action-target").value;
+//       const value = card.querySelector(".action-value").value;
+
+//       socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
+//         if (!res.ok) battleStatus.textContent = res.error;
+//       });
+//     });
+//   }
+
+//   card.querySelectorAll(".action-type:not([disabled]), .action-target:not([disabled]), .action-value:not([disabled])")
+//     .forEach((el) => {
+//       el.addEventListener("input", () => {
+//         const characterId = card.dataset.char;
+//         socket.emit("action:draft", {
+//           characterId,
+//           skillName: card.querySelector(".action-type").value,
+//           targetId: card.querySelector(".action-target").value,
+//           value: card.querySelector(".action-value").value,
+//         }, 
+//         (res) => {
+//           if (!res.ok) return (battleStatus.textContent = res.error);
+//         }
+//       );
+//       });
+//     });
+// }
+
+function attachActionCardHandlers() {
+  const myCharactersEl = document.getElementById("myCharacters");
+  
+  myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
+}
+
 function attachCardHandlers(card) {
-  const submitBtn = card.querySelector(".submit-action:not([disabled])");
   const battleStatus = document.getElementById("battleStatus");
+
+  // 다중선택 드롭다운 토글
+  const toggleBtn = card.querySelector(".target-multiselect-toggle:not([disabled])");
+  const panel = card.querySelector(".target-multiselect-panel");
+  if (toggleBtn && panel) {
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = panel.style.display !== "none";
+      panel.style.display = isOpen ? "none" : "block";
+    });
+  }
+
+  const submitBtn = card.querySelector(".submit-action:not([disabled])");
   if (submitBtn) {
     submitBtn.addEventListener("click", () => {
       const characterId = card.dataset.char;
       const skillName = card.querySelector(".action-type").value;
-      const targetId = card.querySelector(".action-target").value;
+      const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
       const value = card.querySelector(".action-value").value;
 
-      socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
+      socket.emit("action:confirm", { characterId, skillName, targetIds, value }, (res) => {
         if (!res.ok) battleStatus.textContent = res.error;
       });
     });
   }
 
-  card.querySelectorAll(".action-type:not([disabled]), .action-target:not([disabled]), .action-value:not([disabled])")
+  card.querySelectorAll(".action-type:not([disabled]), .target-checkbox:not([disabled]), .action-value:not([disabled])")
     .forEach((el) => {
-      el.addEventListener("input", () => {
+      el.addEventListener(el.classList.contains("target-checkbox") ? "change" : "input", () => {
         const characterId = card.dataset.char;
+        const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
+
         socket.emit("action:draft", {
           characterId,
           skillName: card.querySelector(".action-type").value,
-          targetId: card.querySelector(".action-target").value,
+          targetIds,
           value: card.querySelector(".action-value").value,
-        }, 
+        },
         (res) => {
           if (!res.ok) return (battleStatus.textContent = res.error);
+        });
+
+        // 드롭다운 요약 텍스트도 즉시 갱신
+        if (toggleBtn) {
+          const names = targetIds
+            .map((id) => roomState.characters.find((c) => c.id === id)?.name)
+            .filter(Boolean);
+          toggleBtn.textContent = names.length > 0 ? names.map((n) => `${escapeHtml(n)}`).join(", ") : "대상 선택";
         }
-      );
       });
     });
 }
 
-function attachActionCardHandlers() {
-const myCharactersEl = document.getElementById("myCharacters");
-  
-  myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
+function collectCardData(card) {
+  const characterId = card.dataset.char;
+  const skillName = card.querySelector(".action-type").value;
+  const value = card.querySelector(".action-value").value;
+  const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
+  return { characterId, skillName, targetIds, value };
 }
 
+function sendDraft(card) {
+  const { characterId, skillName, targetIds, value } = collectCardData(card);
+  socket.emit("action:draft", { characterId, skillName, targetIds, value });
+
+  // 선택한 이름 요약 텍스트만 즉시 갱신 (카드 전체를 다시 그리진 않음)
+  const summaryBtn = card.querySelector(".target-multiselect-toggle");
+  const names = targetIds
+    .map((id) => roomState.characters.find((c) => c.id === id)?.name)
+    .filter(Boolean);
+  summaryBtn.textContent = names.length > 0 ? names.map((n) => `(${escapeHtml(n)})`).join(" ") : "대상 선택";
+}
+
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".target-multiselect-panel").forEach((panel) => {
+    if (!panel.parentElement.contains(e.target)) {
+      panel.style.display = "none";
+    }
+  });
+});
