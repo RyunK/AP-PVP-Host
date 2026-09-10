@@ -355,6 +355,37 @@ function renderBattle() {
   attachActionCardHandlers();
 }
 
+/**
+ * 해당 캐릭터가 사용할 수 있는 스킬들을 매핑함.
+ * label이 표시 값, value가 서버로 보내는 값.
+ * @param {string} c 캐릭터 id 
+ * @returns 
+ */
+function buildSkillOptions(c) {
+  const phase = roomState.turn.phase;
+  const round = roomState.turn.round;
+
+  const options = [
+    { value: "공격", label: "공격" },
+    { value: "방어", label: "방어" },
+  ];
+
+  // 낙화는 선공에만 사용 가능
+  if (c.skill && !(phase != "vanguard" && c.skill == "낙화")) {
+    options.push({ value: c.skill, label: c.skill });
+  }
+
+  if (c.position === "카두케우스") {
+    options.push({ value: "회복", label: "회복" });
+  }
+
+  if(round >= 6 && phase == "rearguard"){
+    options.push({ value: "도주", label: "도주" });
+  }
+
+  return options;
+}
+
 function renderActionCard(c, confirmedMap, isMyTeamActing) {
   if (!c.alive) {
     return `<div class="char-card"><strong>${escapeHtml(c.name)}</strong> — 전투불능</div>`;
@@ -373,9 +404,8 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
   const disabledAttr = disabled ? "disabled" : "";
 
   const realdata = confirmed || drafted;
-  const selectedTargetIds = realdata?.targetIds || []; // ← 배열로 변경
+  const selectedTargetIds = realdata?.targetIds || [];
 
-  // Id to Name
   const selectedNames = selectedTargetIds
     .map((id) => roomState.characters.find((e) => e.id === id)?.name)
     .filter(Boolean);
@@ -385,7 +415,12 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
 
   const btnText = confirmed ? "확정됨" : disabled ? "선언 중..." : "선언 확정";
 
-  // 팀별로 그룹핑해서 체크박스 목록 생성
+  // ↓↓↓ 여기가 추가된 부분: 캐릭터마다 가능한 행동 목록을 계산 ↓↓↓
+  const skillOptions = buildSkillOptions(c);
+  const skillOptionsHtml = skillOptions
+    .map((opt) => `<option value="${escapeHtml(opt.value)}" ${realdata?.skillName === opt.value ? "selected" : ""}>${escapeHtml(opt.label)}</option>`)
+    .join("");
+
   const teamAName = roomState.teamNames?.A || "A팀";
   const teamBName = roomState.teamNames?.B || "B팀";
   const buildGroup = (team, teamName) => {
@@ -416,8 +451,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
 
       <div class="char-card-row char-card-default-row">
         <select class="action-type" ${disabledAttr}>
-          <option value="attack" ${realdata?.skillName === "attack" ? "selected" : ""}>공격</option>
-          <option value="heal" ${realdata?.skillName === "heal" ? "selected" : ""}>회복</option>
+          ${skillOptionsHtml}
         </select>
         <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
 
@@ -436,40 +470,6 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
     </div>`;
 }
 
-
-// function attachCardHandlers(card) {
-//   const submitBtn = card.querySelector(".submit-action:not([disabled])");
-//   const battleStatus = document.getElementById("battleStatus");
-//   if (submitBtn) {
-//     submitBtn.addEventListener("click", () => {
-//       const characterId = card.dataset.char;
-//       const skillName = card.querySelector(".action-type").value;
-//       const targetId = card.querySelector(".action-target").value;
-//       const value = card.querySelector(".action-value").value;
-
-//       socket.emit("action:confirm", { characterId, skillName, targetId, value }, (res) => {
-//         if (!res.ok) battleStatus.textContent = res.error;
-//       });
-//     });
-//   }
-
-//   card.querySelectorAll(".action-type:not([disabled]), .action-target:not([disabled]), .action-value:not([disabled])")
-//     .forEach((el) => {
-//       el.addEventListener("input", () => {
-//         const characterId = card.dataset.char;
-//         socket.emit("action:draft", {
-//           characterId,
-//           skillName: card.querySelector(".action-type").value,
-//           targetId: card.querySelector(".action-target").value,
-//           value: card.querySelector(".action-value").value,
-//         }, 
-//         (res) => {
-//           if (!res.ok) return (battleStatus.textContent = res.error);
-//         }
-//       );
-//       });
-//     });
-// }
 
 function attachActionCardHandlers() {
   const myCharactersEl = document.getElementById("myCharacters");
