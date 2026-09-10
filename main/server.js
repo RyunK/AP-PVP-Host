@@ -45,7 +45,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function emitBattleState(room) {
       io.to("main").emit("battle:state", roomManager.serializeRoom(room));
-      // console.log("emitRoomState" + room.turn.phase)
+      // console.log("emitBattleState" + room.turn.phase)
 
     }
 
@@ -202,13 +202,13 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const afterPhase = room.turn.phase;
 
           cb({ ok: true });
-          emitRoomState(roomManager.getRoom());
-          emitBattleState(roomManager.getRoom())
-
+          
           if(beforePhase == "orderCheck" && afterPhase == "vanguard" && !room.onceChecker){
-            sendBattleMessage("LOADING COMPLETE. 초기 순서 확인됨.");
+            sendBattleMessage("...LOADING COMPLETE. 초기 순서 확인.");
             sendBattleMessage("전투를 시작합니다.");
-            sendBattleMessage(`${room.teamNames[firstTeam]}, 선언하십시오.`);
+            sendBattleMessage(`${room.teamNames[firstTeam]} 선언.`);
+            emitRoomState(roomManager.getRoom());
+            emitBattleState(roomManager.getRoom());
             room.onceChecker = true;
           }
           
@@ -233,6 +233,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           cb({ ok: true });
           const firstTeam = result.roundLog?.firstTeam;
           const secondTeam = firstTeam == "A"? "B" : "A";
+          const teamNames = this.roomManager.get().teamNames;
 
           let skillLabel = skillName;
           if(skillName == "침식") skillLabel += `(${value})`
@@ -243,10 +244,10 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
-            sendBattleMessage(`${secondTeam} 선언 확인. 정산을 시작합니다.`);
+            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산을 시작합니다.`);
           } else if (result.phaseComplete){
-            sendBattleMessage(`${firstTeam} 선언 확인. 후공 페이즈를 개시합니다.`);
-            sendBattleMessage(`${secondTeam}, 선언하십시오.`);
+            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈를 개시합니다.`);
+            sendBattleMessage(`${teamNames[secondTeam]} 선언.`);
           }
         } catch (err) {
           cb({ ok: false, error: err.message });

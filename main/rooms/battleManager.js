@@ -102,7 +102,7 @@ class BattleManager {
       turn.phase = "rearguard";
       turn.phaseActions = new Map();
       turn.draft = new Map();
-      return { phaseComplete: true, roundComplete: false };
+      return { phaseComplete: true, roundComplete: false, roundLog:{firstTeam: turn.firstTeam} };
     }
 
     turn.rearguardResult = new Map(turn.phaseActions);

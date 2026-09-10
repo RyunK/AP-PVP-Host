@@ -11,6 +11,14 @@ let roomState = null;
 const myPlayerId = getMyPlayerId();
 let orderChecked = false;
 
+// const myCharactersEl = document.getElementById("myCharacters");
+// const battleLogEl = document.getElementById("battleLog");
+// const turnNumberEl = document.getElementById("turnNumber");
+// const nowTurnEl = document.getElementById("nowTurn");
+// const phaseLabelEl = document.getElementById("phaseLabel");
+const turnTimerEl = document.getElementById("turnTimer");
+
+
 export function init() {
   socket.off("room:state", onRoomState);
   socket.off("battle:state", onBattleState);
@@ -43,7 +51,8 @@ function onRoomState(state) {
 
 function onBattleState(state) {
   roomState = state;
-
+  console.log("BattleState");
+  console.log(state);
   // 전반적인 전투 갱신
   renderBattle();
 
@@ -131,6 +140,7 @@ function startOrderCheckCountdown() {
 }
 
 function onTurnResolved(payload) {
+  const turnNumberEl = document.getElementById("turnNumber");
   events.forEach((ev) => {
     const actor = roomState.characters.find((c) => c.id === ev.actorId);
     const target = roomState.characters.find((c) => c.id === ev.targetId);
@@ -158,12 +168,7 @@ function onRoomClosed({ reason }) {
   renderScreen("entry");
 }
 
-const myCharactersEl = document.getElementById("myCharacters");
-// const battleLogEl = document.getElementById("battleLog");
-const turnNumberEl = document.getElementById("turnNumber");
-const nowTurnEl = document.getElementById("nowTurn");
-const phaseLabelEl = document.getElementById("phaseLabel");
-const turnTimerEl = document.getElementById("turnTimer");
+
 
 function showMyInfo(myPlayerId, myPlayerName) {
   const me = roomState.players.find((p) => p.id === myPlayerId);
@@ -190,6 +195,7 @@ function onBattleDraft({ characterId, skillName, targetId, value }) {
 }
 
 function updateSingleCard(characterId) {
+const myCharactersEl = document.getElementById("myCharacters");
   const oldCard = myCharactersEl.querySelector(`.char-card[data-char="${characterId}"]`);
   if (!oldCard) return; // 지금 화면에 안 보이는 캐릭터(다른 팀 차례 등)면 무시
 
@@ -281,23 +287,28 @@ function renderRoster() {
 
 function renderBattle() {
   const turn = roomState.turn;
+
+  const myCharactersEl = document.getElementById("myCharacters");
+  const turnNumberEl = document.getElementById("turnNumber");
+  const phaseLabelEl = document.getElementById("phaseLabel");
+
+  console.log("renderBattle - roomState : ", roomState)
   turnNumberEl.textContent = turn?.round ?? 0;
   let nowTurnTeam = turn?.actingTeam ?? "-";
-  nowTurnEl.textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
+  document.getElementById("nowTurn").textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
   switch(turn?.phase){
     case "vanguard": 
       phaseLabelEl.textContent = "선공";
-      return;
+      break;
     case "rearguard": 
       phaseLabelEl.textContent = "후공";
-      return;
+      break;
     case "calculating": 
       phaseLabelEl.textContent = "정산";
-      return;
+      break;
     default:
       phaseLabelEl.textContent = "-";
   }
-  phaseLabelEl.textContent = turn?.phase === "vanguard" ? "선공" : turn?.phase === "rearguard" ? "후공" : "-";
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const myTeams = myCharacters.map((c) => c.team);
 
@@ -310,9 +321,11 @@ function renderBattle() {
   const totalActing = actingTeamChars.filter((c) => c.alive).length;
   const confirmedCount = actingTeamChars.filter((c) => confirmedMap.has(c.id)).length;
 
+  const cardsHtml = actingTeamChars.map((c) => renderActionCard(c, confirmedMap, isMyTeamActing)).join("");
+
   myCharactersEl.innerHTML = `
     <div class="confirm-progress hint">확정: ${confirmedCount}/${totalActing}</div>
-    ${actingTeamChars.map((c) => renderActionCard(c,  confirmedMap, isMyTeamActing)).join("")}
+    ${cardsHtml}
   `;
 
   attachActionCardHandlers();
@@ -405,5 +418,7 @@ function attachCardHandlers(card) {
 }
 
 function attachActionCardHandlers() {
+const myCharactersEl = document.getElementById("myCharacters");
+  
   myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
 }
