@@ -206,8 +206,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
           if(beforePhase == "orderCheck" && afterPhase == "vanguard" && !room.onceChecker){
             room.onceChecker = true;
 
-            sendBattleMessage("...SYSTEM COMPLETE. 초기 순서 확인 완료.");
-            sendBattleMessage("전투를 시작합니다.");
+            sendBattleMessage("...SYSTEM INITIALIZATION COMPLETE. 초기 순서 확인 완료.");
+            sendBattleMessage("전투 시작.");
             sendBattleMessage(`선공페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
             emitRoomState(roomManager.getRoom());
             emitBattleState(roomManager.getRoom());

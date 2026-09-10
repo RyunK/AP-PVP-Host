@@ -103,12 +103,13 @@ function renderOrderCheck() {
 
   const diceRow = isTie
     ? `
-      <p class="hint">1d100 결과</p>
+      <p class="">1d100 결과</p>
       <p>${escapeHtml(teamAName)}: ${roomState.turn.decidedFirstTeam[0]} · ${escapeHtml(teamBName)}: ${roomState.turn.decidedFirstTeam[1]}</p>`
     : "";
 
   modal.innerHTML = `
     <div class="alert-modal-box">
+      <h2 id="loadingModalHead">SYSTEM LOADING...</h2>
       <h2>선공 판정</h2>
       <p>${escapeHtml(teamAName)} 최고 민첩: ${dexA} · ${escapeHtml(teamBName)} 최고 민첩: ${dexB}</p>
       ${diceRow}
@@ -130,13 +131,15 @@ function startOrderCheckCountdown() {
   const countdownEl = document.getElementById("orderCheckCountdown");
   const startTime = roomState.turn.startTime;
 
+  let tick_num = 0;
   function tick() {
     const elapsed = Date.now() - startTime;
     const remaining = Math.max(0, ORDER_CHECK_DURATION_MS - elapsed);
     const secondsLeft = Math.ceil(remaining / 1000);
-
+    const dots = ".".repeat(tick_num % 4);
+    tick_num += 1;
     countdownEl.textContent = `${secondsLeft}초 뒤 전투를 시작합니다...`;
-
+    document.getElementById("loadingModalHead").textContent = "SYSTEM LOADING" + dots;
     if (remaining <= 0) {
       clearInterval(orderCheckIntervalId);
       orderCheckIntervalId = null;
