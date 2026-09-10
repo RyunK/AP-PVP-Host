@@ -12,7 +12,7 @@ const { saveGameData } = require("./formulaLoader");
 
 // 원본 GameData가 읽던 것과 동일한 두 범위. 시트 양식이 바뀌지 않는 한 고정값입니다.
 const SKILL_RANGE = "A1:G12";
-const CRITICAL_RANGE = "A12:C20";
+const CRITICAL_RANGE = "A16:C23";
 
 function extractSpreadsheetId(urlOrId) {
   const match = urlOrId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
