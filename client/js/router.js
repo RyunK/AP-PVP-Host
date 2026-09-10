@@ -4,7 +4,12 @@ import { loadIdentity, clearIdentity } from "../js/state.js";
 
 const app = document.getElementById("app");
 
+let currentScreen = null;
+
 export async function renderScreen(screenName, params = {}) {
+  if (currentScreen?.destroy) {
+        currentScreen.destroy();
+    }
   const res = await fetch(`screens/${screenName}.html`);
   // console.log("fetch 상태:", res.status, "screen:", screenName); // ← 임시 로그
   const html = await res.text();
@@ -12,7 +17,8 @@ export async function renderScreen(screenName, params = {}) {
   app.innerHTML = html;
   const mod = await import(`../screens/${screenName}.js`);
   mod.init(params);
-
+  currentScreen = mod;
+  
   const url = new URL(location.href);
   url.searchParams.set("screen", screenName);
   history.pushState({ screenName }, "", url);

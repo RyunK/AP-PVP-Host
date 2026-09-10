@@ -204,12 +204,13 @@ function startServer({ port, onRoomsChanged, onLog }) {
           cb({ ok: true });
           
           if(beforePhase == "orderCheck" && afterPhase == "vanguard" && !room.onceChecker){
-            sendBattleMessage("...LOADING COMPLETE. 초기 순서 확인.");
+            room.onceChecker = true;
+
+            sendBattleMessage("...SYSTEM COMPLETE. 초기 순서 확인 완료.");
             sendBattleMessage("전투를 시작합니다.");
-            sendBattleMessage(`${room.teamNames[firstTeam]} 선언.`);
+            sendBattleMessage(`선공페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
             emitRoomState(roomManager.getRoom());
             emitBattleState(roomManager.getRoom());
-            room.onceChecker = true;
           }
           
         } catch (err) {
@@ -230,7 +231,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
       socket.on("action:confirm", ({ characterId, skillName, targetId, value }, cb) => {
         try {
           const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
-          console.log(result);
+          // console.log(result);
           cb({ ok: true });
           const firstTeam = result.roundLog?.firstTeam;
           const secondTeam = firstTeam == "A"? "B" : "A";
@@ -245,9 +246,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
-            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산을 시작합니다.`);
+            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산페이즈 시작.`);
           } else if (result.phaseComplete){
-            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈를 개시합니다.`);
+            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공페이즈 개시.`);
             sendBattleMessage(`${teamNames[secondTeam]} 선언.`);
           }
         } catch (err) {

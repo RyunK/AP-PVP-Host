@@ -45,6 +45,10 @@ export function init() {
   unassignedBoard.addEventListener("click", handleBoardClick);
 }
 
+export function destroy() {
+    socket.off("room:state", onRoomState);
+}
+
 function handleBoardClick(e) {
   const nameEl = e.target.closest(".char-name");
   if (nameEl) {

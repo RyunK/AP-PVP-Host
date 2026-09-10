@@ -38,6 +38,13 @@ export function init() {
   });
 }
 
+export function destroy() {
+    socket.off("room:state", onRoomState);
+    socket.off("battle:state", onBattleState);
+    socket.off("battle:draft", onBattleDraft);
+    socket.off("round:resolved", onRoundResolved);
+}
+
 function onRoomState(state) {
   roomState = state;
   
@@ -50,6 +57,14 @@ function onRoomState(state) {
 }
 
 function onBattleState(state) {
+  console.log("========== BATTLE STATE ==========");
+  console.log("phase:", state.turn?.phase);
+  console.log("actingTeam:", state.turn?.actingTeam);
+  console.log("characters:", state.characters);
+  console.log("myCharacters:", state.characters?.filter(
+    c => c.ownerId === myPlayerId
+  ));
+
   roomState = state;
   console.log("BattleState");
   console.log(state);
@@ -127,11 +142,9 @@ function startOrderCheckCountdown() {
       orderCheckIntervalId = null;
       document.querySelector(".alert-modal").style.display = "none";
       
-      // console.log("테스트1")
       socket.emit("orderCheck:ended",  (res) => {
         if (!res.ok) battleStatus.textContent = res.error;
       });
-      // console.log("테스트2")
     }
   }
 
@@ -286,13 +299,11 @@ function renderRoster() {
 }
 
 function renderBattle() {
-  const turn = roomState.turn;
-
   const myCharactersEl = document.getElementById("myCharacters");
   const turnNumberEl = document.getElementById("turnNumber");
   const phaseLabelEl = document.getElementById("phaseLabel");
 
-  console.log("renderBattle - roomState : ", roomState)
+  const turn = roomState.turn;
   turnNumberEl.textContent = turn?.round ?? 0;
   let nowTurnTeam = turn?.actingTeam ?? "-";
   document.getElementById("nowTurn").textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
@@ -327,6 +338,7 @@ function renderBattle() {
     <div class="confirm-progress hint">확정: ${confirmedCount}/${totalActing}</div>
     ${cardsHtml}
   `;
+  
 
   attachActionCardHandlers();
 }
