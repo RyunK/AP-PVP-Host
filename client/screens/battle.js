@@ -386,6 +386,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
 
 function attachCardHandlers(card) {
   const submitBtn = card.querySelector(".submit-action:not([disabled])");
+  const battleStatus = document.getElementById("battleStatus");
   if (submitBtn) {
     submitBtn.addEventListener("click", () => {
       const characterId = card.dataset.char;

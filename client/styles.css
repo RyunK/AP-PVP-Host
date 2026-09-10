@@ -203,7 +203,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 
 .battle-message{
   color: var(--accent);
-  font-style: italic;
+  /* font-style: italic; */
   font-weight: 500;
   font-size: 14px;
 }

@@ -70,6 +70,9 @@ class BattleManager {
   }
 
   confirmAction(playerId, characterId, skillName, targetId, value) {
+    // const character = this.room.characters.get(characterId);
+    // console.log(character.team);
+    // console.log(this.room.turn.actingTeam);
     this._assertCanAct(playerId, characterId);
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetId, value });

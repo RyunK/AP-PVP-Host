@@ -230,10 +230,11 @@ function startServer({ port, onRoomsChanged, onLog }) {
       socket.on("action:confirm", ({ characterId, skillName, targetId, value }, cb) => {
         try {
           const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetId, value);
+          console.log(result);
           cb({ ok: true });
           const firstTeam = result.roundLog?.firstTeam;
           const secondTeam = firstTeam == "A"? "B" : "A";
-          const teamNames = this.roomManager.get().teamNames;
+          const teamNames = roomManager.getRoom().teamNames;
 
           let skillLabel = skillName;
           if(skillName == "침식") skillLabel += `(${value})`
