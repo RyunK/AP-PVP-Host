@@ -7,16 +7,12 @@ import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
+import { showPhaseAlert } from "../modals/battleModal.js"
+
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 let orderChecked = false;
 
-// const myCharactersEl = document.getElementById("myCharacters");
-// const battleLogEl = document.getElementById("battleLog");
-// const turnNumberEl = document.getElementById("turnNumber");
-// const nowTurnEl = document.getElementById("nowTurn");
-// const phaseLabelEl = document.getElementById("phaseLabel");
-const turnTimerEl = document.getElementById("turnTimer");
 
 
 export function init() {
@@ -36,6 +32,7 @@ export function init() {
       onRoomState(res.state);
     } 
   });
+
 }
 
 export function destroy() {
@@ -56,18 +53,12 @@ function onRoomState(state) {
   
 }
 
-function onBattleState(state) {
-  console.log("========== BATTLE STATE ==========");
-  console.log("phase:", state.turn?.phase);
-  console.log("actingTeam:", state.turn?.actingTeam);
-  console.log("characters:", state.characters);
-  console.log("myCharacters:", state.characters?.filter(
-    c => c.ownerId === myPlayerId
-  ));
+let phase_state;
+let round = 0;
 
+async function onBattleState(state) {
   roomState = state;
-  console.log("BattleState");
-  console.log(state);
+
   // 전반적인 전투 갱신
   renderBattle();
 
@@ -75,13 +66,30 @@ function onBattleState(state) {
   renderRoster();
 
   // 1라운드 지금 막 시작했다면 순서 확인
-  renderOrderCheck()
+  await renderOrderCheck()
+
+  const now_phase = state.turn?.phase;
+  const now_round = state.turn?.round;
+  let phase_kr;
+  switch(now_phase){
+    case "vanguard" : phase_kr = "선공"; break;
+    case "rearguard" : phase_kr = "후공"; break;
+    case "calculating" : phase_kr = "정산"; break;
+    default: phase_kr = "-"; 
+  }
+  if(phase_state != now_phase && round == now_round ){
+    showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
+  } else if (round != now_round && round != 0){
+    showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
+  }
+  phase_state = now_phase;
+  round = now_round;
 }
 
 const ORDER_CHECK_DURATION_MS = 10_000;
 let orderCheckIntervalId = null;
 
-function renderOrderCheck() {
+async function renderOrderCheck() {
   if (orderChecked) return;
   if (
     !roomState ||
@@ -235,6 +243,7 @@ const myCharactersEl = document.getElementById("myCharacters");
 function onRoundResolved(roundLog) {
   liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
   // TODO: roundLog.events가 나중에 채워지면 여기서 battleLog에 출력
+
 }
 
 
@@ -438,3 +447,4 @@ const myCharactersEl = document.getElementById("myCharacters");
   
   myCharactersEl.querySelectorAll(".char-card").forEach(attachCardHandlers);
 }
+
