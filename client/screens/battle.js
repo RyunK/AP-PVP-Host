@@ -265,9 +265,9 @@ function renderRoster() {
               <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
               <span class="hint">${c.stats.hp}/${maxHp}</span>
             </td>
-            <td>${c.stats.hp_stat}</td>
             <td>${c.position}</td>
             <td>${c.skill}</td>
+            <td>${c.stats.hp_stat}</td>
             <td>${c.stats.dex}</td>
             <td>${c.stats.mnd}</td>
             <td>${c.stats.luck}</td>
