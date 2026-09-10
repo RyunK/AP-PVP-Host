@@ -415,7 +415,6 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
 
   const btnText = confirmed ? "확정됨" : disabled ? "선언 중..." : "선언 확정";
 
-  // ↓↓↓ 여기가 추가된 부분: 캐릭터마다 가능한 행동 목록을 계산 ↓↓↓
   const skillOptions = buildSkillOptions(c);
   const skillOptionsHtml = skillOptions
     .map((opt) => `<option value="${escapeHtml(opt.value)}" ${realdata?.skillName === opt.value ? "selected" : ""}>${escapeHtml(opt.label)}</option>`)
@@ -432,7 +431,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
         <label class="target-option">
           <input type="checkbox" class="target-checkbox" value="${e.id}"
             ${selectedTargetIds.includes(e.id) ? "checked" : ""} ${disabledAttr} />
-          ${escapeHtml(e.name)}${e.id === c.id ? " (나)" : ""}
+            ${escapeHtml(e.name)}${e.id === c.id ? " (나)" : ""}
         </label>`
       )
       .join("");

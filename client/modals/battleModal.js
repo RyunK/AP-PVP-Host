@@ -5,7 +5,7 @@
  * @param {*} round 
  * @param {*} duration 
  */
-export function showPhaseAlert(title, message, round=1, duration = 2000) {
+export function showPhaseAlert(title, message, round=1, duration = 800) {
   const alert = document.getElementById("phaseAlert");
   const titleEl = document.getElementById("phaseAlertTitle");
   const messageEl = document.getElementById("phaseAlertMessage");
