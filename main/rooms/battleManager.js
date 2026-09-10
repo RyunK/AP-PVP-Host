@@ -71,6 +71,7 @@ class BattleManager {
 
   confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
+    this._checkValidAct(characterId, act, targetIds, value)
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
     this.room.turn.draft.delete(characterId);
@@ -82,6 +83,11 @@ class BattleManager {
 
     if (!allConfirmed) return { phaseComplete: false };
     return this._advancePhase();
+  }
+
+  _checkValidAct(characterId, act, targetIds, value){
+    if (!targetIds) throw new Error("대상이 없습니다.");
+    if (!act) throw new Error("행동이 없습니다.");
   }
 
   _assertCanAct(playerId, characterId) {
