@@ -5,6 +5,7 @@ const path = require("path");
 const { Participant } = require("./resolver/participant.js");
 
 const RULE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
+
 /**
  * 전달하면 전투 관련 계산해서 로그 전달해줌
  *
@@ -20,18 +21,15 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     const obj = JSON.parse(data);
     const skillTable = obj["skillTable"];
     const criticalTable = obj["criticalTable"];
-    // console.log(skillTable);
-    // console.log(criticalTable);
 
     // 캐릭터 객체 만들기
     let c_map = new Map();
-    vanguard.forEach((c_act, cid) => {
+    [...vanguard, ...rearguard].forEach(([cid, c_act]) => {
         const c = characters.get(cid);
         const skillType = skillTable[c_act.skillName]["types"];
         let participant = new Participant( c, c_act, skillType)
         c_map.set(cid, participant);
     });
-
 
     // 판정값 계산하기
     
