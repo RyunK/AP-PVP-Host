@@ -1,8 +1,9 @@
 /**
- * 전투(라운드/페이즈/액션 선언·확정) 진행을 전담합니다.
- * roomManager가 들고 있는 room 객체(캐릭터/팀 정보)를 참조는 하되,
- * 방/플레이어/캐릭터 자체의 생성·삭제는 여기서 다루지 않습니다.
+ * 전투(라운드/페이즈/액션 선언·확정) 진행을 전담.
  */
+const { resolveRound } = require("../engine/resolveRound.js");
+
+
 class BattleManager {
   constructor(room) {
     this.room = room; // roomManager가 들고 있는 그 room 객체를 그대로 참조 (복사 아님)
@@ -99,7 +100,7 @@ class BattleManager {
     if (this.room.turn.phaseActions.has(characterId)) throw new Error("이미 확정된 행동입니다.");
   }
 
-  _advancePhase() {
+  async _advancePhase() {
     const turn = this.room.turn;
 
     if (turn.phase === "vanguard") {
@@ -112,7 +113,13 @@ class BattleManager {
     }
 
     turn.rearguardResult = new Map(turn.phaseActions);
+    
     // TODO: 실제 정산(엔진 계산)은 여기서 나중에 채워 넣습니다.
+    const characters = this.room.characters;
+    const vanguard = turn.vanguardResult;
+    const rearguard = turn.rearguardResult;
+    const resultMap =  await resolveRound({characters, vanguard, rearguard });
+
     const roundLog = {
       round: turn.round,
       firstTeam: turn.firstTeam,
@@ -121,7 +128,7 @@ class BattleManager {
       events: [],
     };
 
-    this.room.turn = this._startRound(turn.firstTeam);
+    // this.room.turn = this._startRound(turn.firstTeam);
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 

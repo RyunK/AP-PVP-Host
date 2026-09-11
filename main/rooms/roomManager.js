@@ -2,7 +2,6 @@
 // 호스트만이 항상 진실, 클라이언트는 호스트에게 요청을 보내고 받기만 함.
 const crypto = require("crypto");
 const RECONNECT_GRACE_MS = 30_000; // 30초
-const { resolveSkillAction } = require("../engine/damageCalc");
 const { BattleManager } = require("./battleManager");
 
 function randomPlayerId() {
@@ -270,10 +269,10 @@ class RoomManager {
     // 스킬 사용자의 이름과 대상의 이름을 함께 가져와서 메시지를 전송
     const room = this.getRoom();
     const p_name = room.characters.get(characterId)?.name || "알 수 없음";
-    // const t_name = room.characters.get(targetIds)?.name || "알 수 없음";
     const t_name = targetIds
     .map(n => room.characters.get(n).name)
     .join(", ");
+
     const result = this.battle.confirmAction(playerId, characterId, skillName, targetIds, value);
     
     return {result, p_name, t_name};
