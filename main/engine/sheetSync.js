@@ -3,8 +3,8 @@
 const { saveGameData } = require("./formulaLoader");
 
 const SKILL_RANGE = "A1:G12";
-const CRITICAL_RANGE = "A16:C23";
-s
+const CRITICAL_RANGE = "A14:C23";
+
 function extractSpreadsheetId(urlOrId) {
   const match = urlOrId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : urlOrId.trim();

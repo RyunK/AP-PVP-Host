@@ -137,13 +137,13 @@
       "chance": 54,
       "multiplier": 1.4
     },
-    "크리티컬": {
-      "chance": 0,
-      "multiplier": 0
+    "7": {
+      "chance": 63,
+      "multiplier": 1.4
     },
-    "스탯": {
-      "chance": 0,
-      "multiplier": null
+    "8": {
+      "chance": 70,
+      "multiplier": 1.5
     }
   }
 }
