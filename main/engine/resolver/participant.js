@@ -48,24 +48,6 @@ class Participant {
     this.result = result;
   }
 
-  readSkillResult(){
-    const values = this.skillvalues
-    const rowData = values.find(row => row[0] === this.name);
-
-    if(!rowData) return
-
-    const v = rowData.map(cell =>
-      cell === "" || cell === null || cell === undefined
-        ? 0
-        : cell
-    );
-    let result = {
-      finalFormula : v[5],
-      finalValue : v[6]
-    }
-    this.result = result;
-  }
-
   add_damage(val){
     this.damage.value += val
     this.damage.formula += this.damage.formula === ""

@@ -1,3 +1,5 @@
+// 시트 읽어서 json 파일로 저장
+
 const { saveGameData } = require("./formulaLoader");
 
 const SKILL_RANGE = "A1:G12";

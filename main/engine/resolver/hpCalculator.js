@@ -1,16 +1,7 @@
 class HpCalculator{
-  constructor(){
-    [this.runners,  this.runner_map] = ParticipantSaver.loadParticipants();
-    this.loadSkillUse();
-
-  }
-
-  loadSkillUse() {
-    for(const runner of this.runners){
-      runner.addSkillUsingData();
-      runner.readSkillResult();
-      this.suho = this.getSuhoMap();
-    }
+  constructor(c_map){
+    // [this.runners,  this.runner_map] = ParticipantSaver.loadParticipants();
+    this.runners = c_map;
   }
 
   /**
@@ -124,48 +115,6 @@ class HpCalculator{
     }
   }
 
-  writeResultOnSheet(){
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("전투 진행");
-
-    // C13:J18 데이터 읽기
-    const range = sheet.getRange("C13:J18");
-    const values = range.getValues();
-
-    const runnerMap = this.runner_map
-
-    const result = values.map(row => {
-      const name = row[1];
-
-      if (!name || !runnerMap[name]) {
-        return ["", "", "", "", ""];
-      }
-
-      const runner = runnerMap[name];
-
-      return [
-        runner.damage.value,
-        runner.protection.value,
-        runner.heal.value,
-        runner.calcedHp.formula,
-        runner.calcedHp.value
-      ];
-    });
-
-    sheet.getRange("F13:J18").setValues(result);
-  }
 }
 
-
-function calc_test(){
-  let calc = new HpCalculator();
-
-  calc.calcReceived()
-  calc.calculatingHp()
-
-  Logger.log(calc.runners[3].name)
-  Logger.log(calc.runners[3].damage)
-  Logger.log(calc.runners[3].protection)
-  Logger.log(calc.runners[3].heal)
-  Logger.log(calc.runners[3].calcedHp)
-  Logger.log(calc.runners[4].calcedHp)
-}
+module.exports = { HpCalculator }

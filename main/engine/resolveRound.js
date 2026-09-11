@@ -1,8 +1,10 @@
+// 정산 로직 입구&출구
+
 const { Participant } = require("./resolver/participant.js");
 const { UserDiceRoller } = require("./resolver/userDiceRoller.js");
+const { HpCalculator } = require('./resolver/hpCalculator.js');
 const {getGameData} = require("./resolver/gameData.js")
 
-// const RULE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
 
 /**
  * 전달하면 전투 관련 계산해서 로그 전달해줌
@@ -29,12 +31,58 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     // 판정값 계산하기
     const userDiceRoller = new UserDiceRoller(c_map);
     await userDiceRoller.rollUserDices();
-    // console.log(c_map);
     
     // 체력 계산하기
+    const hpCalculator = new HpCalculator(c_map);
+    hpCalculator.calcReceived();
+    hpCalculator.calculatingHp();
 
-    return { events };
+    // 리턴 생성하기
+    const resultMap = new Map();
+
+    for (const [id, c] of c_map) {
+        resultMap.set(id, makeReturnObj(c));
+    }
+
+    return resultMap;
 }
 
+/**
+ * 객체 받아서 return할 수 있는 이벤트 만들어 돌려줌
+ * @param {Participant} c 캐릭터 객체 하나 
+ * @returns {Calcs}
+ */
+function makeReturnObj(c){
+    /**@type Info */
+    const charInfo = {
+        id: c.no,
+        name: c.name,
+        faction: c.faction,
+        useSkill: c.useSkill,
+        corVal: c.corVal,
+        targets: c.target
+    }
+
+    /**@type DiceResult */
+    const diceResult = {
+        criticalMultiplier: c.criticalMultiplier,
+        formula: c.result.finalFormula,
+        value: c.result.finalValue
+    }
+
+    /**@type HpResult */
+    const hpResult = {
+
+    }
+
+    /**@type Calcs */
+    const calcs = {
+        info: charInfo,
+        diceResult: diceResult,
+        hpResult: hpResult
+    }
+
+    return calcs
+}
 
 module.exports = { resolveRound };
