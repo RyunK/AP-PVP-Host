@@ -1,25 +1,23 @@
 class UserDiceRoller{
-  constructor(order){
-    // 0 : 선공 / 1 : 후공
-    this.order = order;
-    // this.runners = this.loadRunners();
-    [this.runners,  this.runner_map] = ParticipantSaver.loadParticipants();
-    
-    // this.runner_map = runnerMap;
-    this.actvie_runners = this.loadActiveRunners();
+  /** 
+   * 캐릭터 다이스 굴리는 거 정리해주는 클래스
+   * @param {Map} c_map 캐릭터 들어있는 Map / cid -> Participant
+   */
+  constructor(c_map){
+    this.actvie_runners = c_map;
   }
 
-  loadActiveRunners(){
-    let order = this.order
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("전투 진행");
-    const names = sheet.getRange(`D${3+5*order}:D${5+5*order}`).getValues().flat();
+  // loadActiveRunners(){
+  //   let order = this.order
+  //   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("전투 진행");
+  //   const names = sheet.getRange(`D${3+5*order}:D${5+5*order}`).getValues().flat();
 
-    const activeRunners = names
-      .map(name => this.runner_map[name])
-      .filter(Boolean);
+  //   const activeRunners = names
+  //     .map(name => this.runner_map[name])
+  //     .filter(Boolean);
     
-    return activeRunners;
-  }
+  //   return activeRunners;
+  // }
 
   rollUserDices() {
     const actvie_runners = this.actvie_runners
@@ -144,3 +142,4 @@ class UserDiceRoller{
     }
   }
 }
+module.exports = { UserDiceRoller }

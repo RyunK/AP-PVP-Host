@@ -1,10 +1,12 @@
 // const { executeSkill } = require("./skillHandlers");
-const fs = require("fs/promises");
-const path = require("path");
+// const fs = require("fs/promises");
+// const path = require("path");
 // const characterHandler = require("./resolver/participantHandler.js");
 const { Participant } = require("./resolver/participant.js");
+const { UserDiceRoller } = require("./resolver/userDiceRoller.js");
+const {getGameData} = require("./resolver/gameData.js")
 
-const RULE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
+// const RULE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
 
 /**
  * 전달하면 전투 관련 계산해서 로그 전달해줌
@@ -17,10 +19,12 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     const events = [];    
 
     // 스킬 수식 다 가져오기
-    const data = await fs.readFile(RULE_PATH, "utf-8");
-    const obj = JSON.parse(data);
-    const skillTable = obj["skillTable"];
-    const criticalTable = obj["criticalTable"];
+    // const data = await fs.readFile(RULE_PATH, "utf-8");
+    // const obj = JSON.parse(data);
+    // const skillTable = obj["skillTable"];
+    // const criticalTable = obj["criticalTable"];
+
+    const { skillTable, criticalTable }  = await getGameData();
 
     // 캐릭터 객체 만들기
     let c_map = new Map();
@@ -31,7 +35,10 @@ async function resolveRound({ characters, vanguard, rearguard }) {
         c_map.set(cid, participant);
     });
 
+    console.log(c_map.get("cid_abc").name);
+
     // 판정값 계산하기
+    const userDiceRoller = new UserDiceRoller(c_map); 
     
     // 체력 계산하기
 

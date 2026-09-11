@@ -1,46 +1,14 @@
-class GameData {
-  constructor() {
-    const sheet = SpreadsheetApp
-      .getActiveSpreadsheet()
-      .getSheetByName("data");
+const fs = require("fs/promises");
+const path = require("path");
+const RULE_PATH = path.join(__dirname, "..", "..", "..", "config", "gamedata.json");
 
-    this.skillTable = this.loadSkillTable(
-      sheet.getRange("E1:K12").getValues()
-    );
+async function getGameData(){
+  const data = await fs.readFile(RULE_PATH, "utf-8");
+  const obj = JSON.parse(data);
+  const skillTable = obj["skillTable"];
+  const criticalTable = obj["criticalTable"];
 
-    this.criticalTable = this.loadCriticalTable(
-      sheet.getRange("A12:C20").getValues()
-    );
-  }
-
-  loadSkillTable(values) {
-    const result = {};
-
-    values.forEach(row => {
-      if (!row[0]) return;
-
-      result[row[0]] = {
-        diceCount: Number(row[3]) || 0,
-        statBonus: row[4] || "",
-        extraDiceCount: Number(row[5]) || 0,
-        extraDiceStat: row[6] || ""
-      };
-    });
-
-    return result;
-  }
-
-  loadCriticalTable(values) {
-    const result = {};
-
-    values.slice(1).forEach(row => {
-      result[row[0]] = {
-        chance: Number(row[1]),
-        multiplier: Number(row[2])
-      };
-    });
-
-    return result;
-  }
+  return {skillTable, criticalTable};
 }
 
+module.exports = {getGameData};
