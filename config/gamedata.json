@@ -6,7 +6,7 @@
         "방어"
       ],
       "diceCount": 4,
-      "statBonus": "4",
+      "statBonus": "체력",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -17,7 +17,7 @@
         "수호"
       ],
       "diceCount": 3,
-      "statBonus": "3",
+      "statBonus": "체력",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -47,7 +47,7 @@
         "회복"
       ],
       "diceCount": 3,
-      "statBonus": "3",
+      "statBonus": "",
       "extraDiceCount": 2,
       "extraDiceStat": "이능력"
     },
@@ -57,7 +57,7 @@
         "버프"
       ],
       "diceCount": 3,
-      "statBonus": "3",
+      "statBonus": "",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -67,7 +67,7 @@
         "디버프"
       ],
       "diceCount": 3,
-      "statBonus": "3",
+      "statBonus": "",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -77,7 +77,7 @@
         "공격"
       ],
       "diceCount": 3,
-      "statBonus": "3",
+      "statBonus": "",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -87,7 +87,7 @@
         "방어"
       ],
       "diceCount": 2,
-      "statBonus": "2",
+      "statBonus": "",
       "extraDiceCount": "",
       "extraDiceStat": ""
     },
@@ -97,7 +97,7 @@
         "회복"
       ],
       "diceCount": 2,
-      "statBonus": "2",
+      "statBonus": "",
       "extraDiceCount": 1,
       "extraDiceStat": "이능력"
     },
@@ -107,7 +107,7 @@
         "도주"
       ],
       "diceCount": 1,
-      "statBonus": "1",
+      "statBonus": "민첩",
       "extraDiceCount": 1,
       "extraDiceStat": "행운"
     }
