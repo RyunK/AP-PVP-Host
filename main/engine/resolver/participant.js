@@ -39,7 +39,7 @@ class Participant {
     };
 
     this.useSkill = c_act.skillName;
-    this.corVal = c_act.value;
+    this.corVal = c_act.value || 0;
     this.target = c_act.targetIds;
     this.skillType = skillType;
   }

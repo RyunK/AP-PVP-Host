@@ -5,38 +5,6 @@ class DiceRoller {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  static loadSkillTable(values) {
-    const result = {};
-
-    values.forEach(row => {
-      const skillName = row[0];
-
-      if (!skillName) return;
-
-      result[skillName] = {
-        diceCount: Number(row[3]) || 0,
-        statBonus: row[4] || "",
-        extraDiceCount: Number(row[5]) || 0,
-        extraDiceStat: row[6] || ""
-      };
-    });
-
-    return result;
-  }
-
-  static loadCriticalTable(values) {
-    const result = {};
-
-    values.slice(1).forEach(row => {
-      result[row[0]] = {
-        chance: Number(row[1]),
-        multiplier: Number(row[2])
-      };
-    });
-
-    return result;
-  }
-
   static rollBaseDice() {
     const max = 8 + this.runner.power;
 
@@ -221,10 +189,11 @@ class DiceRoller {
     return this.applyBounusNPenalty(result);
   }
 
-  static rollRunaway(skillName, runner, gameData) {
+  static async rollRunaway(skillName, runner) {
     this.runner = runner;
-    this.skillTable = gameData.skillTable;
-    this.criticalTable = gameData.criticalTable;
+    const {skillTable, criticalTable} = await getGameData();
+    this.skillTable = skillTable;
+    this.criticalTable = criticalTable;
 
     return this.rollSkill(skillName);
   }

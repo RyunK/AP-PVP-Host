@@ -14,7 +14,6 @@ const {getGameData} = require("./resolver/gameData.js")
  * @param {Map} rearguard 위와 동일한 형태
  */
 async function resolveRound({ characters, vanguard, rearguard }) {
-    const events = [];    
 
     // 스킬 수식 다 가져오기
     const { skillTable, criticalTable }  = await getGameData();
@@ -30,7 +29,7 @@ async function resolveRound({ characters, vanguard, rearguard }) {
 
     // 판정값 계산하기
     const userDiceRoller = new UserDiceRoller(c_map);
-    await userDiceRoller.rollUserDices();
+    const runResult = await userDiceRoller.rollUserDices();
     
     // 체력 계산하기
     const hpCalculator = new HpCalculator(c_map);
@@ -43,6 +42,8 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     for (const [id, c] of c_map) {
         resultMap.set(id, makeReturnObj(c));
     }
+
+    resultMap.set("runResult", runResult);
 
     return resultMap;
 }
@@ -65,9 +66,9 @@ function makeReturnObj(c){
 
     /**@type DiceResult */
     const diceResult = {
-        criticalMultiplier: c.result.criticalMultiplier,
-        formula: c.result.finalFormula,
-        value: c.result.finalValue
+        criticalMultiplier: c.result?.criticalMultiplier,
+        formula: c.result?.finalFormula,
+        value: c.result?.finalValue
     }
 
     /**@type HpResult */

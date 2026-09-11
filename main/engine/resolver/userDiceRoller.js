@@ -1,5 +1,6 @@
 const { getGameData } = require("./gameData.js")
 const { DiceRoller } = require("./diceRoller.js")
+const { Participant } = require("./participant.js");
 
 class UserDiceRoller{
   /** 
@@ -10,12 +11,27 @@ class UserDiceRoller{
     this.actvie_runners = c_map;
   }
 
+  /**
+   * 모든 캐릭터에 대한 판정 진행 후 Participant 객체에 결과 업데이트,
+   * 반환값을 도주 판정 관련
+   * @returns {selectedFaction, rollResults} 도주 결과를 반환
+   */
   async rollUserDices() {
     const actvie_runners = this.actvie_runners
+    let tryRunFaction = ""
+    let runResult;
 
     for (const [rid, runner] of actvie_runners) {
-      if (!runner.useSkill) {
+      if (!runner.useSkill || runner.faction == tryRunFaction) {
         continue;
+      }
+
+      if(runner.useSkill == "도주"){
+        tryRunFaction = runner.faction;
+        runResult = await this.runAway(tryRunFaction);
+        if(runResult.selectedFaction == tryRunFaction){
+          continue;
+        }
       }
 
       const result = await DiceRoller.rollSkillWithCritical(
@@ -25,11 +41,20 @@ class UserDiceRoller{
       runner.set_result(result)
     }
 
+    // 도주 시도한 진영 캐릭터들 행동 다 취소
+    if (tryRunFaction !== "") {
+        for (const runner of actvie_runners.values()) {
+            if (runner.faction === tryRunFaction) {
+                delete runner.result;
+            }
+        }
+    }
+
     this.applyHwanhee();
     this.applyNakhwa();
 
     // this.writeInSheet();
-    return this.actvie_runners;
+    return runResult;
   }
 
   applyHwanhee() {
@@ -75,31 +100,50 @@ class UserDiceRoller{
   }
 
 
-  runAway(){
-    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("도주 판정")
-    const values = sheet.getRange("B5:F6").getValues();
+  /**
+   * 도주 발생 시 따로 계산해서 리턴
+   */
+  async runAway(triedFaction){
+    const runners = this.actvie_runners;
+    const rollResults = new Map();
 
-    const output = values.map(row => {
-      const [name, power, agility, mental, luck] = row;
+    for (const faction of ["A", "B"]) {
+      const aliveRunners = [...runners.values()].filter(
+          runner => runner.faction === faction && runner.currentHp > 0
+      );
 
-      const participantRow = Array(22).fill("");
+      if (aliveRunners.length === 0) continue;
 
-      participantRow[4] = name;
-      participantRow[12] = power;
-      participantRow[13] = agility;
-      participantRow[14] = mental;
-      participantRow[15] = luck;
+      const stats = Object.fromEntries(
+          ["hpStat", "power", "agility", "mental", "luck"].map(stat => [
+              stat,
+              aliveRunners.reduce((sum, runner) => sum + runner[stat], 0)
+                  / aliveRunners.length
+          ])
+      );
 
-      let faction = new Participant(participantRow);
-      const gameData = new GameData();
-      const result = DiceRoller.rollSkillWithCritical("도주",faction,gameData);
-      return [result.formula, "", result.total]
-    });
+      const participant = new Participant(
+          { stats },
+          { skillName: "도주" },
+          "도주"
+      );
 
-    if (output.length > 0) {
-      sheet.getRange("C10:E11") // I3부터
-          .setValues(output);
+      const rollRunaway =  await DiceRoller.rollRunaway("도주", participant);
+
+      rollResults.set(faction, rollRunaway);
     }
+
+    const resultA = rollResults.get("A");
+    const resultB = rollResults.get("B");
+
+    const selectedFaction =
+        resultA.total > resultB.total
+            ? "A"
+            : resultB.total > resultA.total
+                ? "B"
+                : triedFaction;
+
+    return {selectedFaction, rollResults};
   }
 }
 module.exports = { UserDiceRoller }
