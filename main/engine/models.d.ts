@@ -19,7 +19,8 @@ declare global{
     }
 
     interface HpResult{
-
+        formula: string;
+        value: number;
     }
 
     interface Calcs{

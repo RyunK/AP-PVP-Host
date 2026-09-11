@@ -65,14 +65,15 @@ function makeReturnObj(c){
 
     /**@type DiceResult */
     const diceResult = {
-        criticalMultiplier: c.criticalMultiplier,
+        criticalMultiplier: c.result.criticalMultiplier,
         formula: c.result.finalFormula,
         value: c.result.finalValue
     }
 
     /**@type HpResult */
     const hpResult = {
-
+        formula: c.calcedHp.formula,
+        value: c.calcedHp.value
     }
 
     /**@type Calcs */

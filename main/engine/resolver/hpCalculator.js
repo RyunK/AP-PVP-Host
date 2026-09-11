@@ -2,6 +2,7 @@ class HpCalculator{
   constructor(c_map){
     // [this.runners,  this.runner_map] = ParticipantSaver.loadParticipants();
     this.runners = c_map;
+    this.suho = this.getSuhoMap();
   }
 
   /**
@@ -14,12 +15,12 @@ class HpCalculator{
    */
   getSuhoMap(){
     let suho = {};
-    for (const runner of this.runners) {
+    for (const [_, runner] of this.runners) {
 
       if (runner.useSkill !== "수호") continue;
 
       for (const target of runner.target) {
-        suho[target] = runner.name;
+        suho[target] = runner.no;
       }
     }
   
@@ -28,7 +29,7 @@ class HpCalculator{
 
   // 받은 대미지, 방어, 회복 계산
   calcReceived(){
-    for (const runner of this.runners) {
+    for (const runner of this.runners.values()) {
       if(runner.name == "" || !runner.skillType) continue;
       if (runner.skillType.includes("공격")){
         this.applyDamages(runner)
@@ -48,9 +49,9 @@ class HpCalculator{
     for (const target of runner.target) {
       const guardian = this.suho[target];
       if (guardian) {
-        this.runner_map[guardian].add_damage(damage);
+        this.runners.get(guardian).add_damage(damage);
       } else {
-        this.runner_map[target].add_damage(damage);
+        this.runners.get(target).add_damage(damage);
       }
     }
   }
@@ -59,9 +60,10 @@ class HpCalculator{
     // 방어 유형 스킬을 시전한 시전자의 대상을 찾아서 경감 추가
     let protection = runner.result.finalValue;
 
+    // 수호 시전자가 아니면 대상에게 방어 추가, 수호 시전자면 본인에게 추가
     if(runner.useSkill != "수호"){
       for (const target of runner.target) {
-        this.runner_map[target].add_protection(protection);
+        this.runners.get(target).add_protection(protection);
       }
     } else{
       runner.add_protection(protection);
@@ -72,18 +74,18 @@ class HpCalculator{
     // 회복 유형 스킬을 시전한 시전자의 대상을 찾아서 회복 추가
     let heal = runner.result.finalValue;
     for (const target of runner.target) {
-      this.runner_map[target].add_heal(heal);
+      this.runners.get(target).add_heal(heal);
     }
   }
 
   suhoUserDeathCheck(){
-    for(const runner of this.runners){
+    for(const runner of this.runners.values()){
       if(runner.useSkill != "수호") continue;
       let calc_hp = runner.currentHp - (runner.damage.value - runner.protection.value)
       if( calc_hp < 0){
           const share = Math.floor( -calc_hp / runner.target.length);
           for (const member of runner.target) {
-            this.runner_map[member].add_damage(share);
+            this.runners.get(member).add_damage(share);
           }
         }
       }
@@ -93,7 +95,7 @@ class HpCalculator{
     // 수호 시전자 사망 및 대미지 체크
     this.suhoUserDeathCheck();
 
-    for (const runner of this.runners) {
+    for (const runner of this.runners.values()) {
       let corVal = runner.corVal? runner.corVal : 0
       let c_hp = runner.currentHp - Math.max(0, runner.damage.value - runner.protection.value) - corVal;
 
