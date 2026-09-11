@@ -68,7 +68,7 @@ class UserDiceRoller{
 
       if (!targetRunner) return;
       
-      // B 스킬 카운트 1 깎기
+      // 대상 스킬 카운트 1 깎기
       targetRunner.skillCount = Math.max(targetRunner.skillCount -1, 0);
 
       targetRunner.bonus = (targetRunner.bonus || 0) + user.result.finalValue;

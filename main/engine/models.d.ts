@@ -10,6 +10,7 @@ declare global{
         useSkill: string;
         corVal: number;
         targets: Array;
+        skillLeft: number;
     }
 
     interface DiceResult{

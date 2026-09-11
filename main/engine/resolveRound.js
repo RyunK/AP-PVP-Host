@@ -38,11 +38,16 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     hpCalculator.calcReceived();
     hpCalculator.calculatingHp();
 
+    // 다 계산한 후에 스킬 사용량 증가
+    for (const [_, c] of c_map ){
+        if(c.useSkill == c.skill) c.skillCount += 1;
+    }
+
     // 리턴 생성하기
     const resultMap = new Map();
 
     for (const [id, c] of c_map) {
-        resultMap.set(id, makeReturnObj(c));
+        resultMap.set(id, makeReturnObj(c, skillTable[c.skill]["uses"]));
     }
 
     resultMap.set("runResult", runResult);
@@ -55,7 +60,7 @@ async function resolveRound({ characters, vanguard, rearguard }) {
  * @param {Participant} c 캐릭터 객체 하나 
  * @returns {Calcs}
  */
-function makeReturnObj(c){
+function makeReturnObj(c, skillMaxCnt){
     /**@type Info */
     const charInfo = {
         id: c.no,
@@ -63,7 +68,8 @@ function makeReturnObj(c){
         faction: c.faction,
         useSkill: c.useSkill,
         corVal: c.corVal,
-        targets: c.target
+        targets: c.target,
+        skillLeft: skillMaxCnt - c.skillCount,
     }
 
     /**@type DiceResult */

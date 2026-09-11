@@ -11,7 +11,7 @@ class Participant {
     this.name = c.name;
     this.faction = c.team;
     this.position = c.position;
-    this.skill = c.skill;
+    this.skill = c.skill;                  //  선택 스킬
     this.maxHp = 100 + (c.hp_stat * 5);
     // this.preBattleHp = v[9];       // J열 전투 전 체력
     this.currentHp = c.stats.hp;            // K열 현재 체력
@@ -21,7 +21,7 @@ class Participant {
     this.mental = c.stats.mnd;              // O열 정신력
     this.luck = c.stats.luck;              // P열 행운
 
-    this.skillCount = c.skillCount;    // T열 남은 스킬 횟수
+    this.skillCount = c.skillCount;    // 스킬 사용한 횟수
     this.bonus = 0;            // U열 보너스
     this.penalty = 0;          // V열 패널티
 
