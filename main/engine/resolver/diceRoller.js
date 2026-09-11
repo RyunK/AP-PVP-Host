@@ -217,6 +217,12 @@ class DiceRoller {
     this.skillTable = skillTable;
     this.criticalTable = criticalTable;
 
+    // 스킬 다 썼으면 못 씀
+    if(runner.skill == skillName 
+      && runner.skillCount >= skillTable[skillName]["uses"]){
+        return 0;
+    }
+
     let result = this.rollSkill(skillName);
     result = this.applyCritical(result)
 
