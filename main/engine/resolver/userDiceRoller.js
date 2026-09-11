@@ -29,9 +29,9 @@ class UserDiceRoller{
       if(runner.useSkill == "도주"){
         tryRunFaction = runner.faction;
         runResult = await this.runAway(tryRunFaction);
-        if(runResult.selectedFaction == tryRunFaction){
-          continue;
-        }
+        if(runResult.success){
+          break;
+        }else continue;
       }
 
       const result = await DiceRoller.rollSkillWithCritical(
@@ -143,7 +143,7 @@ class UserDiceRoller{
                 ? "B"
                 : triedFaction;
 
-    return {selectedFaction, rollResults};
+    return {selectedFaction, success: selectedFaction == triedFaction ,rollResults};
   }
 }
 module.exports = { UserDiceRoller }

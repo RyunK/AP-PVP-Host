@@ -12,6 +12,7 @@ const {getGameData} = require("./resolver/gameData.js")
  * @param {Map} characters  room.characters (id -> character 객체, 여기서 직접 변경됨)
  * @param {Map} vanguard  [characterId -> {skillName, targetIds, value}, ...]
  * @param {Map} rearguard 위와 동일한 형태
+ * @return {Map} id -> Calcs , "runResult" -> {selectedFaction, success, rollResult} selectedFaction은 도주 판정에서 승리한 팀
  */
 async function resolveRound({ characters, vanguard, rearguard }) {
 
