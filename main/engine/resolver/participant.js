@@ -14,16 +14,16 @@ class Participant {
     this.skill = c.skill;
     this.maxHp = 100 + (c.hp_stat * 5);
     // this.preBattleHp = v[9];       // J열 전투 전 체력
-    this.currentHp = c.hp;            // K열 현재 체력
-    this.hpStat = c.hp_stat;          // L열 체력(스탯)
-    this.power = c.power;             // M열 이능력
-    this.agility = c.dex;             // N열 민첩
-    this.mental = c.mnd;              // O열 정신력
-    this.luck = c.luck;              // P열 행운
+    this.currentHp = c.stats.hp;            // K열 현재 체력
+    this.hpStat = c.stats.hp_stat;          // L열 체력(스탯)
+    this.power = c.stats.power;             // M열 이능력
+    this.agility = c.stats.dex;             // N열 민첩
+    this.mental = c.stats.mnd;              // O열 정신력
+    this.luck = c.stats.luck;              // P열 행운
 
     this.skillCount = c.skillCount;    // T열 남은 스킬 횟수
-    // this.bonus = v[20];            // U열 보너스
-    // this.penalty = v[21];          // V열 패널티
+    this.bonus = 0;            // U열 보너스
+    this.penalty = 0;          // V열 패널티
 
     this.protection = {
       value: 0,

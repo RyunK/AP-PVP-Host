@@ -1,3 +1,6 @@
+const { getGameData } = require("./gameData.js")
+const { DiceRoller } = require("./diceRoller.js")
+
 class UserDiceRoller{
   /** 
    * 캐릭터 다이스 굴리는 거 정리해주는 클래스
@@ -7,32 +10,17 @@ class UserDiceRoller{
     this.actvie_runners = c_map;
   }
 
-  // loadActiveRunners(){
-  //   let order = this.order
-  //   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("전투 진행");
-  //   const names = sheet.getRange(`D${3+5*order}:D${5+5*order}`).getValues().flat();
-
-  //   const activeRunners = names
-  //     .map(name => this.runner_map[name])
-  //     .filter(Boolean);
-    
-  //   return activeRunners;
-  // }
-
-  rollUserDices() {
+  async rollUserDices() {
     const actvie_runners = this.actvie_runners
-    const gameData = new GameData();
 
-
-    for (const runner of actvie_runners) {
-      if (runner.useSkill == 0) {
+    for (const [rid, runner] of actvie_runners) {
+      if (!runner.useSkill) {
         continue;
       }
 
-      const result = DiceRoller.rollSkillWithCritical(
+      const result = await DiceRoller.rollSkillWithCritical(
         runner.useSkill,
         runner,
-        gameData
       );
       runner.set_result(result)
     }
@@ -40,80 +28,52 @@ class UserDiceRoller{
     this.applyHwanhee();
     this.applyNakhwa();
 
-    this.writeInSheet();
+    // this.writeInSheet();
+    return this.actvie_runners;
   }
 
   applyHwanhee() {
-    const runners = this.actvie_runners
-    const runner_map = this.runner_map
-    const useSkill = runners.filter(runner => runner.useSkill === "환희");
+    const runners = this.actvie_runners;
+    // const runner_map = this.runner_map;
+    const skillUsers = new Map([...runners].filter((_, r) => r.useSkill == "환희" ));
 
-    useSkill.forEach(A => {
-      const B = runner_map[A.target[0]]
-      // const B = runners.find(runner => runner.name === A.target[0]);
+    skillUsers.forEach((skillUser, skillUser_id) => {
+      const targetRunner = runners.get(skillUser.target[0]);
+      // const B = runner_map[A.target[0]]
 
-      if (!B) return;
+      if (!targetRunner) return;
       
-      // B 데이터 전달해서 스킬 카운트 1 깎아야함
-      new ParticipantSaver(runner_map).reduceSkillCount(B.name);
+      // B 스킬 카운트 1 깎기
+      targetRunner.skillCount = Math.max(targetRunner.skillCount -1, 0);
 
-      B.result.finalValue += A.result.finalValue;
-      B.result.finalFormula += ` + ${A.result.finalValue}`;
+      targetRunner.bonus = (targetRunner.bonus || 0) + user.result.finalValue;
+      targetRunner.result.finalValue += skillUser.result.finalValue;
+      targetRunner.result.finalFormula += ` + 환희:${skillUser.result.finalValue}`;
     });
-
-
   }
 
+
   applyNakhwa() {
-    const nakhwaUsers = this.actvie_runners.filter(
-      runner => runner.useSkill === "낙화"
-    );
+    // const nakhwaUsers = this.actvie_runners.filter(
+    //   runner => runner.useSkill === "낙화"
+    // );
+    const runners = this.actvie_runners;
+    const nakhwaUsers = new Map([...runners].filter((_, r) => r.useSkill == "낙화" ));
 
     if(nakhwaUsers.length < 1) return
 
-    for (const user of nakhwaUsers) {
-      const targetRunner = this.runner_map[user.target[0]];
+    for (const [_, user] of nakhwaUsers) {
+      const targetRunner = this.actvie_runners[user.target[0]];
 
       if (!targetRunner) continue;
 
       targetRunner.penalty = (targetRunner.penalty || 0) + user.result.finalValue;
+      targetRunner.result.finalValue -= skillUser.result.finalValue;
+      targetRunner.result.finalValue = Math.max(1, targetRunner.result.finalValue);
+      targetRunner.result.finalFormula += ` - 낙화:${skillUser.result.finalValue}`;
     }
   }
 
-  // 시트에 적기
-  writeInSheet(){
-    const order = this.order;
-    // const runners = this.runners;
-    const runeer_map = this.runner_map;
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("전투 진행");
-    const names = sheet.getRange(`D${3+5*order}:D${5+5*order}`).getValues().flat();
-
-    const output = names.map(name => {
-      const runner = runeer_map[name];
-
-      if(!runner || !runner.result){
-        return ["", ""];
-      } else{
-        return [runner.result.finalFormula, runner.result.finalValue]
-      }
-    });
-
-    // const output = names.map(name => {
-    //   const runner = runners.find(r => r.name === name);
-
-    //   return runner
-    //     ? [runner.result.finalFormula, runner.result.finalValue]
-    //     : ["", ""];
-    // });
-
-    
-    if (output.length > 0) {
-      sheet.getRange(3+order*5 , 9, output.length,2) // I3부터
-          .setValues(output);
-    }
-
-    let saver = new ParticipantSaver(runeer_map).setPenalty().saveSheet();
-  }
 
   runAway(){
     let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("도주 판정")

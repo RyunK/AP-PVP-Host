@@ -1,3 +1,5 @@
+const { getGameData } = require("./gameData.js")
+
 class DiceRoller {
   static random(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -131,16 +133,13 @@ class DiceRoller {
   }
 
   static applyCritical(result) {
-    const agilityInfo =
-      this.criticalTable[this.runner.agility];
+    const agilityInfo = this.criticalTable[`${this.runner.agility}`];
 
-    const luckInfo =
-      this.criticalTable[this.runner.luck];
+    const luckInfo = this.criticalTable[`${this.runner.luck}`];
 
     const roll = this.random(1, 100);
 
-    const critical =
-      roll <= agilityInfo.chance;
+    const critical = roll <= agilityInfo["chance"];
 
     if (!critical) {
       return {
@@ -191,14 +190,14 @@ class DiceRoller {
         ...result,
         finalValue: finalValue,
         finalFormula:
-          `${result.addedCrtFormula} + ${corval}`
+          `${result.addedCrtFormula} + 침식:${corval}`
       };
     } else if(corval != 0){
       return {
         ...result,
         finalValue: finalValue,
         finalFormula:
-          `${result.addedCrtFormula} + ${bonusInfo} - ${penaltyInfo} + ${corval}`
+          `${result.addedCrtFormula} + ${bonusInfo} - ${penaltyInfo} + 침식:${corval}`
       };
     }else{
       return {
@@ -210,10 +209,11 @@ class DiceRoller {
     }  
   }
 
-  static rollSkillWithCritical(skillName, runner, gameData) {
+  static async rollSkillWithCritical(skillName, runner) {
     this.runner = runner;
-    this.skillTable = gameData.skillTable;
-    this.criticalTable = gameData.criticalTable;
+    const {skillTable, criticalTable} = await getGameData();
+    this.skillTable = skillTable;
+    this.criticalTable = criticalTable;
 
     let result = this.rollSkill(skillName);
     result = this.applyCritical(result)
@@ -229,3 +229,5 @@ class DiceRoller {
     return this.rollSkill(skillName);
   }
 }
+
+module.exports = {DiceRoller}
