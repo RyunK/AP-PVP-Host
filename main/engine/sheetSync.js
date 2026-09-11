@@ -112,7 +112,7 @@ function parseSkillTable(rows) {
       uses: row[1] ? Number(row[1]) : null, // 횟수: 비어있으면 무제한(null)
       types: row[2] ? row[2].split(",").map((t) => t.trim()) : [], // 유형: 콤마로 여러 개 가능
       diceCount: Number(row[3]) || row[3], // [다이스]
-      statBonus: Number(row[4]) || row[3], // 추가/고정 (스탯명 또는 "체력*2" 같은 수식)
+      statBonus: Number(row[4]) || row[4], // 추가/고정 (스탯명 또는 "체력*2" 같은 수식)
       extraDiceCount: Number(row[5]) || row[5], // 추가주사위 개수
       extraDiceStat: Number(row[6]) || row[6], // 추가주사위 눈 수 (기준이 되는 스탯명)
     };
