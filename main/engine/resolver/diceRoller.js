@@ -18,6 +18,7 @@ class DiceRoller {
   }
 
   static getStatValue(statName) {
+    if(!statName) return 0;
     // statName이 숫자이거나, 숫자로 변환 가능한 문자열이면 그 값을 그대로 반환
     if (typeof statName === "number") {
       return statName;
@@ -81,7 +82,8 @@ class DiceRoller {
     let formulaParts = [];
 
     // 기본 주사위
-    for (let i = 0; i < skill.diceCount; i++) {
+    const defaultDice = this.getStatValue(skill.diceCount);
+    for (let i = 0; i < defaultDice; i++) {
       const value = this.rollBaseDice();
 
       baseDice.push(value);
