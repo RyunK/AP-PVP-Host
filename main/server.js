@@ -208,7 +208,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
             sendBattleMessage("...SYSTEM INITIALIZATION COMPLETE. 초기 순서 확인 완료.");
             sendBattleMessage("전투 시작.");
-            sendBattleMessage(`선공페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
+            sendBattleMessage(`선공 페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
             emitRoomState(roomManager.getRoom());
             emitBattleState(roomManager.getRoom());
           }
@@ -228,29 +228,52 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("action:confirm", ({ characterId, skillName, targetIds, value }, cb) => {
+      socket.on("action:confirm", async ({ characterId, skillName, targetIds, value }, cb) => {
         try {
-          const {result, p_name, t_name} = roomManager.confirmAction(socket.data.playerId, characterId, skillName, targetIds, value);
+          const { result, p_name, t_name } = await roomManager.confirmAction(
+            socket.data.playerId,
+            characterId,
+            skillName,
+            targetIds,
+            value
+          );
           // console.log(result);
           cb({ ok: true });
           const firstTeam = result.roundLog?.firstTeam;
-          const secondTeam = firstTeam == "A"? "B" : "A";
+          const secondTeam = firstTeam == "A" ? "B" : "A";
           const teamNames = roomManager.getRoom().teamNames;
 
           let skillLabel = skillName;
-          if(skillName == "침식") skillLabel += `(${value})`
+          if (skillName == "침식") skillLabel += `(${value})`;
 
-          emitBattleState(roomManager.serializeRoom(roomManager.getRoom()))
-          // io.to("main").emit("battle:state", roomManager.serializeRoom(roomManager.getRoom()));
+          emitBattleState(roomManager.serializeRoom(roomManager.getRoom()));
+
+          if (result.roundComplete) {
+            io.to("main").emit("calculating:result", result.roundLog);
+          }
           sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
 
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
-            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산페이즈 시작.`);
-          } else if (result.phaseComplete){
-            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공페이즈 개시.`);
+            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
+            sendBattleMessage(``);
+          } else if (result.phaseComplete) {
+            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈 개시.`);
             sendBattleMessage(`${teamNames[secondTeam]} 선언.`);
           }
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
+      socket.on("calculating:confirm", ({ }, cb) => {
+        try {
+          roomManager.toNextRound();
+          sendBattleMessage("정산 확인 완료.");
+          sendBattleMessage(`선공 페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
+          emitRoomState(roomManager.getRoom());
+          emitBattleState(roomManager.getRoom());
+          cb({ ok: true });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }

@@ -53,7 +53,6 @@ class BattleManager {
       round: (this.room.turn?.round ?? 0) + 1,
       firstTeam,
       actingTeam: firstTeam,
-      // phase: "vanguard",
       phase: "vanguard",
       phaseActions: new Map(),
       draft: new Map(),
@@ -70,7 +69,7 @@ class BattleManager {
     return this.room.turn.actingTeam;
   }
 
-  confirmAction(playerId, characterId, skillName, targetIds, value) {
+  async confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
     this._checkValidAct(characterId, act, targetIds, value)
 
@@ -82,8 +81,9 @@ class BattleManager {
     );
     const allConfirmed = actingChars.every((id) => this.room.turn.phaseActions.has(id));
 
+    // 생존자 전부 행동했다면 라운드 진행
     if (!allConfirmed) return { phaseComplete: false };
-    return this._advancePhase();
+    return await this._advancePhase();
   }
 
   _checkValidAct(characterId, act, targetIds, value){
@@ -109,12 +109,15 @@ class BattleManager {
       turn.phase = "rearguard";
       turn.phaseActions = new Map();
       turn.draft = new Map();
+
+      // 후공페이즈 타임 세팅
+      this.setTimestamp();
       return { phaseComplete: true, roundComplete: false, roundLog:{firstTeam: turn.firstTeam} };
     }
 
     turn.rearguardResult = new Map(turn.phaseActions);
     
-    // TODO: 실제 정산(엔진 계산)은 여기서 나중에 채워 넣습니다.
+    // 실제 정산
     const characters = this.room.characters;
     const vanguard = turn.vanguardResult;
     const rearguard = turn.rearguardResult;
@@ -125,11 +128,26 @@ class BattleManager {
       firstTeam: turn.firstTeam,
       vanguard: [...turn.vanguardResult.entries()],
       rearguard: [...turn.rearguardResult.entries()],
-      events: [],
+      results: Object.fromEntries(resultMap),
     };
 
     // this.room.turn = this._startRound(turn.firstTeam);
+    turn.phase = "calculating";
+    // 정산 페이즈 타임 세팅
+    this.setTimestamp();
     return { phaseComplete: true, roundComplete: true, roundLog };
+  }
+
+  applyHp(resultMap){
+    for ( const [id, char] of this.room.characters){
+      char.stats.hp = resultMap.get(id).hpResult.value;
+      if (char.stats.hp <= 0) char.alive = false;
+    }
+  }
+
+  toNextRound(){
+    this.setTimestamp();
+    this.room.turn = this._startRound(turn.firstTeam);
   }
 
   getPlayerTeams(playerId) {

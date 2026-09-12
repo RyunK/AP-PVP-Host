@@ -264,7 +264,7 @@ class RoomManager {
     return this.battle.draftAction(playerId, characterId, skillName, targetIds, value);
   }
 
-  confirmAction(playerId, characterId, skillName, targetIds, value) {
+  async confirmAction(playerId, characterId, skillName, targetIds, value) {
     if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
     // 스킬 사용자의 이름과 대상의 이름을 함께 가져와서 메시지를 전송
     const room = this.getRoom();
@@ -273,9 +273,13 @@ class RoomManager {
     .map(n => room.characters.get(n).name)
     .join(", ");
 
-    const result = this.battle.confirmAction(playerId, characterId, skillName, targetIds, value);
+    const result = await this.battle.confirmAction(playerId, characterId, skillName, targetIds, value);
     
     return {result, p_name, t_name};
+  }
+
+  toNextRound(){
+    this.battle.toNextRound();
   }
 
   getPlayerTeams(playerId) {
