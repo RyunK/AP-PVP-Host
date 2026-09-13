@@ -134,7 +134,7 @@ class BattleManager {
     };
 
     // this.room.turn = this._startRound(turn.firstTeam);
-    turn.phase = "calculating";
+    turn.phase = "resolution";
     // 정산 페이즈 타임 세팅
     this.setTimestamp();
     applyHp(resultMap);

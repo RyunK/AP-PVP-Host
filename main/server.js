@@ -255,7 +255,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
             io.to("main").emit("round:resolved", result.roundLog);
             sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
             sendBattleMessage(``);
-            io.to("main").emit("calculating:result", result.roundLog);
+            io.to("main").emit("resolution:result", result.roundLog);
             emitBattleState("정산 완료.\n" + calcMessage(result.roundLog));
           } else if (result.phaseComplete) {
             sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈 개시.`);
@@ -266,7 +266,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      socket.on("calculating:confirm", ({ }, cb) => {
+      socket.on("resolution:confirm", ({ }, cb) => {
         try {
           roomManager.toNextRound();
           sendBattleMessage("정산 확인 완료.");

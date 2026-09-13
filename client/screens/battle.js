@@ -74,7 +74,7 @@ async function onBattleState(state) {
   switch(now_phase){
     case "vanguard" : phase_kr = "선공"; break;
     case "rearguard" : phase_kr = "후공"; break;
-    case "calculating" : phase_kr = "정산"; break;
+    case "resolution" : phase_kr = "정산"; break;
     default: phase_kr = "-"; 
   }
   if(phase_state != now_phase && round == now_round ){
@@ -326,7 +326,7 @@ function renderBattle() {
     case "rearguard": 
       phaseLabelEl.textContent = "후공";
       break;
-    case "calculating": 
+    case "resolution": 
       phaseLabelEl.textContent = "정산";
       break;
     default:
