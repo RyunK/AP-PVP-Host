@@ -252,7 +252,6 @@ function startServer({ port, onRoomsChanged, onLog }) {
           sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
 
           if (result.roundComplete) {
-            io.to("main").emit("round:resolved", result.roundLog);
             sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
             sendBattleMessage(``);
             io.to("main").emit("resolution:result", result.roundLog);

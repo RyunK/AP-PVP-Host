@@ -482,6 +482,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   min-width: 140px;
   text-align: left;
   height: 37px;
+  width:100%
 }
 .target-multiselect.is-disabled .target-multiselect-toggle {
   opacity: 0.5;
@@ -581,6 +582,31 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   min-width: 320px;
 }
 .order-result { font-size: 18px; margin: 16px 0; }
+
+.round-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+.round-log-table th {
+  text-align: left;
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11.5px;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+}
+.round-log-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.round-log-table tr:hover td {
+  background: var(--bg-btn-ghost);
+}
+
 
 /* ================================
    Combat Phase Alert

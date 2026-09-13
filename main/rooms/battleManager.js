@@ -72,7 +72,7 @@ class BattleManager {
 
   async confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
-    this._checkValidAct(characterId, act, targetIds, value)
+    this._checkValidAct(characterId, skillName, targetIds, value)
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
     this.room.turn.draft.delete(characterId);
@@ -88,7 +88,7 @@ class BattleManager {
   }
 
   _checkValidAct(characterId, act, targetIds, value){
-    if (!targetIds) throw new Error("대상이 없습니다.");
+    if (!targetIds || targetIds.length <= 0) throw new Error("대상이 없습니다.");
     if (!act) throw new Error("행동이 없습니다.");
   }
 
@@ -137,7 +137,7 @@ class BattleManager {
     turn.phase = "resolution";
     // 정산 페이즈 타임 세팅
     this.setTimestamp();
-    applyHp(resultMap);
+    this.applyHp(resultMap);
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 

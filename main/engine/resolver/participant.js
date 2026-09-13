@@ -12,7 +12,7 @@ class Participant {
     this.faction = c.team;
     this.position = c.position;
     this.skill = c.skill;                  //  선택 스킬
-    this.maxHp = 100 + (c.hp_stat * 5);
+    this.maxHp = 100 + (c.stats.hp_stat * 5);
     // this.preBattleHp = v[9];       // J열 전투 전 체력
     this.currentHp = c.stats.hp;            // K열 현재 체력
     this.hpStat = c.stats.hp_stat;          // L열 체력(스탯)

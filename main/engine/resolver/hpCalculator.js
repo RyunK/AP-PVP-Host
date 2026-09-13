@@ -109,7 +109,8 @@ class HpCalculator{
       if(c_hp >0 ){
         // 회복
         calcedHp.formula += ` + 회복: ${runner.heal.value}`
-        c_hp = Math.max(runner.maxHp , c_hp + runner.heal.value)
+        const healValue = runner.heal.value? runner.heal.value: 0;
+        c_hp = Math.min(runner.maxHp , c_hp + healValue)
       }
       calcedHp.value = c_hp
       

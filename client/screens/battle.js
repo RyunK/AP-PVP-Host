@@ -9,6 +9,8 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 import { showPhaseAlert } from "../modals/battleModal.js"
 
+import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
+
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 let orderChecked = false;
@@ -20,11 +22,13 @@ export function init() {
   socket.off("battle:state", onBattleState);
   socket.off("battle:draft", onBattleDraft);
   socket.off("round:resolved", onRoundResolved);
+  socket.off("resolution:result", onResult);
 
   socket.on("room:state", onRoomState);
   socket.on("battle:state", onBattleState);
   socket.on("battle:draft", onBattleDraft);
   socket.on("round:resolved", onRoundResolved);
+  socket.on("resolution:result", onResult);
 
   socket.emit("room:get-state", {}, (res) => {
     if (res.ok){
@@ -35,6 +39,12 @@ export function init() {
 
 }
 
+function onResult(roundLog){
+  console.log("onResult");
+  console.log(roundLog);
+  renderRoundLog(roundLog.results);
+}
+
 export function destroy() {
     socket.off("room:state", onRoomState);
     socket.off("battle:state", onBattleState);
@@ -42,6 +52,10 @@ export function destroy() {
     socket.off("round:resolved", onRoundResolved);
 }
 
+/**
+ * 채팅과 플레이어리스트, 내 정보만 업데이트
+ * @param {Object} state 
+ */
 function onRoomState(state) {
   roomState = state;
   
@@ -50,7 +64,6 @@ function onRoomState(state) {
   renderPlayerList(document.getElementById("playerListContainer"), state.players);
 
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
-  
 }
 
 let phase_state;
@@ -328,10 +341,12 @@ function renderBattle() {
       break;
     case "resolution": 
       phaseLabelEl.textContent = "정산";
-      break;
+      document.getElementById("nowTurn").textContent = "-";  
+      return;
     default:
       phaseLabelEl.textContent = "-";
   }
+
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const myTeams = myCharacters.map((c) => c.team);
 
@@ -497,6 +512,8 @@ function attachCardHandlers(card) {
       const skillName = card.querySelector(".action-type").value;
       const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
       const value = card.querySelector(".action-value").value;
+
+      battleStatus.textContent = "";
 
       socket.emit("action:confirm", { characterId, skillName, targetIds, value }, (res) => {
         if (!res.ok) battleStatus.textContent = res.error;

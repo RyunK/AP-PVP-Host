@@ -82,14 +82,15 @@ function makeReturnObj(c, skillMaxCnt){
     /**@type HpResult */
     const hpResult = {
         formula: c.calcedHp.formula,
-        value: c.calcedHp.value
+        value: c.calcedHp.value,
+        before: c.currentHp,
     }
 
     /**@type Calcs */
     const calcs = {
         info: charInfo,
         diceResult: diceResult,
-        hpResult: hpResult
+        hpResult: hpResult,
     }
 
     return calcs
