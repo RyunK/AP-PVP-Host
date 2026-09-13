@@ -16,9 +16,13 @@ function sortByFaction(roundLog) {
   });
 }
 
-function buildRollTable(sortedLog) {
+function buildRollTable(sortedLog, roomState) {
   const rows = sortedLog
     .map((c) => {
+      c.info.targets = c.info.targets.map(id => {
+          const character = roomState.characters.find(c => c.id === id);
+          return character ? character.name : id;
+      });
       const targets = (c.info.targets || []).join(", ");
       return `
         <tr>
@@ -77,9 +81,9 @@ function buildHpTable(sortedLog) {
     </table>`;
 }
 
-export function renderRoundLog(roundLog) {
+export function renderRoundLog(roundLog, roomState) {
   const container = document.getElementById("myCharacters");
   const sortedLog = sortByFaction(roundLog);
 
-  container.innerHTML = buildRollTable(sortedLog) + buildHpTable(sortedLog);
+  container.innerHTML = buildRollTable(sortedLog, roomState) + buildHpTable(sortedLog);
 }

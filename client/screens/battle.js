@@ -40,9 +40,9 @@ export function init() {
 }
 
 function onResult(roundLog){
-  console.log("onResult");
-  console.log(roundLog);
-  renderRoundLog(roundLog.results);
+  // console.log("onResult");
+  // console.log(roundLog);
+  renderRoundLog(roundLog.results, roomState);
 }
 
 export function destroy() {
@@ -345,7 +345,7 @@ function renderBattle() {
     case "resolution": 
       phaseLabelEl.textContent = "정산";
       document.getElementById("nowTurn").textContent = "-";  
-      renderRoundLog(roomState.battleLogs[round - 1]);
+      renderRoundLog(roomState.battleLogs[round - 1], roomState);
       return;
     default:
       phaseLabelEl.textContent = "-";
