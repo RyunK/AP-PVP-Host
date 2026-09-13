@@ -328,8 +328,11 @@ function renderBattle() {
   const turnNumberEl = document.getElementById("turnNumber");
   const phaseLabelEl = document.getElementById("phaseLabel");
 
+  console.log(roomState);
+
   const turn = roomState.turn;
-  turnNumberEl.textContent = turn?.round ?? 0;
+  const round = turn?.round ?? 0;
+  turnNumberEl.textContent = round;
   let nowTurnTeam = turn?.actingTeam ?? "-";
   document.getElementById("nowTurn").textContent = roomState.teamNames?.[nowTurnTeam] || nowTurnTeam;
   switch(turn?.phase){
@@ -342,6 +345,7 @@ function renderBattle() {
     case "resolution": 
       phaseLabelEl.textContent = "정산";
       document.getElementById("nowTurn").textContent = "-";  
+      renderRoundLog(roomState.battleLogs[round - 1]);
       return;
     default:
       phaseLabelEl.textContent = "-";

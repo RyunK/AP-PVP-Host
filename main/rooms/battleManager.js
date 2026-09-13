@@ -7,7 +7,6 @@ const { resolveRound } = require("../engine/resolveRound.js");
 class BattleManager {
   constructor(room) {
     this.room = room; // roomManager가 들고 있는 그 room 객체를 그대로 참조 (복사 아님)
-    this.room.battleLogs = [];
   }
 
   setTimestamp(){
@@ -123,7 +122,6 @@ class BattleManager {
     const vanguard = turn.vanguardResult;
     const rearguard = turn.rearguardResult;
     const resultMap =  await resolveRound({characters, vanguard, rearguard });
-    this.room.battleLogs.push(resultMap);
 
     const roundLog = {
       round: turn.round,
@@ -133,11 +131,13 @@ class BattleManager {
       results: Object.fromEntries(resultMap),
     };
 
+    
     // this.room.turn = this._startRound(turn.firstTeam);
     turn.phase = "resolution";
     // 정산 페이즈 타임 세팅
     this.setTimestamp();
     this.applyHp(resultMap);
+    this.room.battleLogs.push(Object.fromEntries(resultMap));
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 

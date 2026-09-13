@@ -67,6 +67,7 @@ class RoomManager {
       teamNames: { A: "A팀", B: "B팀" },
       turn: { number: 0, pendingActions: new Map() },
       chatHistory: [],
+      battleLogs: [],
     };
   }
 
@@ -304,6 +305,7 @@ class RoomManager {
       turnNumber: room.turn.number,
       turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
+      battleLogs: room.battleLogs,
     };
   }
 
