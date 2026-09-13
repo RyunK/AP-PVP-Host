@@ -59,6 +59,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
     function sendBattleMessage(text) {
       const message = roomManager.postBattleMessage(text);
       io.to("main").emit("chat:message", message);
+
+      console.log(text);
+      
     }
 
     function syncPlayerTeamRooms(playerId) {
@@ -253,9 +256,11 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
           if (result.roundComplete) {
             sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
-            sendBattleMessage(``);
+            console.log(result.roundLog.results);
+            const resolutionMessage = calcMessage(result.roundLog.results);
+            console.log(resolutionMessage);
+            sendBattleMessage("정산 완료.\n" + resolutionMessage);
             io.to("main").emit("resolution:result", result.roundLog);
-            emitBattleState("정산 완료.\n" + calcMessage(result.roundLog));
           } else if (result.phaseComplete) {
             sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈 개시.`);
             sendBattleMessage(`${teamNames[secondTeam]} 선언.`);

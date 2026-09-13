@@ -12,6 +12,8 @@ function calcMessage(roundLog) {
     const remainHpB = [];
 
     for (const c of Object.values(roundLog)) {
+        // console.log(c.info.name);
+        if(!c || !c.info) continue;
         if (c.info.faction == "A") {
             damageA.push(`${c.info.name}:  ${c.diceResult.value}`);
             remainHpA.push(`${c.info.name}:   ${c.hpResult.value}`);
@@ -22,12 +24,12 @@ function calcMessage(roundLog) {
     }
 
     const damageSection =
-        `[판정값]\n\n` +
+        `[판정값]\n` +
         `${damageA.join('\n')}\n\n` +
         `${damageB.join('\n')}`;
 
     const remainHpSection =
-        `[남은 체력]\n\n` +
+        `[남은 체력]\n` +
         `${remainHpA.join('\n')}\n\n` +
         `${remainHpB.join('\n')}`;
 

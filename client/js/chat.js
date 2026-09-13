@@ -21,7 +21,8 @@ function renderLog() {
         ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
         </span> </div>`;
       }else if(m.battleMessage){
-        return `<div class="chat-message battle-message">[NECTAR] ${escapeHtml(m.text)} 
+        return `<div class="chat-message battle-message">
+        <span style="white-space: pre-line;">[NECTAR] ${escapeHtml(m.text)} </span>
         <span class="chat-timestamp">
         ${m.timestamp ? new Date(m.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : ""}
         </span> </div>`;

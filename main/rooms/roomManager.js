@@ -358,7 +358,6 @@ class RoomManager {
     };
 
     this.room.chatHistory.push(message);
-    if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
 
     return message;
   }
@@ -380,7 +379,6 @@ class RoomManager {
       };
 
       this.room.chatHistory.push(sysMessage);
-      if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
 
       return sysMessage;
   }
@@ -402,7 +400,6 @@ class RoomManager {
       };
 
       this.room.chatHistory.push(sysMessage);
-      if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
 
       return sysMessage;
   }
