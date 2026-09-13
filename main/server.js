@@ -249,17 +249,14 @@ function startServer({ port, onRoomsChanged, onLog }) {
           if (skillName == "침식") skillLabel += `(${value})`;
 
           emitBattleState(roomManager.serializeRoom(roomManager.getRoom()));
-
-          if (result.roundComplete) {
-            io.to("main").emit("calculating:result", result.roundLog);
-            emitBattleState("정산 완료.\n" + calcMessage(result.roundLog));
-          }
           sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
 
           if (result.roundComplete) {
             io.to("main").emit("round:resolved", result.roundLog);
             sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
             sendBattleMessage(``);
+            io.to("main").emit("calculating:result", result.roundLog);
+            emitBattleState("정산 완료.\n" + calcMessage(result.roundLog));
           } else if (result.phaseComplete) {
             sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈 개시.`);
             sendBattleMessage(`${teamNames[secondTeam]} 선언.`);
