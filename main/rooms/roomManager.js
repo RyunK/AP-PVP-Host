@@ -3,6 +3,7 @@
 const crypto = require("crypto");
 const RECONNECT_GRACE_MS = 30_000; // 30초
 const { BattleManager } = require("./battleManager");
+const { loadGameData } = require("../engine/formulaLoader")
 
 function randomPlayerId() {
   return `p_${crypto.randomBytes(6).toString("hex")}`;
@@ -68,6 +69,7 @@ class RoomManager {
       turn: { number: 0, pendingActions: new Map() },
       chatHistory: [],
       battleLogs: [],
+      ruleData: loadGameData(),
     };
   }
 
@@ -161,6 +163,7 @@ class RoomManager {
     player.characterIds = [];
 
     const created = characterDefs.map((def, idx) => {
+      const skillCount = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const charId = `c_${playerId}_${idx}`;
       room.characters.set(charId, {
         id: charId,
@@ -168,7 +171,7 @@ class RoomManager {
         name: def.name || `캐릭터${idx + 1}`,
         position: def.position || "아이기스",
         skill: def.skill  || "엄호",
-        skillCount : 0,
+        skillCount : skillCount,
         stats: {
           hp: def.hp || 1,
           hp_stat: def.hp_stat || 0,

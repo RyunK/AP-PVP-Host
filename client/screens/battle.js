@@ -290,10 +290,11 @@ function renderRoster() {
             <td>${c.position}</td>
             <td>${c.skill}</td>
             <td>${c.stats.hp_stat}</td>
+            <td>${c.stats.power}</td>
             <td>${c.stats.dex}</td>
             <td>${c.stats.mnd}</td>
             <td>${c.stats.luck}</td>
-            <td>${c.stats.power}</td>
+            <td>${c.skillCount}</td>
             <td>${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}</td>
           </tr>`;
       })
@@ -309,10 +310,10 @@ function renderRoster() {
             <th>포지션</th>
             <th>선택스킬</th>
             <th>체력</th>
+            <th>이능력</th>
             <th>민첩</th>
             <th>정신력</th>
             <th>행운</th>
-            <th>이능력</th>
             <th>남은 스킬</th>
           </tr>
         </thead>

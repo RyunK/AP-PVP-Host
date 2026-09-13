@@ -42,7 +42,7 @@ function buildRollTable(sortedLog, roomState) {
       <thead>
         <tr>
           <th>이름</th>
-          <th>사용 스킬</th>
+          <th>행동</th>
           <th>침식값</th>
           <th>대상</th>
           <th>계산식</th>
