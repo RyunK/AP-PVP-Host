@@ -33,7 +33,7 @@ function buildRollTable(sortedLog) {
     .join("");
 
   return `
-    <h3>판정 결과</h3>
+    <h2>판정 결과</h2>
     <table class="round-log-table">
       <thead>
         <tr>
@@ -63,7 +63,7 @@ function buildHpTable(sortedLog) {
     .join("");
 
   return `
-    <h3>체력 정산</h3>
+    <h2>체력 정산</h2>
     <table class="round-log-table">
       <thead>
         <tr>
