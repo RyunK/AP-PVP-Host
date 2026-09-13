@@ -60,7 +60,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
       const message = roomManager.postBattleMessage(text);
       io.to("main").emit("chat:message", message);
 
-      console.log(text);
+      // console.log(text);
       
     }
 
@@ -256,9 +256,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
           if (result.roundComplete) {
             sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
-            console.log(result.roundLog.results);
             const resolutionMessage = calcMessage(result.roundLog.results);
-            console.log(resolutionMessage);
             sendBattleMessage("정산 완료.\n" + resolutionMessage);
             io.to("main").emit("resolution:result", result.roundLog);
           } else if (result.phaseComplete) {
