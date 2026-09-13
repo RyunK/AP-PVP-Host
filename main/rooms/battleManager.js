@@ -135,9 +135,14 @@ class BattleManager {
     turn.phase = "calculating";
     // 정산 페이즈 타임 세팅
     this.setTimestamp();
+    applyHp(resultMap);
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 
+  /**
+   * 계산만 했던 체력을 실제로 room.characters에 적용시킴
+   * @param {Map} resultMap 
+   */
   applyHp(resultMap){
     for ( const [id, char] of this.room.characters){
       char.stats.hp = resultMap.get(id).hpResult.value;
