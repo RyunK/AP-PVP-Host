@@ -7,6 +7,7 @@ const { resolveRound } = require("../engine/resolveRound.js");
 class BattleManager {
   constructor(room) {
     this.room = room; // roomManager가 들고 있는 그 room 객체를 그대로 참조 (복사 아님)
+    this.room.battleLogs = [];
   }
 
   setTimestamp(){
@@ -122,6 +123,7 @@ class BattleManager {
     const vanguard = turn.vanguardResult;
     const rearguard = turn.rearguardResult;
     const resultMap =  await resolveRound({characters, vanguard, rearguard });
+    this.room.battleLogs.push(resultMap);
 
     const roundLog = {
       round: turn.round,
