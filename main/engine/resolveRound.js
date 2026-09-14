@@ -26,6 +26,8 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     let c_map = new Map();
     characters.forEach((c, cid) => {
         const c_act = actionMap.get(cid); // 행동을 선언했으면 그 액션, 안 했으면 undefined
+        const source = vanguard.has(cid) ? "vanguard" : "rearguard";
+        validCheck(characters, actionMap, cid, source);
 
         const skillType = c_act?.skillName ? skillTable[c_act.skillName]?.["types"] : "";
         const participant = new Participant(c, c_act, skillType);
@@ -97,6 +99,38 @@ function makeReturnObj(c, skillMaxCnt){
     }
 
     return calcs
+}
+
+function validCheck(characters, actionMap, characterId, source){
+    const c_act = actionMap.get(characterId);
+    const skillTargetMax = {
+      엄호: 1, 수호: 2, 확산: 3, 침식: 1, 성호: 2, 환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
+    }
+
+    if(targetIds.length > skillTargetMax[c_act.skillName]){
+        c_act.targetIds = c_act.targetIds.slice(0, skillTargetMax[c_act.skillName]);
+    }
+    const character = characters.get(characterId);
+    if ((character.skillCount >= character.skillMax) 
+    || (act == "낙화" && source == "rearguard") 
+    || (act == "도주" && source == "vanguard" && this.turn.round < 6) ){
+        c_act.skillName = "";
+        c_act.targetIds = [];
+    }
+
+    
+    const value = actionMap.value;
+    if(act == "침식" && (character.stats.hp <= value || value > 20) ) actionMap.value = Math.min(character.stats.hp, 20);
+
+    if(act == "낙화"){
+      targetIds.forEach(targetId => {
+        const target_skill = characters.get(targetId).skill;
+        if (target_skill == "낙화" || target_skill == "환희"){
+            c_act.skillName = "";
+            c_act.targetIds = [];
+        }
+      });
+    }
 }
 
 module.exports = { resolveRound };

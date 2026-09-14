@@ -91,6 +91,16 @@ class UserDiceRoller{
       const targetRunner = this.actvie_runners[user.target[0]];
 
       if (!targetRunner) continue;
+      if (targetRunner.result.finalValue == 0){
+        continue;
+      }
+      if(targetRunner.useSkill == targetRunner.skill){
+        targetRunner.useSkill = "";
+        targetRunner.result = {
+          finalFormula : "낙화 대상 - 선택 스킬 선언 불가", finalValue: 0 
+        }
+        continue;
+      }
 
       targetRunner.penalty = (targetRunner.penalty || 0) + user.result.finalValue;
       targetRunner.result.finalValue -= skillUser.result.finalValue;

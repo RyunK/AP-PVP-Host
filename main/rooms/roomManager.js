@@ -17,6 +17,8 @@ class RoomManager {
     this.onRoomClosed = onRoomClosed || (() => {});
     this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
     this.onceChecker = false; // false -> 아직 안했다 / true -> 했다.
+
+    
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
@@ -166,6 +168,7 @@ class RoomManager {
 
     const created = characterDefs.map((def, idx) => {
       const skillMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
+      const skillTargetMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const charId = `c_${playerId}_${idx}`;
       room.characters.set(charId, {
         id: charId,

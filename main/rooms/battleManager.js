@@ -9,6 +9,10 @@ class BattleManager {
     this.room = room;
     this.onAutoAdvance = onAutoAdvance || (() => {}); // 타이머가 스스로 다음 단계로 넘어갈 때 서버 통신 보내는 용도
     this._timer = null;
+
+    this.skillTargetMax = {
+      엄호: 1, 수호: 2, 확산: 3, 침식: 1, 성호: 2, 환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
+    }
   }
 
   setTimestamp(durationms = 30_000){
@@ -161,7 +165,25 @@ class BattleManager {
 
   _checkValidAct(characterId, act, targetIds, value){
     if (!targetIds || targetIds.length <= 0) throw new Error("대상이 없습니다.");
+    if(targetIds.length > this.skillTargetMax[act]) throw new Error("대상이 너무 많습니다.");
+
     if (!act) throw new Error("행동이 없습니다.");
+    const character = this.room.characters.get(characterId);
+    if (character.skillCount >= character.skillMax) throw new Error("스킬을 사용할 수 없습니다.");
+    if(act == "낙화" && this.turn.phase == "rearguard") throw new Error("지금은 낙화를 사용할 수 없습니다.");
+    if(act == "도주" && this.turn.phase == "vanguard" && this.turn.round < 6) throw new Error("지금은 도주할 수 없습니다.");
+    if(act == "침식" && (character.stats.hp <= value || value > 20) ) throw new Error("침식값이 너무 큽니다.");
+
+    if(act == "낙화"){
+      targetIds.forEach(targetId => {
+        const target_skill = this.room.characters.get(targetId).skill;
+        if (target_skill == "낙화" || target_skill == "환희")
+          throw new Error("낙화 혹은 환희 스킬을 가진 대상을 지정할 수 없습니다.");
+      });
+    }
+
+    // 선공에 낙화 썼으면 대상 체크 후 스킬 사용시 불가하다고 오류
+    
   }
 
   _assertCanAct(playerId, characterId) {
