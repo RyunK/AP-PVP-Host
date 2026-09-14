@@ -164,7 +164,7 @@ class RoomManager {
     player.characterIds = [];
 
     const created = characterDefs.map((def, idx) => {
-      const skillCount = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
+      const skillMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const charId = `c_${playerId}_${idx}`;
       room.characters.set(charId, {
         id: charId,
@@ -172,7 +172,8 @@ class RoomManager {
         name: def.name || `캐릭터${idx + 1}`,
         position: def.position || "아이기스",
         skill: def.skill  || "엄호",
-        skillCount : skillCount,
+        skillMax  : skillMax,
+        skillCount : 0,
         stats: {
           hp: def.hp || 1,
           hp_stat: def.hp_stat || 0,

@@ -304,7 +304,7 @@ function renderRoster() {
             <td>${c.stats.dex}</td>
             <td>${c.stats.mnd}</td>
             <td>${c.stats.luck}</td>
-            <td>${c.skillCount}</td>
+            <td>${c.skillMax - c.skillCount}</td>
             <td>${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}</td>
           </tr>`;
       })
