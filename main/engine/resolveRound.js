@@ -24,7 +24,8 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     let c_map = new Map();
     [...vanguard, ...rearguard].forEach(([cid, c_act]) => {
         const c = characters.get(cid);
-        const skillType = skillTable[c_act.skillName]["types"];
+        if(!cid) return;
+        const skillType = c_act.skillName? skillTable[c_act.skillName]["types"]:"";
         let participant = new Participant( c, c_act, skillType)
         c_map.set(cid, participant);
     });
@@ -66,23 +67,23 @@ function makeReturnObj(c, skillMaxCnt){
         id: c.no,
         name: c.name,
         faction: c.faction,
-        useSkill: c.useSkill,
+        useSkill: c.useSkill  || "",
         corVal: c.corVal,
-        targets: c.target,
-        skillLeft: skillMaxCnt - c.skillCount,
+        targets: c.target  || [],
+        skillLeft: skillMaxCnt - c.skillCount || 0,
     }
 
     /**@type DiceResult */
     const diceResult = {
-        criticalMultiplier: c.result?.criticalMultiplier,
-        formula: c.result?.finalFormula,
-        value: c.result?.finalValue
+        criticalMultiplier: c.result?.criticalMultiplier || 1,
+        formula: c.result?.finalFormula || "",
+        value: c.result?.finalValue || 0
     }
 
     /**@type HpResult */
     const hpResult = {
-        formula: c.calcedHp.formula,
-        value: c.calcedHp.value,
+        formula: c.calcedHp.formula || "",
+        value: c.calcedHp.value || 0,
         before: c.currentHp,
     }
 
