@@ -121,7 +121,8 @@ class RoomManager {
 
     const stillConnected = [...room.players.values()].some((p) => p.connected);
     if (player.isHost || !stillConnected) {
-      this.room.battle?._clearTimer();
+      this.battle?.destroy(); // this.room.battle이 아니라 this.battle
+      this.battle = null;         
       this.room = null;
       this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
     } else{

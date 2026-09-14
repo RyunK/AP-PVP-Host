@@ -209,7 +209,7 @@ class BattleManager {
     
     // this.room.turn = this._startRound(turn.firstTeam);
     turn.phase = "resolution";
-    console.log(Object.fromEntries(resultMap));
+    // console.log(Object.fromEntries(resultMap));
     this.room.battleLogs.push(Object.fromEntries(resultMap));
     this.applyHp(resultMap);
     // 정산 페이즈 타임 세팅

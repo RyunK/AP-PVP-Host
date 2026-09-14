@@ -46,6 +46,7 @@ function calcMessage(roundLog) {
  * @returns 
  */
 function autoPhaseForwarding(room, expectedPhase){
+    if(!room || !room.turn || !expectedPhase) return "";
     const firstTeam = room.turn.firstTeam;
     const secondTeam = firstTeam == "A" ? "B" : "A";
     const teamNames = room.teamNames;
