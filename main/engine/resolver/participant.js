@@ -38,10 +38,10 @@ class Participant {
       formula: ""
     };
 
-    this.useSkill = c_act.skillName;
-    this.corVal = c_act.value || 0;
-    this.target = c_act.targetIds;
-    this.skillType = skillType;
+    this.useSkill = c_act?.skillName || "";
+    this.corVal = c_act?.value || 0;
+    this.target = c_act?.targetIds || [];
+    this.skillType = skillType || [];
   }
   
   set_result(result){

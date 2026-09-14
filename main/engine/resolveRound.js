@@ -21,12 +21,24 @@ async function resolveRound({ characters, vanguard, rearguard }) {
     const { skillTable, criticalTable }  = await getGameData();
 
     // 캐릭터 객체 만들기
+    // let c_map = new Map();
+    // [...vanguard, ...rearguard].forEach(([cid, c_act]) => {
+    //     const c = characters.get(cid);
+    //     if(!cid) return;
+    //     const skillType = c_act.skillName? skillTable[c_act.skillName]["types"]:"";
+    //     let participant = new Participant( c, c_act, skillType)
+    //     c_map.set(cid, participant);
+    // });
+
+    // 캐릭터 객체 만들기
+    const actionMap = new Map([...vanguard, ...rearguard]); // characterId -> action, 조회용
+
     let c_map = new Map();
-    [...vanguard, ...rearguard].forEach(([cid, c_act]) => {
-        const c = characters.get(cid);
-        if(!cid) return;
-        const skillType = c_act.skillName? skillTable[c_act.skillName]["types"]:"";
-        let participant = new Participant( c, c_act, skillType)
+    characters.forEach((c, cid) => {
+        const c_act = actionMap.get(cid); // 행동을 선언했으면 그 액션, 안 했으면 undefined
+
+        const skillType = c_act?.skillName ? skillTable[c_act.skillName]?.["types"] : "";
+        const participant = new Participant(c, c_act, skillType);
         c_map.set(cid, participant);
     });
 
