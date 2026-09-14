@@ -218,9 +218,15 @@ class DiceRoller {
     this.criticalTable = criticalTable;
 
     // 스킬 다 썼으면 못 씀
+    let skillcount = runner.skillCount;
+    let skillmax = skillTable[skillName]["uses"];
+
     if(runner.skill == skillName 
       && runner.skillCount >= skillTable[skillName]["uses"]){
-        return 0;
+        return {
+          finalValue: 0,
+          finalFormula:""
+        };
     }
 
     let result = this.rollSkill(skillName);
