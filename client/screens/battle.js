@@ -72,6 +72,8 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
+  console.log(roomState);
+
   // 전반적인 전투 갱신
   renderBattle();
   startTurnTimer();
@@ -438,7 +440,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
     .map((id) => roomState.characters.find((e) => e.id === id)?.name)
     .filter(Boolean);
   const targetSummary = selectedNames.length > 0
-    ? selectedNames.map((n) => `(${escapeHtml(n)})`).join(" ")
+    ? selectedNames.map((n) => `${escapeHtml(n)}`).join(", ")
     : "대상 선택";
 
   const btnText = confirmed ? "확정됨" : disabled ? "선언 중..." : "선언 확정";

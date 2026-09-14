@@ -24,17 +24,17 @@ class BattleManager {
   _scheduleTimeout(expectedPhase, delayMs) {
     clearTimeout(this._timer); // 이전에 걸어둔 타이머가 있으면 먼저 취소 (중복 방지)
 
-    this._timer = setTimeout(() => {
+    this._timer = setTimeout(async () =>  {
       if (this.room.turn.phase !== expectedPhase) return; // 이미 다른 방법으로 넘어갔으면 무시
 
       if (expectedPhase === "rearguard" || expectedPhase === "vanguard") {
-        this._advancePhase(); // 원래 행동 확인 -> 페이즈 전환 하던 함수
+        await this._advancePhase(); // 원래 행동 확인 -> 페이즈 전환 하던 함수
       } else if (expectedPhase === "resolution") {
         this.toNextRound(); 
       } else if (expectedPhase === "orderCheck"){
         this.endOrderCheck();
       }
-
+      console.log("onAutoAdvance: " + expectedPhase);
       this.onAutoAdvance?.(expectedPhase); // 타임아웃 끝나면 현재 상태 emit
     }, delayMs);
   }
@@ -123,9 +123,9 @@ class BattleManager {
   toNextRound(){
     const durationMs = this._getPhaseDuration('vanguard')
 
+    this.room.turn = this._startRound(this.room.turn.firstTeam);
     this.setTimestamp(durationMs);
     this._scheduleTimeout('vanguard', durationMs);
-    this.room.turn = this._startRound(this.room.turn.firstTeam);
   }
 
   endOrderCheck(){
@@ -209,6 +209,7 @@ class BattleManager {
     
     // this.room.turn = this._startRound(turn.firstTeam);
     turn.phase = "resolution";
+    console.log(Object.fromEntries(resultMap));
     this.room.battleLogs.push(Object.fromEntries(resultMap));
     this.applyHp(resultMap);
     // 정산 페이즈 타임 세팅
@@ -230,7 +231,6 @@ class BattleManager {
   }
 
   
-
   getPlayerTeams(playerId) {
     const player = this.room?.players.get(playerId);
     if (!player) return [];
@@ -242,7 +242,6 @@ class BattleManager {
     return [...teams];
   }
 
-  
 
   /** roomManager.serializeRoom이 room.turn을 공개용으로 변환할 때 씀 */
   serializeTurn() {
