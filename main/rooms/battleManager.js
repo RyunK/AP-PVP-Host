@@ -8,22 +8,45 @@ class BattleManager {
   constructor(room, { onAutoAdvance } = {}) {
     this.room = room;
     this.onAutoAdvance = onAutoAdvance || (() => {}); // 타이머가 스스로 다음 단계로 넘어갈 때 server.js에 알림
-    this.timer = null;
+    this._timer = null;
   }
 
   setTimestamp(){
     this.room.turn.startTime = new Date().getTime();
   }
 
-  _scheduleTimer(delayMs, callback) {
-    this._clearTimer();
-    this.timer = setTimeout(callback, delayMs);
+  /**
+   * 타임아웃 걸어줌
+   * @param {string} expectedPhase 현재 페이즈 (지금부터 시작할 페이즈)
+   * @param {number} delayMs 타임아웃 걸 milli seconds
+   */
+  _scheduleTimeout(expectedPhase, delayMs) {
+    clearTimeout(this._timer); // 이전에 걸어둔 타이머가 있으면 먼저 취소 (중복 방지)
+
+    this._timer = setTimeout(() => {
+      if (this.room.turn.phase !== expectedPhase) return; // 이미 다른 방법으로 넘어갔으면 무시
+
+      if (expectedPhase === "rearguard" || expectedPhase === "vanguard") {
+        this._advancePhase(); // 원래 행동 확인 -> 페이즈 전환 하던 함수
+      } else if (expectedPhase === "resolution") {
+        this.toNextRound(); 
+      } else if (expectedPhase === "orderCheck"){
+        this.endOrderCheck();
+      }
+
+      this.onAutoAdvance?.(); // server.js에 "상태 바뀌었으니 방송해줘" 알리는 용도 (선택)
+    }, delayMs);
   }
+
+  // _scheduleTimer(delayMs, callback) {
+  //   this._clearTimer();
+  //   this.timer = setTimeout(callback, delayMs);
+  // }
  
   _clearTimer() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
     }
   }
  
@@ -36,6 +59,7 @@ class BattleManager {
     this.room.turn = this._startRound(null);
     this.room.turn.phase = "orderCheck"
     this.setTimestamp();
+    this._scheduleTimeout("orderCheck", this._getPhaseDuration("orderCheck"));
     return this.room.turn;
   }
 
@@ -57,54 +81,54 @@ class BattleManager {
     }
   }
 
-  _enterPhase(phase) {
-    const turn = this.room.turn;
-    turn.phase = phase;
-    turn.startTime = Date.now();
+  // _enterPhase(phase) {
+  //   const turn = this.room.turn;
+  //   turn.phase = phase;
+  //   turn.startTime = Date.now();
 
-    const duration = this._getPhaseDuration(phase);
-    if (duration) {
-      this._scheduleTimer(duration, () => this._handlePhaseTimeout(phase));
-    } else {
-      this._clearTimer();
-    }
-  }
+  //   const duration = this._getPhaseDuration(phase);
+  //   if (duration) {
+  //     this._scheduleTimer(duration, () => this._handlePhaseTimeout(phase));
+  //   } else {
+  //     this._clearTimer();
+  //   }
+  // }
 
-  _handlePhaseTimeout(expectedPhase) {
-    const turn = this.room.turn;
-    if (!turn || turn.phase !== expectedPhase) return; // 이미 다른 경로로 넘어갔으면 무시 (중복 실행 방지)
+  // _handlePhaseTimeout(expectedPhase) {
+  //   const turn = this.room.turn;
+  //   if (!turn || turn.phase !== expectedPhase) return; // 이미 다른 경로로 넘어갔으면 무시 (중복 실행 방지)
 
-    switch (expectedPhase) {
-      case "orderCheck":
-        this._enterPhase("vanguard");
-        this.onAutoAdvance({ type: "phase-change", phase: "vanguard" });
-        break;
+  //   switch (expectedPhase) {
+  //     case "orderCheck":
+  //       this._enterPhase("vanguard");
+  //       this.onAutoAdvance({ type: "phase-change", phase: "vanguard" });
+  //       break;
 
-      case "vanguard":
-      case "rearguard":
-        this._autoConfirmRemaining(expectedPhase); // 아래 4번
-        break;
+  //     case "vanguard":
+  //     case "rearguard":
+  //       this._autoConfirmRemaining(expectedPhase); // 아래 4번
+  //       break;
 
-      case "calculating":
-        this._autoAdvanceFromCalculating(); // 지금 있는 그 메서드 그대로 재사용
-        break;
-    }
-  }
+  //     case "calculating":
+  //       this._autoAdvanceFromCalculating(); // 지금 있는 그 메서드 그대로 재사용
+  //       break;
+  //   }
+  // }
 
-  _autoAdvanceFromCalculating() {
-    const turn = this.room.turn;
-    if (!turn || turn.phase !== "calculating") return;
+  // _autoAdvanceFromCalculating() {
+  //   const turn = this.room.turn;
+  //   if (!turn || turn.phase !== "calculating") return;
  
-    if (turn.winner) {
-      this.room.phase = "ended";
-      this.onAutoAdvance({ type: "battle-ended", winner: turn.winner });
-      return;
-    }
+  //   if (turn.winner) {
+  //     this.room.phase = "ended";
+  //     this.onAutoAdvance({ type: "battle-ended", winner: turn.winner });
+  //     return;
+  //   }
  
-    this.room.turn = this._buildOrderCheckTurn(turn.firstTeam);
-    this._scheduleTimer(ORDER_CHECK_MS, () => this._autoAdvanceFromOrderCheck());
-    this.onAutoAdvance({ type: "phase-change", phase: "orderCheck" });
-  }
+  //   this.room.turn = this._buildOrderCheckTurn(turn.firstTeam);
+  //   this._scheduleTimer(ORDER_CHECK_MS, () => this._autoAdvanceFromOrderCheck());
+  //   this.onAutoAdvance({ type: "phase-change", phase: "orderCheck" });
+  // }
 
   // _autoConfirmRemaining(phase) {
   //   const turn = this.room.turn;
@@ -164,6 +188,18 @@ class BattleManager {
     };
   }
 
+  toNextRound(){
+    this.setTimestamp();
+    this._scheduleTimeout('vanguard', this._getPhaseDuration('vanguard'));
+    this.room.turn = this._startRound(turn.firstTeam);
+  }
+
+  endOrderCheck(){
+    this.room.turn.phase = "vanguard";
+    this._scheduleTimeout('vanguard', this._getPhaseDuration('vanguard'));
+    this.setTimestamp();
+  }
+
   draftAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
     this.room.turn.draft.set(characterId, { skillName, targetIds, value });
@@ -213,6 +249,7 @@ class BattleManager {
 
       // 후공페이즈 타임 세팅
       this.setTimestamp();
+      this._scheduleTimeout("rearguard", this._getPhaseDuration("rearguard"));
       return { phaseComplete: true, roundComplete: false, roundLog:{firstTeam: turn.firstTeam} };
     }
 
@@ -235,10 +272,11 @@ class BattleManager {
     
     // this.room.turn = this._startRound(turn.firstTeam);
     turn.phase = "resolution";
+    this.room.battleLogs.push(Object.fromEntries(resultMap));
+    this.applyHp(resultMap);
     // 정산 페이즈 타임 세팅
     this.setTimestamp();
-    this.applyHp(resultMap);
-    this.room.battleLogs.push(Object.fromEntries(resultMap));
+    this._scheduleTimeout("resolution", this._getPhaseDuration("resolution"));
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 
@@ -253,10 +291,7 @@ class BattleManager {
     }
   }
 
-  toNextRound(){
-    this.setTimestamp();
-    this.room.turn = this._startRound(turn.firstTeam);
-  }
+  
 
   getPlayerTeams(playerId) {
     const player = this.room?.players.get(playerId);
@@ -269,10 +304,7 @@ class BattleManager {
     return [...teams];
   }
 
-  endOrderCheck(){
-    this.room.turn.phase = "vanguard";
-    this.setTimestamp();
-  }
+  
 
   /** roomManager.serializeRoom이 room.turn을 공개용으로 변환할 때 씀 */
   serializeTurn() {

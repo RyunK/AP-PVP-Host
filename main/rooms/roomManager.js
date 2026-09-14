@@ -195,10 +195,6 @@ class RoomManager {
 
     const character = this.room.characters.get(characterId);
 
-    // console.log("character:", character); 
-    // console.log("전달받은 playerId:", requesterId); 
-    // console.log("character.ownerId:", character?.ownerId); 
-
     if (!character) throw new Error("캐릭터를 찾을 수 없습니다.");
     const requester = this.room.players.get(requesterId);
     const isOwner = character.ownerId === requesterId;
