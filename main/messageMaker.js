@@ -11,6 +11,8 @@ function calcMessage(roundLog) {
     const remainHpA = [];
     const remainHpB = [];
 
+    if (!roundLog || Object.values(roundLog).length <= 0) return "";
+
     for (const c of Object.values(roundLog)) {
         // console.log(c.info.name);
         if(!c || !c.info) continue;

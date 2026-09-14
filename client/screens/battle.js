@@ -74,7 +74,8 @@ async function onBattleState(state) {
 
   // 전반적인 전투 갱신
   renderBattle();
-
+  startTurnTimer();
+  
   // 캐릭터들 스탯 상황
   renderRoster();
 
@@ -99,7 +100,6 @@ async function onBattleState(state) {
   round = now_round;
 }
 
-const ORDER_CHECK_DURATION_MS = 10_000;
 let orderCheckIntervalId = null;
 
 async function renderOrderCheck() {
@@ -151,11 +151,12 @@ function maxDex(team) {
 function startOrderCheckCountdown() {
   const countdownEl = document.getElementById("orderCheckCountdown");
   const startTime = roomState.turn.startTime;
+  const durationMs = roomState.turn.durationMs;
 
   let tick_num = 0;
   function tick() {
     const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, ORDER_CHECK_DURATION_MS - elapsed);
+    const remaining = Math.max(0, durationMs - elapsed);
     const secondsLeft = Math.ceil(remaining / 1000);
     const dots = ".".repeat(tick_num % 4);
     tick_num += 1;
@@ -166,9 +167,9 @@ function startOrderCheckCountdown() {
       orderCheckIntervalId = null;
       document.querySelector(".alert-modal").style.display = "none";
       
-      socket.emit("orderCheck:ended",  (res) => {
-        if (!res.ok) battleStatus.textContent = res.error;
-      });
+      // socket.emit("orderCheck:ended",  (res) => {
+      //   if (!res.ok) battleStatus.textContent = res.error;
+      // });
     }
   }
 
@@ -176,35 +177,42 @@ function startOrderCheckCountdown() {
   orderCheckIntervalId = setInterval(tick, 1000);
 }
 
-function onTurnResolved(payload) {
-  const turnNumberEl = document.getElementById("turnNumber");
-  events.forEach((ev) => {
-    const actor = roomState.characters.find((c) => c.id === ev.actorId);
-    const target = roomState.characters.find((c) => c.id === ev.targetId);
-    if (ev.type === "damage") {
-      logLine(
-        `${actor?.name ?? "?"} → ${target?.name ?? "?"}: ${ev.amount} 피해${ev.isCrit ? " (치명타!)" : ""}`
-      );
-    } else if (ev.type === "heal") {
-      logLine(`${actor?.name ?? "?"} → ${target?.name ?? "?"}: ${ev.amount} 회복`);
+
+let turnTimerInterval = null;
+
+function startTurnTimer() {
+    const timerEl = document.getElementById("turnTimer");
+
+    if (turnTimerInterval !== null) {
+        clearInterval(turnTimerInterval);
     }
-  });
-  if (winner) {
-    logLine(winner === "draw" ? "무승부입니다." : `${winner}팀 승리!`);
-  }
-  turnNumberEl.textContent = nextTurn;
-}
 
-function onTurnWaiting({ waitingFor }) {
-  logLine(`${waitingFor.length}명의 행동을 기다리는 중...`);
-}
+    const startTime = roomState.turn.startTime;
+    const durationMs = roomState.turn.durationMs;
 
-function onRoomClosed({ reason }) {
-  clearIdentity();
-  alert(`방이 종료되었습니다: ${reason}`);
-  renderScreen("entry");
-}
+    function update() {
+        const remainingMs = Math.max(
+            0, durationMs - (Date.now() - startTime)
+        );
 
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        timerEl.textContent =
+            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+        if (remainingMs <= 0) {
+            clearInterval(turnTimerInterval);
+            turnTimerInterval = null;
+        }
+    }
+
+    update();
+
+    turnTimerInterval = setInterval(update, 1000);
+}
 
 
 function showMyInfo(myPlayerId, myPlayerName) {

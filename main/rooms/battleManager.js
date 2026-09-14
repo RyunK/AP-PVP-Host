@@ -11,8 +11,9 @@ class BattleManager {
     this._timer = null;
   }
 
-  setTimestamp(){
+  setTimestamp(durationms = 30_000){
     this.room.turn.startTime = new Date().getTime();
+    this.room.turn.durationMs = durationms;
   }
 
   /**
@@ -53,8 +54,10 @@ class BattleManager {
   start() {
     this.room.turn = this._startRound(null);
     this.room.turn.phase = "orderCheck"
-    this.setTimestamp();
-    this._scheduleTimeout("orderCheck", this._getPhaseDuration("orderCheck"));
+
+    const duration = this._getPhaseDuration("orderCheck")
+    this.setTimestamp(duration);
+    this._scheduleTimeout("orderCheck", duration);
     return this.room.turn;
   }
 
@@ -113,19 +116,24 @@ class BattleManager {
       rearguardResult: null,
       decidedFirstTeam,
       startTime:null,
+      durationMs: null,
     };
   }
 
   toNextRound(){
-    this.setTimestamp();
-    this._scheduleTimeout('vanguard', this._getPhaseDuration('vanguard'));
+    const durationMs = this._getPhaseDuration('vanguard')
+
+    this.setTimestamp(durationMs);
+    this._scheduleTimeout('vanguard', durationMs);
     this.room.turn = this._startRound(this.room.turn.firstTeam);
   }
 
   endOrderCheck(){
+    const durationMs = this._getPhaseDuration('vanguard')
+
     this.room.turn.phase = "vanguard";
-    this._scheduleTimeout('vanguard', this._getPhaseDuration('vanguard'));
-    this.setTimestamp();
+    this._scheduleTimeout('vanguard', durationMs);
+    this.setTimestamp(durationMs);
   }
 
   draftAction(playerId, characterId, skillName, targetIds, value) {
@@ -176,8 +184,9 @@ class BattleManager {
       turn.draft = new Map();
 
       // 후공페이즈 타임 세팅
-      this.setTimestamp();
-      this._scheduleTimeout("rearguard", this._getPhaseDuration("rearguard"));
+      const durationMs = this._getPhaseDuration("rearguard")
+      this.setTimestamp(durationMs);
+      this._scheduleTimeout("rearguard", durationMs);
       return { phaseComplete: true, roundComplete: false, roundLog:{firstTeam: turn.firstTeam} };
     }
 
@@ -203,8 +212,9 @@ class BattleManager {
     this.room.battleLogs.push(Object.fromEntries(resultMap));
     this.applyHp(resultMap);
     // 정산 페이즈 타임 세팅
-    this.setTimestamp();
-    this._scheduleTimeout("resolution", this._getPhaseDuration("resolution"));
+    const durationMs = this._getPhaseDuration("resolution")
+    this.setTimestamp(durationMs);
+    this._scheduleTimeout("resolution", durationMs);
     return { phaseComplete: true, roundComplete: true, roundLog };
   }
 
@@ -246,6 +256,7 @@ class BattleManager {
       confirmed: [...turn.phaseActions.entries()],
       decidedFirstTeam : [turn.decidedFirstTeam?.rollA, turn.decidedFirstTeam?.rollB],
       startTime: turn.startTime,
+      durationMs: turn.durationMs
     };
   }
 }
