@@ -239,7 +239,7 @@ class RoomManager {
     character.team = team;
   }
 
-  startBattle(room) {
+  startBattle(room, { onAutoAdvance } = {}) {
     const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
     const allReady = nonHostPlayers.every((p) => p.ready);
     if (!allReady) throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
@@ -251,7 +251,7 @@ class RoomManager {
     }
 
     room.phase = "battle";
-    this.battle = new BattleManager(room);
+    this.battle = new BattleManager(room, { onAutoAdvance });
     this.battle.start();
   }
 

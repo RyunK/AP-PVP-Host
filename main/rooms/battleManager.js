@@ -7,7 +7,7 @@ const { resolveRound } = require("../engine/resolveRound.js");
 class BattleManager {
   constructor(room, { onAutoAdvance } = {}) {
     this.room = room;
-    this.onAutoAdvance = onAutoAdvance || (() => {}); // 타이머가 스스로 다음 단계로 넘어갈 때 server.js에 알림
+    this.onAutoAdvance = onAutoAdvance || (() => {}); // 타이머가 스스로 다음 단계로 넘어갈 때 서버 통신 보내는 용도
     this._timer = null;
   }
 
@@ -17,7 +17,7 @@ class BattleManager {
 
   /**
    * 타임아웃 걸어줌
-   * @param {string} expectedPhase 현재 페이즈 (지금부터 시작할 페이즈)
+   * @param {string} expectedPhase 현재 페이즈 (타임아웃 거는 시점에 시작할 페이즈)
    * @param {number} delayMs 타임아웃 걸 milli seconds
    */
   _scheduleTimeout(expectedPhase, delayMs) {
@@ -34,14 +34,9 @@ class BattleManager {
         this.endOrderCheck();
       }
 
-      this.onAutoAdvance?.(); // server.js에 "상태 바뀌었으니 방송해줘" 알리는 용도 (선택)
+      this.onAutoAdvance?.(expectedPhase); // 타임아웃 끝나면 현재 상태 emit
     }, delayMs);
   }
-
-  // _scheduleTimer(delayMs, callback) {
-  //   this._clearTimer();
-  //   this.timer = setTimeout(callback, delayMs);
-  // }
  
   _clearTimer() {
     if (this._timer) {
@@ -63,15 +58,14 @@ class BattleManager {
     return this.room.turn;
   }
 
-  
-  ORDER_CHECK_MS = 10_000;
-  RESOLUTION_MS = 30_000;
-
   _getPhaseDuration(phase) {
+    const ORDER_CHECK_MS = 10_000;
+    const RESOLUTION_MS = 30_000;
+
     switch (phase) {
       case "orderCheck":
         return ORDER_CHECK_MS;
-      case "calculating":
+      case "resolution":
         return RESOLUTION_MS;
       case "vanguard":
       case "rearguard":
@@ -80,72 +74,6 @@ class BattleManager {
         return null; // 타이머가 필요 없는 페이즈
     }
   }
-
-  // _enterPhase(phase) {
-  //   const turn = this.room.turn;
-  //   turn.phase = phase;
-  //   turn.startTime = Date.now();
-
-  //   const duration = this._getPhaseDuration(phase);
-  //   if (duration) {
-  //     this._scheduleTimer(duration, () => this._handlePhaseTimeout(phase));
-  //   } else {
-  //     this._clearTimer();
-  //   }
-  // }
-
-  // _handlePhaseTimeout(expectedPhase) {
-  //   const turn = this.room.turn;
-  //   if (!turn || turn.phase !== expectedPhase) return; // 이미 다른 경로로 넘어갔으면 무시 (중복 실행 방지)
-
-  //   switch (expectedPhase) {
-  //     case "orderCheck":
-  //       this._enterPhase("vanguard");
-  //       this.onAutoAdvance({ type: "phase-change", phase: "vanguard" });
-  //       break;
-
-  //     case "vanguard":
-  //     case "rearguard":
-  //       this._autoConfirmRemaining(expectedPhase); // 아래 4번
-  //       break;
-
-  //     case "calculating":
-  //       this._autoAdvanceFromCalculating(); // 지금 있는 그 메서드 그대로 재사용
-  //       break;
-  //   }
-  // }
-
-  // _autoAdvanceFromCalculating() {
-  //   const turn = this.room.turn;
-  //   if (!turn || turn.phase !== "calculating") return;
- 
-  //   if (turn.winner) {
-  //     this.room.phase = "ended";
-  //     this.onAutoAdvance({ type: "battle-ended", winner: turn.winner });
-  //     return;
-  //   }
- 
-  //   this.room.turn = this._buildOrderCheckTurn(turn.firstTeam);
-  //   this._scheduleTimer(ORDER_CHECK_MS, () => this._autoAdvanceFromOrderCheck());
-  //   this.onAutoAdvance({ type: "phase-change", phase: "orderCheck" });
-  // }
-
-  // _autoConfirmRemaining(phase) {
-  //   const turn = this.room.turn;
-  //   const actingChars = this.room.teams[turn.actingTeam].filter(
-  //     (id) => this.room.characters.get(id)?.alive
-  //   );
-
-  //   for (const charId of actingChars) {
-  //     if (!turn.phaseActions.has(charId)) {
-  //       turn.phaseActions.set(charId, { skillName: "방어", targetIds: [charId], value: "" });
-  //       turn.draft.delete(charId);
-  //     }
-  //   }
-
-  //   const result = this._advancePhase();
-  //   this.onAutoAdvance({ type: "phase-timeout", phase, result });
-  // }
 
   _decideFirstTeamByDex() {
     const maxDex = (team) =>
@@ -191,7 +119,7 @@ class BattleManager {
   toNextRound(){
     this.setTimestamp();
     this._scheduleTimeout('vanguard', this._getPhaseDuration('vanguard'));
-    this.room.turn = this._startRound(turn.firstTeam);
+    this.room.turn = this._startRound(this.room.turn.firstTeam);
   }
 
   endOrderCheck(){
