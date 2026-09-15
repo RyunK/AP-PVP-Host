@@ -413,6 +413,91 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   margin: 2px 0 8px;
 }
 
+.skill-custom-dropdown {
+  position: relative;
+}
+.skill-dropdown-toggle {
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.skill-custom-dropdown.is-disabled .skill-dropdown-toggle {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.skill-dropdown-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 120px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.skill-option-row {
+  position: relative; /* 툴팁 위치 기준점 */
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.skill-option-row:hover {
+  background: var(--bg-btn-ghost-hover);
+}
+
+/* 마우스를 올렸을 때만 보이는 안내 (JS 없이 CSS만으로 동작) */
+.skill-tooltip {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
+  min-width: 200px;
+  width: 300px;
+  max-width: 300px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  z-index: 30;
+}
+.skill-option-row:hover .skill-tooltip {
+  display: block;
+}
+
+.target-multiselect-toggle,
+.skill-dropdown-toggle {
+  position: relative;
+  padding-right: 28px; /* 화살표 들어갈 자리 확보 */
+}
+
+.target-multiselect-toggle::after,
+.skill-dropdown-toggle::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: translateY(-70%) rotate(45deg); /* 정사각형 모서리를 45도 돌리면 ∨ 모양이 됨 */
+  pointer-events: none; /* 화살표를 클릭해도 버튼 클릭으로 처리되게 */
+}
+
 .unassigned-board {
   margin-top: 20px;
   padding-top: 16px;

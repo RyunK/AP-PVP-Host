@@ -10,6 +10,7 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 import { showPhaseAlert } from "../modals/battleModal.js"
 
 import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
+import {skillDescribes} from "../js/renderBattle/skillDescribe.js"
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
@@ -452,6 +453,33 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
     .map((opt) => `<option value="${escapeHtml(opt.value)}" ${realdata?.skillName === opt.value ? "selected" : ""}>${escapeHtml(opt.label)}</option>`)
     .join("");
   
+  const currentSkill = realdata?.skillName || skillOptions[0]?.value;
+  const currentLabel = skillOptions.find((o) => o.value === currentSkill)?.label || "스킬 선택";
+
+  const skillDropdownHtml = `
+    <div class="skill-select-wrap">
+      <select class="action-type" style="display:none;" ${disabledAttr}>
+        ${skillOptionsHtml}
+      </select>
+      <div class="skill-custom-dropdown ${disabled ? "is-disabled" : ""}">
+        <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  ${escapeHtml(currentLabel)} </button>
+        <div class="skill-dropdown-panel" style="display:none;">
+          ${skillOptions
+            .map((opt) => {
+              const lines = skillDescribes[opt.value] || [];
+              return `
+                <div class="skill-option-row" data-value="${opt.value}">
+                  <span>${escapeHtml(opt.label)}</span>
+                  <div class="skill-tooltip">
+                    ${lines.map((line) => `<div style="margin-bottom: 8px;">${line}</div>`).join("")}
+                  </div>
+                </div>`;
+            })
+            .join("")}
+        </div>
+      </div>
+    </div>`;
+  
   let checkboxDisabled = disabledAttr;
   if(realdata?.skillName == "확산" || realdata?.skillName == "수호" || realdata?.skillName == "성호"){
     checkboxDisabled = "disabled"
@@ -486,9 +514,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
       </div>
 
       <div class="char-card-row char-card-default-row">
-        <select class="action-type" ${disabledAttr}>
-          ${skillOptionsHtml}
-        </select>
+        ${skillDropdownHtml}
         <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
 
         <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
@@ -515,6 +541,28 @@ function attachActionCardHandlers() {
 
 function attachCardHandlers(card) {
   const battleStatus = document.getElementById("battleStatus");
+
+  const skillToggle = card.querySelector(".skill-dropdown-toggle:not([disabled])");
+  const skillPanel = card.querySelector(".skill-dropdown-panel");
+
+  if (skillToggle && skillPanel) {
+    skillToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      skillPanel.style.display = skillPanel.style.display === "none" ? "block" : "none";
+    });
+
+    card.querySelectorAll(".skill-option-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        const select = card.querySelector(".action-type");
+        select.value = row.dataset.value;
+        skillToggle.textContent = row.querySelector("span").textContent;
+        skillPanel.style.display = "none";
+
+        // 진짜 select에 값만 바꾸고 끝나면 기존 리스너가 못 알아채니, input 이벤트를 직접 발생시킴
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    });
+  }
 
   // 다중선택 드롭다운 토글
   const toggleBtn = card.querySelector(".target-multiselect-toggle:not([disabled])");
@@ -631,7 +679,7 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
 // }
 
 document.addEventListener("click", (e) => {
-  document.querySelectorAll(".target-multiselect-panel").forEach((panel) => {
+  document.querySelectorAll(".target-multiselect-panel, .skill-dropdown-panel").forEach((panel) => {
     if (!panel.parentElement.contains(e.target)) {
       panel.style.display = "none";
     }
