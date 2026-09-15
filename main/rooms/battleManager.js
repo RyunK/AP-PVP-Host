@@ -149,7 +149,8 @@ class BattleManager {
   async confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
     targetIds = this._targetCheck(characterId, skillName, targetIds);
-    this._checkValidAct(characterId, skillName, targetIds, value)
+    this._checkValidAct(characterId, skillName, targetIds, value);
+    this._checkEnemyTargetLimit(characterId, targetIds, 2);
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
     this.room.turn.draft.delete(characterId);
@@ -196,6 +197,37 @@ class BattleManager {
     } else {
       // 일반 스킬은 입력받은 대상 그대로
       return targetIds;
+    }
+  }
+
+  _checkEnemyTargetLimit(characterId, targetIds, maxCount = 2) {
+    const character = this.room.characters.get(characterId);
+
+    const targetCount = new Map();
+
+    // 기존 행동
+    for (const [cid, action] of this.room.turn.phaseActions) {
+      if (cid === characterId) continue;
+
+      for (const targetId of action.targetIds) {
+        const target = this.room.characters.get(targetId);
+
+        if (target?.team !== character.team) {
+          targetCount.set(targetId, (targetCount.get(targetId) ?? 0) + 1 );
+        }
+      }
+    }
+    // 현재 행동
+    for (const targetId of targetIds) {
+      const target = this.room.characters.get(targetId);
+
+      if (target?.team !== character.team) {
+        const count = (targetCount.get(targetId) ?? 0) + 1;
+        if (count > maxCount) {
+          throw new Error( `${target.name}은(는) 최대 ${maxCount}명까지만 지목할 수 있습니다.`);
+        }
+        targetCount.set(targetId, count);
+      }
     }
   }
 
