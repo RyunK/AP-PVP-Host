@@ -73,7 +73,11 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
-  console.log(roomState);
+  if (state.turn?.winner) {
+    renderScreen("summary", { summary: buildSummaryData(state) });
+    return;
+  }
+  // console.log(roomState);
 
   // 전반적인 전투 갱신
   renderBattle();
@@ -659,25 +663,24 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
   });
 }
 
-// function collectCardData(card) {
-//   const characterId = card.dataset.char;
-//   const skillName = card.querySelector(".action-type").value;
-//   const value = card.querySelector(".action-value").value;
-//   const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
-//   return { characterId, skillName, targetIds, value };
-// }
+function buildSummaryData(state) {
+  const calcStats = (team) => {
+    const chars = state.characters.filter((c) => c.team === team);
+    const survivors = chars.filter((c) => c.alive);
+    return {
+      survivorCount: survivors.length,
+      survivorHpTotal: survivors.reduce((sum, c) => sum + c.stats.hp, 0),
+      diceTotal: "-", // TODO: 전체 라운드 다이스 합계는 누적 로그가 필요 (아래 참고)
+    };
+  };
 
-// function sendDraft(card) {
-//   const { characterId, skillName, targetIds, value } = collectCardData(card);
-//   socket.emit("action:draft", { characterId, skillName, targetIds, value });
+  return {
+    winnerTeam: state.turn.winner,
+    teamNames: state.teamNames,
+    stats: { A: calcStats("A"), B: calcStats("B") },
+  };
+}
 
-//   // 선택한 이름 요약 텍스트만 즉시 갱신 (카드 전체를 다시 그리진 않음)
-//   const summaryBtn = card.querySelector(".target-multiselect-toggle");
-//   const names = targetIds
-//     .map((id) => roomState.characters.find((c) => c.id === id)?.name)
-//     .filter(Boolean);
-//   summaryBtn.textContent = names.length > 0 ? names.map((n) => `(${escapeHtml(n)})`).join(" ") : "대상 선택";
-// }
 
 document.addEventListener("click", (e) => {
   document.querySelectorAll(".target-multiselect-panel, .skill-dropdown-panel").forEach((panel) => {
