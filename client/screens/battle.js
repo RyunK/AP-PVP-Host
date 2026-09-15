@@ -449,6 +449,11 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
   const skillOptionsHtml = skillOptions
     .map((opt) => `<option value="${escapeHtml(opt.value)}" ${realdata?.skillName === opt.value ? "selected" : ""}>${escapeHtml(opt.label)}</option>`)
     .join("");
+  
+  let checkboxDisabled = disabledAttr;
+  if(realdata?.skillName == "확산" || realdata?.skillName == "수호" || realdata?.skillName == "성호"){
+    checkboxDisabled = "disabled"
+  }
 
   const teamAName = roomState.teamNames?.A || "A팀";
   const teamBName = roomState.teamNames?.B || "B팀";
@@ -460,7 +465,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
         (e) => `
         <label class="target-option">
           <input type="checkbox" class="target-checkbox" value="${e.id}"
-            ${selectedTargetIds.includes(e.id) ? "checked" : ""} ${disabledAttr} />
+            ${selectedTargetIds.includes(e.id) ? "checked" : ""} ${checkboxDisabled} />
             ${escapeHtml(e.name)}${e.id === c.id ? " (나)" : ""}
         </label>`
       )
@@ -485,7 +490,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
         <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
 
         <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
-          <button type="button" class="target-multiselect-toggle" ${disabledAttr}>${targetSummary}</button>
+          <button type="button" class="target-multiselect-toggle" ${disabled}>${targetSummary}</button>
           <div class="target-multiselect-panel" style="display:none;">
             ${buildGroup("A", teamAName)}
             ${buildGroup("B", teamBName)}
@@ -536,7 +541,7 @@ function attachCardHandlers(card) {
     });
   }
 
-  card.querySelectorAll(".action-type:not([disabled]), .target-checkbox:not([disabled]), .action-value:not([disabled])")
+  card.querySelectorAll(".action-type:not([disabled]), .target-checkbox, .action-value:not([disabled])")
     .forEach((el) => {
       el.addEventListener(el.classList.contains("target-checkbox") ? "change" : "input", () => {
         const characterId = card.dataset.char;
@@ -548,7 +553,7 @@ function attachCardHandlers(card) {
         const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
 
         console.log(targetIds);
-        
+
         socket.emit("action:draft", {
           characterId,
           skillName: card.querySelector(".action-type").value,
