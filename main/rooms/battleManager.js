@@ -205,7 +205,8 @@ class BattleManager {
 
     if (!act) throw new Error("행동이 없습니다.");
     const character = this.room.characters.get(characterId);
-    if (character.skillCount >= character.skillMax) throw new Error("스킬을 사용할 수 없습니다.");
+    if ((character.skillCount >= character.skillMax) 
+      && (character.skill == act)) throw new Error("스킬을 사용할 수 없습니다.");
     if(act == "낙화" && this.room.turn.phase == "rearguard") throw new Error("지금은 낙화를 사용할 수 없습니다.");
     if(act == "도주" 
       && this.room.turn.phase == "vanguard" 

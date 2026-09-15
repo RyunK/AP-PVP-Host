@@ -401,7 +401,9 @@ function buildSkillOptions(c) {
   ];
 
   // 낙화는 선공에만 사용 가능
-  if (c.skill && !(phase != "vanguard" && c.skill == "낙화")) {
+  if (c.skill 
+    && !(phase != "vanguard" && c.skill == "낙화")
+    && (c.skillCount < c.skillMax)) {
     options.push({ value: c.skill, label: c.skill });
   }
 
