@@ -177,7 +177,7 @@ class DiceRoller {
 
     let finalValue =
       Math.round(
-        result.addedCrtValue + bonusInfo - penaltyInfo + corval
+        result.addedCrtValue + bonusInfo - penaltyInfo + Number(corval)
       );
     finalValue = finalValue>0? finalValue : 1
 

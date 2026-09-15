@@ -326,6 +326,7 @@ function renderRoster() {
             <th>정신력</th>
             <th>행운</th>
             <th>남은 스킬</th>
+            <th>/th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -506,7 +507,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
   return `
     <div class="char-card" data-char="${c.id}">
       <div class="char-card-row char-card-name-row">
-        <strong>${escapeHtml(c.name)}</strong>
+        <strong>${escapeHtml(c.name)} | ${escapeHtml(c.position)}</strong>
         <span class="hint">(${c.stats.hp}/${maxHp})</span>
         ${confirmed ? '<span class="badge badge--ready">확정됨</span>' : ""}
         ${!isMyTeamActing ? '<span class="badge badge--waiting">적군</span>' : ""}

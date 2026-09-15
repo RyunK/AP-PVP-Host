@@ -100,7 +100,7 @@ class HpCalculator{
       let c_hp = runner.currentHp - Math.max(0, runner.damage.value - runner.protection.value) - corVal;
 
       let calcedHp ={}
-      calcedHp.formula =`${runner.currentHp} - (대미지: ${runner.damage.value} - 경감: ${runner.protection.value})`
+      calcedHp.formula =`${runner.currentHp} - (피해: ${runner.damage.value} - 경감: ${runner.protection.value})`
 
       if(corVal > 0){
         calcedHp.formula += ` - 침식: ${corVal}`
