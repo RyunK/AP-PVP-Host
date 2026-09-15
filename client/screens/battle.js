@@ -540,8 +540,15 @@ function attachCardHandlers(card) {
     .forEach((el) => {
       el.addEventListener(el.classList.contains("target-checkbox") ? "change" : "input", () => {
         const characterId = card.dataset.char;
+
+        if (el.classList.contains("action-type")) {
+          applyAutoTargeting(card, el.value, characterId);
+        }
+
         const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
 
+        console.log(targetIds);
+        
         socket.emit("action:draft", {
           characterId,
           skillName: card.querySelector(".action-type").value,
@@ -563,25 +570,58 @@ function attachCardHandlers(card) {
     });
 }
 
-function collectCardData(card) {
-  const characterId = card.dataset.char;
-  const skillName = card.querySelector(".action-type").value;
-  const value = card.querySelector(".action-value").value;
-  const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
-  return { characterId, skillName, targetIds, value };
+function applyAutoTargeting(card, skillName, myCharacterId) {
+  const myCharacter = roomState.characters.find((c) => c.id === myCharacterId);
+  if (!myCharacter) return;
+
+  const checkboxes = [...card.querySelectorAll(".target-checkbox")];
+
+  let autoSelectedIds = null; // null이면 "자동 대상 스킬이 아님" -> 아무 것도 안 건드림
+
+  if (skillName === "확산") {
+    // 다른 팀(상대 팀)의 대상을 모두 선택
+    const enemyTeam = myCharacter.team === "A" ? "B" : "A";
+    autoSelectedIds = roomState.characters
+      .filter((c) => c.team === enemyTeam && c.alive)
+      .map((c) => c.id);
+  } else if (skillName === "수호" || skillName === "성호") {
+    // 자신을 제외한 아군 전체 선택
+    autoSelectedIds = roomState.characters
+      .filter((c) => c.team === myCharacter.team && c.alive && c.id !== myCharacterId)
+      .map((c) => c.id);
+  }
+
+  if (autoSelectedIds === null) {
+    checkboxes.forEach((cb) => (cb.disabled = false));
+    return;
+  }
+
+  // 그 외 대상은 전부 해제, 대상에 해당하는 것만 체크 + 전체 잠금
+  checkboxes.forEach((cb) => {
+    cb.checked = autoSelectedIds.includes(cb.value);
+    cb.disabled = true;
+  });
 }
 
-function sendDraft(card) {
-  const { characterId, skillName, targetIds, value } = collectCardData(card);
-  socket.emit("action:draft", { characterId, skillName, targetIds, value });
+// function collectCardData(card) {
+//   const characterId = card.dataset.char;
+//   const skillName = card.querySelector(".action-type").value;
+//   const value = card.querySelector(".action-value").value;
+//   const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
+//   return { characterId, skillName, targetIds, value };
+// }
 
-  // 선택한 이름 요약 텍스트만 즉시 갱신 (카드 전체를 다시 그리진 않음)
-  const summaryBtn = card.querySelector(".target-multiselect-toggle");
-  const names = targetIds
-    .map((id) => roomState.characters.find((c) => c.id === id)?.name)
-    .filter(Boolean);
-  summaryBtn.textContent = names.length > 0 ? names.map((n) => `(${escapeHtml(n)})`).join(" ") : "대상 선택";
-}
+// function sendDraft(card) {
+//   const { characterId, skillName, targetIds, value } = collectCardData(card);
+//   socket.emit("action:draft", { characterId, skillName, targetIds, value });
+
+//   // 선택한 이름 요약 텍스트만 즉시 갱신 (카드 전체를 다시 그리진 않음)
+//   const summaryBtn = card.querySelector(".target-multiselect-toggle");
+//   const names = targetIds
+//     .map((id) => roomState.characters.find((c) => c.id === id)?.name)
+//     .filter(Boolean);
+//   summaryBtn.textContent = names.length > 0 ? names.map((n) => `(${escapeHtml(n)})`).join(" ") : "대상 선택";
+// }
 
 document.addEventListener("click", (e) => {
   document.querySelectorAll(".target-multiselect-panel").forEach((panel) => {

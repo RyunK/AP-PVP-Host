@@ -249,6 +249,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           }
         } catch (err) {
           cb({ ok: false, error: err.message });
+          console.error(err.stack);
         }
       });
 

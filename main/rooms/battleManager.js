@@ -170,8 +170,10 @@ class BattleManager {
     if (!act) throw new Error("행동이 없습니다.");
     const character = this.room.characters.get(characterId);
     if (character.skillCount >= character.skillMax) throw new Error("스킬을 사용할 수 없습니다.");
-    if(act == "낙화" && this.turn.phase == "rearguard") throw new Error("지금은 낙화를 사용할 수 없습니다.");
-    if(act == "도주" && this.turn.phase == "vanguard" && this.turn.round < 6) throw new Error("지금은 도주할 수 없습니다.");
+    if(act == "낙화" && this.room.turn.phase == "rearguard") throw new Error("지금은 낙화를 사용할 수 없습니다.");
+    if(act == "도주" 
+      && this.room.turn.phase == "vanguard" 
+      && this.room.turn.round < 6) throw new Error("지금은 도주할 수 없습니다.");
     if(act == "침식" && (character.stats.hp <= value || value > 20) ) throw new Error("침식값이 너무 큽니다.");
 
     if(act == "환희"){
@@ -183,7 +185,7 @@ class BattleManager {
     }
 
     // 선공에 낙화 썼으면 대상 체크 후 스킬 사용시 불가하다고 오류
-    const nakhwaTargetIds = [...turn.vanguardResult.values()]
+    const nakhwaTargetIds = [...(this.room.turn.vanguardResult?.values() ?? [])]
       .filter(action => action.skillName === "낙화")
       .flatMap(action => action.targetIds);
 

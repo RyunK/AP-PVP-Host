@@ -170,6 +170,8 @@ class RoomManager {
       const skillMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const skillTargetMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const charId = `c_${playerId}_${idx}`;
+      const maxhp = 100 + (def.hp_stat || 0) * 5
+      if (def?.hp > maxhp) def.hp = maxhp;
       room.characters.set(charId, {
         id: charId,
         ownerId: playerId,
@@ -178,6 +180,7 @@ class RoomManager {
         skill: def.skill  || "엄호",
         skillMax  : skillMax,
         skillCount : 0,
+        skillTargetMax: skillTargetMax,
         stats: {
           hp: def.hp || 1,
           hp_stat: def.hp_stat || 0,

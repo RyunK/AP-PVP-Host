@@ -103,27 +103,30 @@ function makeReturnObj(c, skillMaxCnt){
 
 function validCheck(characters, actionMap, characterId, source){
     const c_act = actionMap.get(characterId);
+
+    if(!c_act) return;
+
     const skillTargetMax = {
       엄호: 1, 수호: 2, 확산: 3, 침식: 1, 성호: 2, 환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
     }
 
-    if(targetIds.length > skillTargetMax[c_act.skillName]){
+    if(c_act.targetIds.length > skillTargetMax[c_act.skillName]){
         c_act.targetIds = c_act.targetIds.slice(0, skillTargetMax[c_act.skillName]);
     }
     const character = characters.get(characterId);
     if ((character.skillCount >= character.skillMax) 
-    || (act == "낙화" && source == "rearguard") 
-    || (act == "도주" && source == "vanguard" && this.turn.round < 6) ){
+    || (c_act.skillName == "낙화" && source == "rearguard") 
+    || (c_act.skillName == "도주" && source == "vanguard" ) ){
         c_act.skillName = "";
         c_act.targetIds = [];
     }
 
     
-    const value = actionMap.value;
-    if(act == "침식" && (character.stats.hp <= value || value > 20) ) actionMap.value = Math.min(character.stats.hp, 20);
+    const value = c_act.value;
+    if(c_act.skillName == "침식" && (character.stats.hp <= value || value > 20) ) actionMap.value = Math.min(character.stats.hp, 20);
 
-    if(act == "환희"){
-      targetIds.forEach(targetId => {
+    if(c_act.skillName == "환희"){
+      c_act.targetIds.forEach(targetId => {
         const target_skill = characters.get(targetId).skill;
         if (target_skill == "낙화" || target_skill == "환희"){
             c_act.skillName = "";
