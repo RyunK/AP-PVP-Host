@@ -11,7 +11,7 @@ class BattleManager {
     this._timer = null;
 
     this.skillTargetMax = {
-      엄호: 1, 수호: 2, 확산: 3, 침식: 1, 성호: 2, 환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
+      엄호: 1,  침식: 1,  환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
     }
   }
 
@@ -148,6 +148,7 @@ class BattleManager {
 
   async confirmAction(playerId, characterId, skillName, targetIds, value) {
     this._assertCanAct(playerId, characterId);
+    targetIds = this._targetCheck(characterId, skillName, targetIds);
     this._checkValidAct(characterId, skillName, targetIds, value)
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
@@ -161,6 +162,41 @@ class BattleManager {
     // 생존자 전부 행동했다면 라운드 진행
     if (!allConfirmed) return { phaseComplete: false };
     return await this._advancePhase();
+  }
+
+  /**
+   * 확산 -> 적군 전원 / 수호, 성호 -> 본인 외 아군 전원
+   */
+  _targetCheck(characterId, skillName, targetIds) {
+    const character = this.room.characters.get(characterId);
+
+    if (!character) {
+      throw new Error(`존재하지 않는 캐릭터입니다: ${characterId}`);
+    }
+
+    if (skillName === "확산") {
+      // 적군 전원
+      return [...this.room.characters.values()]
+        .filter(c =>
+          c.alive &&
+          c.team !== character.team
+        )
+        .map(c => c.id);
+
+    } else if (skillName === "수호" || skillName === "성호") {
+      // 본인 외 아군 전원
+      return [...this.room.characters.values()]
+        .filter(c =>
+          c.alive &&
+          c.team === character.team &&
+          c.id !== characterId
+        )
+        .map(c => c.id);
+
+    } else {
+      // 일반 스킬은 입력받은 대상 그대로
+      return targetIds;
+    }
   }
 
   _checkValidAct(characterId, act, targetIds, value){
@@ -242,7 +278,7 @@ class BattleManager {
     turn.phase = "resolution";
     // console.log(Object.fromEntries(resultMap));
     this.room.battleLogs.push(Object.fromEntries(resultMap));
-    this.applyHp(resultMap);
+    this.applyHpNskillCnt(resultMap);
     // 정산 페이즈 타임 세팅
     const durationMs = this._getPhaseDuration("resolution")
     this.setTimestamp(durationMs);
@@ -254,9 +290,10 @@ class BattleManager {
    * 계산만 했던 체력을 실제로 room.characters에 적용시킴
    * @param {Map} resultMap 
    */
-  applyHp(resultMap){
+  applyHpNskillCnt(resultMap){
     for ( const [id, char] of this.room.characters){
       char.stats.hp = resultMap.get(id).hpResult.value;
+      char.skillCount = resultMap.get(id).info.skillCount;
       if (char.stats.hp <= 0) char.alive = false;
     }
   }

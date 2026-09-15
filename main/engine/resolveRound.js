@@ -74,7 +74,7 @@ function makeReturnObj(c, skillMaxCnt){
         useSkill: c.useSkill  || "",
         corVal: c.corVal,
         targets: c.target  || [],
-        skillLeft: skillMaxCnt - c.skillCount || 0,
+        skillCount: c.skillCount || 0,
     }
 
     /**@type DiceResult */
