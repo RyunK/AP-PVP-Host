@@ -174,7 +174,7 @@ class BattleManager {
     if(act == "도주" && this.turn.phase == "vanguard" && this.turn.round < 6) throw new Error("지금은 도주할 수 없습니다.");
     if(act == "침식" && (character.stats.hp <= value || value > 20) ) throw new Error("침식값이 너무 큽니다.");
 
-    if(act == "낙화"){
+    if(act == "환희"){
       targetIds.forEach(targetId => {
         const target_skill = this.room.characters.get(targetId).skill;
         if (target_skill == "낙화" || target_skill == "환희")
@@ -183,7 +183,14 @@ class BattleManager {
     }
 
     // 선공에 낙화 썼으면 대상 체크 후 스킬 사용시 불가하다고 오류
-    
+    const nakhwaTargetIds = [...turn.vanguardResult.values()]
+      .filter(action => action.skillName === "낙화")
+      .flatMap(action => action.targetIds);
+
+    if (nakhwaTargetIds.includes(characterId)) {
+      throw new Error("낙화의 대상으로 지정됐을 때에는 스킬을 사용할 수 없습니다.");
+    }
+
   }
 
   _assertCanAct(playerId, characterId) {

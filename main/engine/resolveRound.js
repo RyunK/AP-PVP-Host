@@ -122,7 +122,7 @@ function validCheck(characters, actionMap, characterId, source){
     const value = actionMap.value;
     if(act == "침식" && (character.stats.hp <= value || value > 20) ) actionMap.value = Math.min(character.stats.hp, 20);
 
-    if(act == "낙화"){
+    if(act == "환희"){
       targetIds.forEach(targetId => {
         const target_skill = characters.get(targetId).skill;
         if (target_skill == "낙화" || target_skill == "환희"){
