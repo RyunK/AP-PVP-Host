@@ -329,7 +329,7 @@ function renderRoster() {
             <th>정신력</th>
             <th>행운</th>
             <th>남은 스킬</th>
-            <th>/th>
+            <th></th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>

@@ -39,7 +39,7 @@ class Participant {
     };
 
     this.useSkill = c_act?.skillName || "";
-    this.corVal = c_act?.value || 0;
+    this.corVal = c_act?.skillName == "침식"? c_act?.value || 0 : 0;
     this.target = c_act?.targetIds || [];
     this.skillType = skillType || [];
   }

@@ -374,7 +374,12 @@ function renderTeamBoard() {
 
 function startBattle(){
   socket.emit("battle:start", {}, (res) => {
-    if (!res.ok) lobbyStatus.textContent = res.error;
+    document.getElementById("startBattleBtn").disabled = true;
+      lobbyStatus.textContent = "전장을 열고 있습니다...";
+    if (!res.ok) {
+      document.getElementById("startBattleBtn").disabled = false;
+      lobbyStatus.textContent = res.error;
+    }
   });
 }
 

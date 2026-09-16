@@ -125,12 +125,13 @@ class BattleManager {
   }
 
   _hasAliveMember(team) {
+    console.log(this.room.teams[team].some((id) => this.room.characters.get(id)?.alive))
     return this.room.teams[team].some((id) => this.room.characters.get(id)?.alive);
   }
 
   toNextRound(){
     // 게임 끝났는지 체크
-    if (this.room.turn.round >= 10 || !this._hasAliveMember("A") || !this._hasAliveMember){
+    if (this.room.turn.round >= 10 || !this._hasAliveMember("A") || !this._hasAliveMember("B")){
       const summary = {
         A: this.buildSummaryData("A"),
         B: this.buildSummaryData("B"),

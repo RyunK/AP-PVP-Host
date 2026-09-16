@@ -50,6 +50,10 @@ function autoPhaseForwarding(room, expectedPhase){
     const firstTeam = room.turn.firstTeam;
     const secondTeam = firstTeam == "A" ? "B" : "A";
     const teamNames = room.teamNames;
+
+    if(room.phase == "summary")
+        return ["전투 종료. 최종 정산 완료."];
+
     switch(expectedPhase){
         case "vanguard":
             return ["시간 종료. 후공 페이즈 개시.", `${teamNames[secondTeam]} 선언.`];
@@ -59,6 +63,7 @@ function autoPhaseForwarding(room, expectedPhase){
         case "resolution":
             return [`정산 확인 완료. 라운드 ${room.turn.round}. ${teamNames[firstTeam]}의 선공.`, 
                 `선공 페이즈 개시. ${teamNames[firstTeam]} 선언.` ];
+        case "summary":
         case "orderCheck":
             return [
                 "...SYSTEM INITIALIZATION COMPLETE. 초기 순서 확인 완료.",
