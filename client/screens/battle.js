@@ -62,7 +62,7 @@ function onRoomState(state) {
   
   mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
-  renderPlayerList(document.getElementById("playerListContainer"), state.players);
+  renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
 }
@@ -368,7 +368,8 @@ function renderBattle() {
   }
 
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
-  const myTeams = myCharacters.map((c) => c.team);
+  const myTeams = myCharacters? myCharacters.map((c) => c.team) : ["A", "B"];
+  // const isSpectator = !myCharacters;
 
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
 

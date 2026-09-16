@@ -282,14 +282,20 @@ class RoomManager {
   }
 
   startBattle(room, { onAutoAdvance } = {}) {
-    const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
-    const allReady = nonHostPlayers.every((p) => p.ready);
+    const nonHostPlayers = [...this.room.players.values()].filter((p) => !p.isHost);
+    const requiredToReady = nonHostPlayers.filter((p) => p.characterIds.length > 0); // 캐릭터 있는 사람만
+    const allReady = requiredToReady.every((p) => p.ready);
     if (!allReady) throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
 
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
     if (aCount === 0 || bCount === 0 || aCount !== bCount) {
       throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다.");
+    }
+
+    // 이 시점에 캐릭터가 하나도 없는 플레이어는 이번 전투의 관전자로 확정
+    for (const player of this.room.players.values()) {
+      player.isSpectator = player.characterIds.length === 0;
     }
 
     room.phase = "battle";
@@ -336,6 +342,7 @@ class RoomManager {
         id: p.id,
         name: p.name,
         isHost: p.isHost,
+        isSpectator: p.isSpectator || false,
         characterIds: p.characterIds,
         connected: p.connected,
         ready: p.ready,

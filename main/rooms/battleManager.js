@@ -379,6 +379,9 @@ class BattleManager {
   getPlayerTeams(playerId) {
     const player = this.room?.players.get(playerId);
     if (!player) return [];
+
+    if (player.isSpectator) return ["A", "B"]; // 관전자는 양쪽 다 구독
+
     const teams = new Set();
     for (const charId of player.characterIds) {
       const team = this.room.characters.get(charId)?.team;

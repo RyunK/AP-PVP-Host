@@ -45,7 +45,7 @@ export function init(params = {}) {
         attachSummaryHandlers(summary);
         mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
         updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
-        renderPlayerList(document.getElementById("playerListContainer"), state.players);
+        renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
         showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
         renderRoster();
 

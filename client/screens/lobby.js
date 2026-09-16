@@ -134,7 +134,7 @@ function onRoomState(state) {
 
   renderMyCharacterList();
   renderTeamBoard();
-  renderPlayerList(document.getElementById("playerListContainer"), state.players);
+  renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   
