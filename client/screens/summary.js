@@ -30,6 +30,10 @@ export function init(params = {}) {
   const state = params.state || {};
   roomState = state;
 
+  socket.off("room:state", onRoomState);
+  socket.on("room:state", onRoomState);
+
+
   socket.emit("room:get-state", {}, (res) => {
       if (res.ok){
         const state = res.state || {};
@@ -45,9 +49,36 @@ export function init(params = {}) {
         showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
         renderRoster();
 
+        setupRestartButton(); 
         attachEventListeners();
       } 
     });
+}
+
+function onRoomState(state) {
+  roomState = state;
+  if (state.phase === "lobby" && state.restarted) {
+    renderScreen("lobby"); // 호스트가 재시작했으니 자동으로 따라감
+  }
+}
+
+function setupRestartButton() {
+  const identity = loadIdentity(); 
+  const me = roomState?.players?.find((p) => p.id === identity?.playerId);
+
+  const wrap = document.getElementById("restartWrap");
+  if (!me?.isHost) {
+    wrap.style.display = "none";
+    return;
+  }
+
+  wrap.style.display = "block";
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    socket.emit("room:restart", {}, (res) => {
+      if (!res.ok) return alert(res.error);
+      renderScreen("lobby");
+    });
+  });
 }
 
 function renderWinnerLine(summary) {
@@ -236,5 +267,11 @@ function attachEventListeners(){
   });
   document.getElementById("saveBattleLogBtn")?.addEventListener("click", () => {
     exportBattleLog(roomState); // roomState는 이 화면이 접근 가능한 최신 상태여야 함
+  });
+  document.getElementById("restartBtn")?.addEventListener("click", () => {
+    socket.emit("room:restart", {}, (res) => {
+      if (!res.ok) return alert(res.error);
+      renderScreen("lobby"); // 초기화된 방의 로비로 이동
+    });
   });
 }

@@ -25,10 +25,13 @@ class RoomManager {
   enterRoom(socketId, profile) {
     if (!this.room) {
       this.room = this._createRoom(socketId);
+      this.room.restarted = true;
     }
-    if (this.room.phase === "battle") {
-      throw new Error("이미 전투가 시작된 방입니다.");
+    if (this.room.phase === "summary" && !this.room.restarted) {
+      throw new Error("호스트가 재시작하기 전까지 입장할 수 없습니다.");
     }
+    if (this.room.phase === "battle") throw new Error("이미 전투가 시작된 방입니다.");
+
     const isHost = ![...this.room.players.values()].some((p) => p.isHost); // 아무도 없고 호스트도 없으면 내가 호스트
     return this._addPlayer(this.room, socketId, profile, { isHost });
   }
@@ -44,6 +47,9 @@ class RoomManager {
     if (!player) {
       throw new Error("이 방에서 플레이어 정보를 찾을 수 없습니다.");
     }
+    if (this.room.phase === "ended" && !this.room.restarted && !player.isHost) {
+      throw new Error("호스트가 재시작하기 전까지 다시 입장할 수 없습니다.");
+    }
 
     if (player.disconnectTimer) {
       clearTimeout(player.disconnectTimer);
@@ -56,6 +62,32 @@ class RoomManager {
     return { room: this.room, playerId };
   }
 
+  restartRoom(playerId) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+
+    const requester = this.room.players.get(playerId);
+    if (!requester?.isHost) throw new Error("호스트만 재시작할 수 있습니다.");
+
+    // 캐릭터/팀/전투 관련 데이터는 전부 비움
+    this.room.characters = new Map();
+    this.room.teams = { A: [], B: [] };
+    this.room.teamNames = { A: "A팀", B: "B팀" };
+    this.room.battleLogs = [];
+    this.room.battleResult = null;
+    this.room.phase = "lobby";
+    this.room.restarted = true; // ← 핵심: "이 방은 재시작됐다"는 표시
+
+    // 플레이어 목록(닉네임)은 유지하되, 각자의 characterIds만 비움 (캐릭터 자체가 없어졌으니)
+    for (const player of this.room.players.values()) {
+      player.characterIds = [];
+      player.ready = false; // 준비 상태를 쓰고 계셨다면 같이 초기화
+    }
+
+    this.battle?.destroy();
+    this.battle = null;
+
+    return this.room;
+  }
 
   _createRoom(hostSocketId) {
     const settings = this.getMatchSettings();
@@ -316,6 +348,7 @@ class RoomManager {
       chat: room.chatHistory,
       battleLogs: room.battleLogs,
       battleResult: room.battleResult,
+      restarted: room.restarted || false,
     };
   }
 
