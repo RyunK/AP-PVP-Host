@@ -18,18 +18,24 @@ import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str ?? "";
-  return div.innerHTML;
-}
+const myPlayerId = getMyPlayerId();
+let roomState = null;
+
 
 export function init(params = {}) {
+  
   const summary = params.summary || {};
+  const state = params.state || {};
+  roomState = state;
 
   renderWinnerLine(summary);
   renderStatsTable(summary);
   attachSummaryHandlers(summary);
+  mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
+  updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
+  renderPlayerList(document.getElementById("playerListContainer"), state.players);
+  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+
 }
 
 function renderWinnerLine(summary) {
@@ -89,4 +95,16 @@ function attachSummaryHandlers(summary) {
   document.getElementById("saveChatLogBtn")?.addEventListener("click", () => {
     console.log("TODO: 전체 채팅 저장");
   });
+}
+
+function showMyInfo(myPlayerId, myPlayerName) {
+  const me = roomState.players.find((p) => p.id === myPlayerId);
+  const isHost = me?.isHost;
+  
+  document.getElementById("myInfoLabel").innerHTML = `
+  ${myPlayerName} 
+  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
+  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
+  
+  `;
 }

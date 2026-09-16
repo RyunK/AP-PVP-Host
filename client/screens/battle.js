@@ -41,16 +41,16 @@ export function init() {
 }
 
 function onResult(roundLog){
-  // console.log("onResult");
-  // console.log(roundLog);
   renderRoundLog(roundLog.results, roomState);
 }
 
 export function destroy() {
+    console.log("destroy 실행됨");
     socket.off("room:state", onRoomState);
     socket.off("battle:state", onBattleState);
     socket.off("battle:draft", onBattleDraft);
     socket.off("round:resolved", onRoundResolved);
+    socket.off("resolution:result", onResult);
 }
 
 /**
@@ -74,7 +74,7 @@ async function onBattleState(state) {
   roomState = state;
 
   if (state.phase == "summary") {
-    renderScreen("summary", { summary: state.battleResult });
+    renderScreen("summary", { summary: state.battleResult, state });
     return;
   }
 
@@ -344,7 +344,7 @@ function renderBattle() {
   const turnNumberEl = document.getElementById("turnNumber");
   const phaseLabelEl = document.getElementById("phaseLabel");
 
-  console.log(roomState);
+  // console.log(roomState);
 
   const turn = roomState.turn;
   const round = turn?.round ?? 0;
@@ -606,7 +606,7 @@ function attachCardHandlers(card) {
 
         const targetIds = [...card.querySelectorAll(".target-checkbox:checked")].map((cb) => cb.value);
 
-        console.log(targetIds);
+        // console.log(targetIds);
 
         socket.emit("action:draft", {
           characterId,

@@ -64,18 +64,6 @@ function startServer({ port, onRoomsChanged, onLog }) {
       
     }
 
-    // function syncPlayerTeamRooms(playerId) {
-    //   const room = roomManager.getRoom();
-    //   if (!room) return;
-    //   const player = room.players.get(playerId);
-    //   const socket = io.sockets.sockets.get(player?.socketId);
-    //   if (!socket) return;
-    //   const myTeams = roomManager.getPlayerTeams(playerId);
-    //   ["A", "B"].forEach((t) => {
-    //     myTeams.includes(t) ? socket.join(`team:${t}`) : socket.leave(`team:${t}`);
-    //   });
-    // }
-
     io.on("connection", (socket) => {
       onLog?.(`플레이어 연결됨: ${socket.id}`);
 

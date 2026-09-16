@@ -29,7 +29,7 @@ export function init() {
 
 
   socket.emit("room:get-state", {}, (res) => {
-    console.log("room:get-state 응답:", res);
+    // console.log("room:get-state 응답:", res);
     if (res.ok) onRoomState(res.state);
   });
   
@@ -119,7 +119,7 @@ function toggleReady() {
 }
 
 function onRoomState(state) {
-  console.log("전체 roomState:", state);
+  // console.log("전체 roomState:", state);
   roomState = state;
 
   if (state.phase === "battle" || state.phase === "summary") {
