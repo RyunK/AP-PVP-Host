@@ -43,7 +43,17 @@ async function start() {
     );
     if (res.ok) {
       const phase = res.state.phase;
-      renderScreen(phase === "battle" || phase === "ended" ? "battle" : "lobby");
+      switch(phase){
+        case "battle":
+          renderScreen("battle");
+          break;
+        case "summary":
+          renderScreen("summary");
+          break;
+        default:
+          renderScreen("lobby");
+      }
+      // renderScreen(phase === "battle" || phase === "ended" ? "battle" : "lobby");
       return;
     }
     clearIdentity();

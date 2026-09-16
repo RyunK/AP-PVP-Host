@@ -50,6 +50,11 @@ html, body {
 h1 { font-size: 22px; margin: 0 0 20px; }
 h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 
+
+.accent{
+  color: var(--accent);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -84,8 +89,13 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 }
 .btn-primary { background: var(--accent); color: var(--accent-text-on); }
 .btn-primary:not(:disabled):hover { background: var(--accent-hover); }
+
+.btn-primary-border { background: var(--bg-page); color: var(--accent); border: 1px solid var(--accent);}
+.btn-primary-border:not(:disabled):hover { background-color: var(--bg-btn-ghost);}
+
 .btn-ghost { background: var(--bg-btn-ghost); color: var(--text); }
 .btn-ghost:not(:disabled):hover { background: var(--bg-btn-ghost-hover); }
+
 .btn-danger { background: var(--danger); color: var(--accent-text-on); }
 .btn-danger:not(:disabled):hover { background: var(--danger-hover); }
 
@@ -604,7 +614,8 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 
 .roster-team { margin-bottom: 16px; }
 
-#rosterBoard h3 {
+#rosterBoard h3,
+#final-status h3 {
   margin: 0 0 6px;
   font-size: 14px;
   color: var(--text-muted);
@@ -898,10 +909,10 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 
 
 .summary-winner { text-align: center; font-size: 22px; color: var(--accent); margin: 16px 0 24px; }
-.summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px;  text-align: center;}
 .summary-table th { text-align: center; padding: 8px 10px; color: var(--text-muted); font-size: 12px; border-bottom: 1px solid var(--border-strong); }
 .summary-table td { text-align: center; padding: 10px; border-bottom: 1px solid var(--border); }
-.summary-row-label { text-align: left !important; color: var(--text-muted); font-size: 13px; }
+.summary-row-label { text-align: center;  font-size: 13px; }
 .summary-thanks { text-align: center; margin: 20px 0; font-size: 15px; }
 .summary-actions { display: flex; gap: 10px; margin-bottom: 16px; }
 .summary-actions .btn { flex: 1; margin-bottom: 0; }

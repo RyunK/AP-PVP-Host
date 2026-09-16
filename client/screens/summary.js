@@ -28,14 +28,22 @@ export function init(params = {}) {
   const state = params.state || {};
   roomState = state;
 
-  renderWinnerLine(summary);
-  renderStatsTable(summary);
-  attachSummaryHandlers(summary);
-  mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
-  updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
-  renderPlayerList(document.getElementById("playerListContainer"), state.players);
-  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  socket.emit("room:get-state", {}, (res) => {
+      if (res.ok){
+        const state = res.state || {};
+        roomState = state;
+        const summary = state.battleResult;
 
+        renderWinnerLine(summary);
+        renderStatsTable(summary);
+        attachSummaryHandlers(summary);
+        mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
+        updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
+        renderPlayerList(document.getElementById("playerListContainer"), state.players);
+        showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+        renderRoster();
+      } 
+    });
 }
 
 function renderWinnerLine(summary) {
@@ -52,7 +60,7 @@ function renderWinnerLine(summary) {
   }
 
   const winnerName = teamNames[summary.winnerTeam] || `${summary.winnerTeam}팀`;
-  el.innerHTML = `<h2 class="summary-winner">${escapeHtml(winnerName)} 승리!</h2>`;
+  el.innerHTML = `<h2 class="summary-winner">${escapeHtml(winnerName)} 승리</h2>`;
 }
 
 function renderStatsTable(summary) {
@@ -82,7 +90,7 @@ function renderStatsTable(summary) {
       <tbody>
         ${row("생존자 수", "survivorCount")}
         ${row("생존자 체력 합계", "survivorHpTotal")}
-        ${row("전체 다이스 합계", "diceTotal")}
+        ${row("전체 판정값 합계", "diceTotal")}
       </tbody>
     </table>`;
 }
@@ -107,4 +115,66 @@ function showMyInfo(myPlayerId, myPlayerName) {
   ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
   
   `;
+}
+
+function renderRoster() {
+  const container = document.getElementById("final-status");
+  const teamAName = roomState.teamNames?.A || "A팀";
+  const teamBName = roomState.teamNames?.B || "B팀";
+
+  const renderTeamTable = (team, teamName) => {
+    const chars = roomState.characters.filter((c) => c.team === team);
+
+    const rows = chars
+      .map((c) => {
+        const maxHp = 100 + c.stats.hp_stat * 5;
+        const hpPct = Math.max(0, Math.round((c.stats.hp / maxHp) * 100));
+        const owner = roomState.players.find((p) => p.id === c.ownerId);
+        return `
+          <tr class="${c.alive ? "" : "is-dead"}">
+            <td class="roster-name-cell">
+              <span class="char-name" data-char="${c.id}">${escapeHtml(c.name)}</span>
+              <span class="owner-tag">${escapeHtml(owner?.name || "")}</span>
+            </td>
+            <td class="roster-hp-cell">
+              <div class="hp-bar"><div class="hp-fill" style="width:${hpPct}%"></div></div>
+              <span class="hint">${c.stats.hp}/${maxHp}</span>
+            </td>
+            <td>${c.position}</td>
+            <td>${c.skill}</td>
+            <td>${c.stats.hp_stat}</td>
+            <td>${c.stats.power}</td>
+            <td>${c.stats.dex}</td>
+            <td>${c.stats.mnd}</td>
+            <td>${c.stats.luck}</td>
+            <td>${c.skillMax - c.skillCount}</td>
+            <td>${!c.alive ? '<span class="badge badge--offline">전투불능</span>' : ""}</td>
+          </tr>`;
+      })
+      .join("");
+
+      
+    return `
+      <h3>${escapeHtml(teamName)}</h3>
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>HP</th>
+            <th>포지션</th>
+            <th>선택스킬</th>
+            <th>체력</th>
+            <th>이능력</th>
+            <th>민첩</th>
+            <th>정신력</th>
+            <th>행운</th>
+            <th>남은 스킬</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  };
+
+  container.innerHTML = "<h2>최종 상태</h2>" + renderTeamTable("A", teamAName) + renderTeamTable("B", teamBName);
 }
