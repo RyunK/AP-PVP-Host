@@ -10,6 +10,13 @@
 //     B: { survivorCount: 0, survivorHpTotal: 0, diceTotal: 0 },
 //   },
 // }
+import { socket } from "../js/socket.js";
+import { loadIdentity } from "../js/state.js";
+import { renderScreen } from "../js/router.js";
+import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
+import { getMyPlayerId } from "../js/state.js";
+import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 function escapeHtml(str) {
   const div = document.createElement("div");

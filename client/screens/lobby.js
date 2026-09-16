@@ -122,7 +122,7 @@ function onRoomState(state) {
   console.log("전체 roomState:", state);
   roomState = state;
 
-  if (state.phase === "battle" || state.phase === "ended") {
+  if (state.phase === "battle" || state.phase === "summary") {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;
   }

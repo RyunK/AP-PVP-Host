@@ -124,12 +124,55 @@ class BattleManager {
     };
   }
 
-  toNextRound(){
-    const durationMs = this._getPhaseDuration('vanguard')
+  _hasAliveMember(team) {
+    return this.room.teams[team].some((id) => this.room.characters.get(id)?.alive);
+  }
 
-    this.room.turn = this._startRound(this.room.turn.firstTeam);
-    this.setTimestamp(durationMs);
-    this._scheduleTimeout('vanguard', durationMs);
+  toNextRound(){
+    // 게임 끝났는지 체크
+    if (this.room.turn.round >= 10 || !this._hasAliveMember("A") || !this._hasAliveMember){
+      const summary = {
+        A: this.buildSummaryData("A"),
+        B: this.buildSummaryData("B"),
+      }
+      
+      const tiebreakers = ["survivorCount", "survivorHpTotal", "diceTotal"];
+      let winnerTeam = "draw";
+      for (const key of tiebreakers) {
+        if (summary.A[key] !== summary.B[key]) {
+          winnerTeam = summary.A[key] > summary.B[key] ? "A" : "B";
+          break;
+        }
+      }
+
+      this.room.battleResult = { winnerTeam, stats:summary, teamNames: this.room.teamNames };
+      this.room.phase =  "summary";
+      this._clearTimer();
+    } else{
+      const durationMs = this._getPhaseDuration('vanguard')
+
+      this.room.turn = this._startRound(this.room.turn.firstTeam);
+      this.setTimestamp(durationMs);
+      this._scheduleTimeout('vanguard', durationMs);
+    }
+  }
+
+  buildSummaryData(team) {
+    const chars = [...this.room.characters.values()].filter((c) => c.team === team);
+    const survivors = chars.filter((c) => c.alive);
+    const charIds = new Set(chars.map((c) => c.id)); 
+
+    const diceTotal = this.room.battleLogs.reduce((total, roundLog) => {
+      return total + Object.entries(roundLog)
+        .filter(([characterId]) => charIds.has(characterId)) 
+        .reduce((roundTotal, [, c]) => roundTotal + (c.diceResult?.value || 0), 0);
+    }, 0);
+
+    return {
+      survivorCount: survivors.length,
+      survivorHpTotal: survivors.reduce((sum, c) => sum + c.stats.hp, 0),
+      diceTotal,
+    };
   }
 
   endOrderCheck(){

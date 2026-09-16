@@ -73,11 +73,10 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
-  if (state.turn?.winner) {
-    renderScreen("summary", { summary: buildSummaryData(state) });
+  if (state.phase == "summary") {
+    renderScreen("summary", { summary: state.battleResult });
     return;
   }
-  // console.log(roomState);
 
   // 전반적인 전투 갱신
   renderBattle();
@@ -663,23 +662,23 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
   });
 }
 
-function buildSummaryData(state) {
-  const calcStats = (team) => {
-    const chars = state.characters.filter((c) => c.team === team);
-    const survivors = chars.filter((c) => c.alive);
-    return {
-      survivorCount: survivors.length,
-      survivorHpTotal: survivors.reduce((sum, c) => sum + c.stats.hp, 0),
-      diceTotal: "-", // TODO: 전체 라운드 다이스 합계는 누적 로그가 필요 (아래 참고)
-    };
-  };
+// function buildSummaryData(state) {
+//   const calcStats = (team) => {
+//     const chars = state.characters.filter((c) => c.team === team);
+//     const survivors = chars.filter((c) => c.alive);
+//     return {
+//       survivorCount: survivors.length,
+//       survivorHpTotal: survivors.reduce((sum, c) => sum + c.stats.hp, 0),
+//       diceTotal: "-", // TODO: 전체 라운드 다이스 합계는 누적 로그가 필요 (아래 참고)
+//     };
+//   };
 
-  return {
-    winnerTeam: state.turn.winner,
-    teamNames: state.teamNames,
-    stats: { A: calcStats("A"), B: calcStats("B") },
-  };
-}
+//   return {
+//     winnerTeam: state.winner,
+//     teamNames: state.teamNames,
+//     stats: { A: calcStats("A"), B: calcStats("B") },
+//   };
+// }
 
 
 document.addEventListener("click", (e) => {

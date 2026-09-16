@@ -72,6 +72,7 @@ class RoomManager {
       chatHistory: [],
       battleLogs: [],
       ruleData: loadGameData(),
+      battleResult: null,
     };
   }
 
@@ -314,6 +315,7 @@ class RoomManager {
       turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
       battleLogs: room.battleLogs,
+      battleResult: room.battleResult,
     };
   }
 
