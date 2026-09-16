@@ -662,24 +662,6 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
   });
 }
 
-// function buildSummaryData(state) {
-//   const calcStats = (team) => {
-//     const chars = state.characters.filter((c) => c.team === team);
-//     const survivors = chars.filter((c) => c.alive);
-//     return {
-//       survivorCount: survivors.length,
-//       survivorHpTotal: survivors.reduce((sum, c) => sum + c.stats.hp, 0),
-//       diceTotal: "-", // TODO: 전체 라운드 다이스 합계는 누적 로그가 필요 (아래 참고)
-//     };
-//   };
-
-//   return {
-//     winnerTeam: state.winner,
-//     teamNames: state.teamNames,
-//     stats: { A: calcStats("A"), B: calcStats("B") },
-//   };
-// }
-
 
 document.addEventListener("click", (e) => {
   document.querySelectorAll(".target-multiselect-panel, .skill-dropdown-panel").forEach((panel) => {

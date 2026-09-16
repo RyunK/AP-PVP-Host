@@ -18,6 +18,8 @@ import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
+import { exportBattleLog } from "../js/exportBattleLogs.js"
+
 const myPlayerId = getMyPlayerId();
 let roomState = null;
 
@@ -42,6 +44,8 @@ export function init(params = {}) {
         renderPlayerList(document.getElementById("playerListContainer"), state.players);
         showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
         renderRoster();
+
+        attachEventListeners();
       } 
     });
 }
@@ -177,4 +181,60 @@ function renderRoster() {
   };
 
   container.innerHTML = "<h2>최종 상태</h2>" + renderTeamTable("A", teamAName) + renderTeamTable("B", teamBName);
+}
+
+function saveChatLogAsHtml() {
+  const chatLogEl = document.getElementById("chatLog"); // 채팅 내역이 담긴 요소
+  if (!chatLogEl) return;
+
+  // 지금 페이지에 적용된 CSS를 그대로 긁어와서 같이 저장 (색상/배지 등 유지)
+  const styles = [...document.styleSheets]
+    .map((sheet) => {
+      try {
+        return [...sheet.cssRules].map((rule) => rule.cssText).join("\n");
+      } catch {
+        return ""; // 외부(CDN) 스타일시트는 보안 정책상 못 읽어올 수 있음, 그런 건 건너뜀
+      }
+    })
+    .join("\n");
+
+  const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>채팅 로그</title>
+  <style>${styles}</style>
+</head>
+<body style="background:#14171c; padding:20px;">
+  ${chatLogEl.outerHTML}
+</body>
+</html>`;
+
+  downloadFile(html, `채팅로그_${formatDate()}.html`, "text/html");
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url); // 메모리 정리
+}
+
+function formatDate() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}_${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function attachEventListeners(){
+  document.getElementById("saveChatLogBtn")?.addEventListener("click", () => {
+    saveChatLogAsHtml();
+  });
+  document.getElementById("saveBattleLogBtn")?.addEventListener("click", () => {
+    exportBattleLog(roomState); // roomState는 이 화면이 접근 가능한 최신 상태여야 함
+  });
 }
