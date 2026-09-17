@@ -26,9 +26,9 @@ let roomState = null;
 
 export function init(params = {}) {
   
-  const summary = params.summary || {};
-  const state = params.state || {};
-  roomState = state;
+  // const summary = params.summary || {};
+  // const state = params.state || {};
+  // roomState = state;
 
   socket.off("room:state", onRoomState);
   socket.on("room:state", onRoomState);
@@ -40,6 +40,7 @@ export function init(params = {}) {
         roomState = state;
         const summary = state.battleResult;
 
+        renderRunResult(summary);
         renderWinnerLine(summary);
         renderStatsTable(summary);
         attachSummaryHandlers(summary);
@@ -79,6 +80,16 @@ function setupRestartButton() {
       renderScreen("lobby");
     });
   });
+}
+
+function renderRunResult(summary){
+  const el = document.getElementById("runResult");
+  if(summary.runSuccess){
+    const runFaction = summary.winnerTeam == "A" ? "B" : "A";
+    const teamNames = summary.teamNames || {};
+
+    el.innerHTML = `<p class="">${teamNames[runFaction]}이 도주했습니다...</p>`
+  } else el.innerHTML = "";
 }
 
 function renderWinnerLine(summary) {

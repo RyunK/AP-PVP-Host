@@ -131,22 +131,30 @@ class BattleManager {
 
   toNextRound(){
     // 게임 끝났는지 체크
-    if (this.room.turn.round >= 10 || !this._hasAliveMember("A") || !this._hasAliveMember("B")){
+    const roundLog = this.room.battleLogs[this.room.battleLogs.length -1];
+    const runSuccess = roundLog.runResult ? roundLog.runResult.success : false;
+    if (this.room.turn.round >= 10 || runSuccess
+       || !this._hasAliveMember("A") || !this._hasAliveMember("B")){
       const summary = {
         A: this.buildSummaryData("A"),
         B: this.buildSummaryData("B"),
       }
       
-      const tiebreakers = ["survivorCount", "survivorHpTotal", "diceTotal"];
       let winnerTeam = "draw";
-      for (const key of tiebreakers) {
-        if (summary.A[key] !== summary.B[key]) {
-          winnerTeam = summary.A[key] > summary.B[key] ? "A" : "B";
-          break;
+      if(runSuccess){
+        // 도주시 무조건 패배
+        winnerTeam = roundLog.runResult.triedFaction == "A" ? "B" : "A";          
+      } else {
+        const tiebreakers = ["survivorCount", "survivorHpTotal", "diceTotal"];
+        for (const key of tiebreakers) {
+          if (summary.A[key] !== summary.B[key]) {
+            winnerTeam = summary.A[key] > summary.B[key] ? "A" : "B";
+            break;
+          }
         }
       }
-
-      this.room.battleResult = { winnerTeam, stats:summary, teamNames: this.room.teamNames };
+      
+      this.room.battleResult = { winnerTeam, stats:summary, teamNames: this.room.teamNames, runSuccess };
       this.room.phase =  "summary";
       this._clearTimer();
     } else{
@@ -351,9 +359,7 @@ class BattleManager {
     };
 
     
-    // this.room.turn = this._startRound(turn.firstTeam);
     turn.phase = "resolution";
-    // console.log(Object.fromEntries(resultMap));
     this.room.battleLogs.push(Object.fromEntries(resultMap));
     this.applyHpNskillCnt(resultMap);
     // 정산 페이즈 타임 세팅
