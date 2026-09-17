@@ -11,6 +11,7 @@ function escapeHtml(str) {
 
 /** faction 값 기준으로 정렬된 복사본을 반환 (원본 배열은 건드리지 않음) */
 function sortByFaction(roundLog) {
+  if (!roundLog) return {}; 
   return Object.values(roundLog).sort((a, b) => {
     const fa = a.info?.faction ?? "";
     const fb = b.info?.faction ?? "";
@@ -63,7 +64,7 @@ function buildRunTable(roundLog, teamNames) {
   const triedFaction = roundLog.runResult.triedFaction;
 
   let rows = ""
-  Object.entries(roundLog.runResult).forEach(([key, value]) => {
+  Object.entries(roundLog.runResult.rollResults).forEach(([key, value]) => {
 
     rows += `
         <tr>
@@ -121,6 +122,9 @@ function buildHpTable(sortedLog) {
 }
 
 export function renderRoundLog(roundLog, roomState) {
+
+  console.log(roundLog);
+
   const container = document.getElementById("myCharacters");
   const sortedLog = sortByFaction(roundLog);
 

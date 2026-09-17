@@ -19,7 +19,8 @@ function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
 
   lines.push("[판정 결과]");
   for (const c of entries) {
-    const targets = (c.info.targets || []).join(", ") || "-";
+    if(!c.info) continue;
+    const targets = (c.info?.targets || []).join(", ") || "-";
     lines.push(
       `- ${c.info.name} (${teamNames[c.info.faction]}) | 스킬: ${c.info.useSkill || "-"}` +
         (c.info.corVal ? ` | 침식값: ${c.info.corVal}` : "") +
@@ -31,6 +32,7 @@ function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
 
   lines.push("[체력 정산]");
   for (const c of entries) {
+    if(!c.info) continue;
     lines.push(
       `- ${c.info.name} (${teamNames[c.info.faction]}) | ${c.hpResult.formula || "-"} = ${c.hpResult.value}`
     );
@@ -39,9 +41,9 @@ function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
 
   if(roundLog.runResult){
     lines.push("[도주 결과]")
-      Object.entries(roundLog.runResult).forEach(([key, value]) => {
+      Object.entries(roundLog.runResult.rollResults).forEach(([key, value]) => {
 
-        lines.push(` - ${teamNames[key]} : ${key == triedFaction? "시도" : "저지"}`);
+        lines.push(` - ${teamNames[key]} : ${key == roundLog.runResult.triedFaction? "시도" : "저지"}`);
         lines.push(`    판정식: ${value.formula} = ${value.total}`)
       })
     lines.push(`도주 ${roundLog.runResult.success? "성공" : "실패"}`);

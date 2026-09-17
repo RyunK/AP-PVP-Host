@@ -45,7 +45,7 @@ function onResult(roundLog){
 }
 
 export function destroy() {
-    console.log("destroy 실행됨");
+    // console.log("destroy 실행됨");
     socket.off("room:state", onRoomState);
     socket.off("battle:state", onBattleState);
     socket.off("battle:draft", onBattleDraft);
@@ -172,10 +172,7 @@ function startOrderCheckCountdown() {
       clearInterval(orderCheckIntervalId);
       orderCheckIntervalId = null;
       document.querySelector(".alert-modal").style.display = "none";
-      
-      // socket.emit("orderCheck:ended",  (res) => {
-      //   if (!res.ok) battleStatus.textContent = res.error;
-      // });
+
     }
   }
 
@@ -197,6 +194,7 @@ function startTurnTimer() {
     const durationMs = roomState.turn.durationMs;
 
     function update() {
+        document.getElementById("battleStatus").textContent = ""
         const remainingMs = Math.max(
             0, durationMs - (Date.now() - startTime)
         );
@@ -213,6 +211,8 @@ function startTurnTimer() {
             clearInterval(turnTimerInterval);
             turnTimerInterval = null;
         }
+        liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+
     }
 
     update();
@@ -501,7 +501,8 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
         (e) => `
         <label class="target-option">
           <input type="checkbox" class="target-checkbox" value="${e.id}"
-            ${selectedTargetIds.includes(e.id) ? "checked" : ""} ${checkboxDisabled} />
+            ${selectedTargetIds.includes(e.id) ? "checked" : ""} 
+             ${checkboxDisabled} />
             ${escapeHtml(e.name)}${e.id === c.id ? " (나)" : ""}
         </label>`
       )

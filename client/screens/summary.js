@@ -43,7 +43,6 @@ export function init(params = {}) {
         renderRunResult(summary);
         renderWinnerLine(summary);
         renderStatsTable(summary);
-        attachSummaryHandlers(summary);
         mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
         updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
         renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
@@ -88,7 +87,7 @@ function renderRunResult(summary){
     const runFaction = summary.winnerTeam == "A" ? "B" : "A";
     const teamNames = summary.teamNames || {};
 
-    el.innerHTML = `<p class="">${teamNames[runFaction]}이 도주했습니다...</p>`
+    el.innerHTML = `<p class="runResult">${teamNames[runFaction]}이 도주했습니다...</p>`
   } else el.innerHTML = "";
 }
 
@@ -141,15 +140,6 @@ function renderStatsTable(summary) {
     </table>`;
 }
 
-function attachSummaryHandlers(summary) {
-  // TODO: 실제 저장 로직 (Blob + 다운로드 등)은 로그 데이터 형태가 정해지면 채웁니다.
-  document.getElementById("saveBattleLogBtn")?.addEventListener("click", () => {
-    console.log("TODO: 전투 경과 저장", summary);
-  });
-  document.getElementById("saveChatLogBtn")?.addEventListener("click", () => {
-    console.log("TODO: 전체 채팅 저장");
-  });
-}
 
 function showMyInfo(myPlayerId, myPlayerName) {
   const me = roomState.players.find((p) => p.id === myPlayerId);
