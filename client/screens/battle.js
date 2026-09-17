@@ -370,6 +370,7 @@ function renderBattle() {
   // const isSpectator = !myCharacters;
 
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
+  const isSpectator = myCharacters.length <= 0;
 
   // "이번 페이즈에 행동 차례인 팀"의 캐릭터만 카드로 보여줌.
   const actingTeamChars = roomState.characters.filter((c) => c.team === turn?.actingTeam);
@@ -378,7 +379,7 @@ function renderBattle() {
   const totalActing = actingTeamChars.filter((c) => c.alive).length;
   const confirmedCount = actingTeamChars.filter((c) => confirmedMap.has(c.id)).length;
 
-  const cardsHtml = actingTeamChars.map((c) => renderActionCard(c, confirmedMap, isMyTeamActing)).join("");
+  const cardsHtml = actingTeamChars.map((c) => renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator)).join("");
 
   myCharactersEl.innerHTML = `
     <div class="confirm-progress hint">확정: ${confirmedCount}/${totalActing}</div>
@@ -422,7 +423,7 @@ function buildSkillOptions(c) {
   return options;
 }
 
-function renderActionCard(c, confirmedMap, isMyTeamActing) {
+function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
   if (!c.alive) {
     return `<div class="char-card"><strong>${escapeHtml(c.name)}</strong> — 전투불능</div>`;
   }
@@ -514,7 +515,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing) {
         <span class="hint">(${c.stats.hp}/${maxHp})</span>
         ${confirmed ? '<span class="badge badge--ready">확정됨</span>' : ""}
         ${!isMyTeamActing ? '<span class="badge badge--waiting">적군</span>' : ""}
-        ${!isMine && isMyTeamActing ? '<span class="badge badge--waiting">아군</span>' : ""}
+        ${!isMine && isMyTeamActing && !isSpectator ? '<span class="badge badge--waiting">아군</span>' : ""}
       </div>
 
       <div class="char-card-row char-card-default-row">
