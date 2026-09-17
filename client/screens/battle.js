@@ -256,7 +256,8 @@ const myCharactersEl = document.getElementById("myCharacters");
 
   const confirmedMap = new Map(turn?.confirmed || []);
   const myCharacters = roomState.characters.filter((ch) => ch.ownerId === myPlayerId);
-  const myTeams = myCharacters.map((ch) => ch.team);
+  // const myTeams = myCharacters.map((ch) => ch.team);
+  const myTeams = myCharacters.length > 0 ? myCharacters.map((c) => c.team) : ["A", "B"];
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
 
   const wrapper = document.createElement("div");
@@ -368,7 +369,7 @@ function renderBattle() {
   }
 
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
-  const myTeams = myCharacters? myCharacters.map((c) => c.team) : ["A", "B"];
+  const myTeams = myCharacters.length > 0 ? myCharacters.map((c) => c.team) : ["A", "B"];
   // const isSpectator = !myCharacters;
 
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);

@@ -1,7 +1,7 @@
 // roundLog(캐릭터별 판정/정산 결과 리스트)를 "판정 결과" / "체력 정산" 두 개의 표로
 // #myCharacters 안에 그립니다. faction(진영) 값 기준으로 정렬해서 표시합니다.
 
-import { round } from "mathjs";
+// import { round } from "mathjs";
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -12,8 +12,8 @@ function escapeHtml(str) {
 /** faction 값 기준으로 정렬된 복사본을 반환 (원본 배열은 건드리지 않음) */
 function sortByFaction(roundLog) {
   return Object.values(roundLog).sort((a, b) => {
-    const fa = a.info.faction ?? "";
-    const fb = b.info.faction ?? "";
+    const fa = a.info?.faction ?? "";
+    const fb = b.info?.faction ?? "";
     return fa < fb ? -1 : fa > fb ? 1 : 0;
   });
 }
@@ -124,10 +124,10 @@ export function renderRoundLog(roundLog, roomState) {
   const container = document.getElementById("myCharacters");
   const sortedLog = sortByFaction(roundLog);
 
-  if(roundLog.roomState.runResult && roundLog.roomState.runResult.success){
+  if(roundLog.runResult && roundLog.runResult.success){
     container.innerHTML = buildRunTable(roundLog, roomState.teamNames);
   } else{
-    container.innerHTML = buildRunTable(roundLog, roomState.teamNames); + buildRollTable(sortedLog, roomState) + buildHpTable(sortedLog);
+    container.innerHTML = buildRunTable(roundLog, roomState.teamNames) + buildRollTable(sortedLog, roomState) + buildHpTable(sortedLog);
   }
 
   document.getElementById("battleStatus").textContent = "잠시 후 전투가 진행됩니다..."

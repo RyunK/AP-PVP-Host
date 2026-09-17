@@ -133,7 +133,7 @@ class UserDiceRoller{
         );
 
         const participant = new Participant(
-            { stats },
+            { team: faction ,stats },
             { skillName: "도주" },
             "도주"
         );

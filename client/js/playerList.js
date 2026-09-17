@@ -14,7 +14,7 @@ export function escapeHtml(str) {
 export function renderPlayerList(container, players, roomPhase) {
   container.innerHTML = players
     .map((p) => {
-      const roleBadge = p.isSpectator
+      const roleBadge = p.characterIds.length <= 0
         ? '<span class="badge badge--waiting">관전</span>'
         : '<span class="badge badge--online">플레이</span>';
 
@@ -22,9 +22,8 @@ export function renderPlayerList(container, players, roomPhase) {
 
       return `
         <div class="player-chip">
-          ${renderAvatar(p.avatar)}
           <span>${escapeHtml(p.name)}</span>
-          ${p.isHost ? '<span class="badge">호스트</span>' : roleBadge}
+          ${p.isHost ? '<span class="badge  badge--host">호스트</span>' : roleBadge}
           ${showReadyBadge ? renderReadyBadge(p.ready) : ""}
           ${!p.connected ? '<span class="badge badge--offline">연결 끊김</span>' : ""}
         </div>`;
