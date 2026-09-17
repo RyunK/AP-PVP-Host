@@ -113,38 +113,38 @@ class UserDiceRoller{
   /**
    * 도주 발생 시 따로 계산해서 리턴
    */
-  async runAway(triedFaction){
+  async runAway(triedFaction) {
     const runners = this.actvie_runners;
-    const rollResults = new Map();
+    const rollResults = {};
 
     for (const faction of ["A", "B"]) {
-      const aliveRunners = [...runners.values()].filter(
-          runner => runner.faction === faction && runner.currentHp > 0
-      );
+        const aliveRunners = [...runners.values()].filter(
+            runner => runner.faction === faction && runner.currentHp > 0
+        );
 
-      if (aliveRunners.length === 0) continue;
+        if (aliveRunners.length === 0) continue;
 
-      const stats = Object.fromEntries(
-          ["hpStat", "power", "agility", "mental", "luck"].map(stat => [
-              stat,
-              aliveRunners.reduce((sum, runner) => sum + runner[stat], 0)
-                  / aliveRunners.length
-          ])
-      );
+        const stats = Object.fromEntries(
+            ["hpStat", "power", "agility", "mental", "luck"].map(stat => [
+                stat,
+                aliveRunners.reduce((sum, runner) => sum + runner[stat], 0)
+                    / aliveRunners.length
+            ])
+        );
 
-      const participant = new Participant(
-          { stats },
-          { skillName: "도주" },
-          "도주"
-      );
+        const participant = new Participant(
+            { stats },
+            { skillName: "도주" },
+            "도주"
+        );
 
-      const rollRunaway =  await DiceRoller.rollRunaway("도주", participant);
+        const rollRunaway = await DiceRoller.rollRunaway("도주", participant);
 
-      rollResults.set(faction, rollRunaway);
+        rollResults[faction] = rollRunaway;
     }
 
-    const resultA = rollResults.get("A");
-    const resultB = rollResults.get("B");
+    const resultA = rollResults["A"];
+    const resultB = rollResults["B"];
 
     const selectedFaction =
         resultA.total > resultB.total
@@ -153,7 +153,12 @@ class UserDiceRoller{
                 ? "B"
                 : triedFaction;
 
-    return {selectedFaction, success: selectedFaction == triedFaction ,rollResults};
+    return {
+        winner: selectedFaction,
+        success: selectedFaction === triedFaction,
+        triedFaction,
+        rollResults
+    };
   }
 }
 module.exports = { UserDiceRoller }

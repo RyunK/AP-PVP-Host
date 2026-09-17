@@ -61,6 +61,17 @@ async function resolveRound({ characters, vanguard, rearguard }) {
 }
 
 /**
+ * runResult (Object)
+ * {
+ *    winner: 판정 이긴 진영 string
+ *    success: 도주 성공 여부 bool
+ *    rollResults: object "A" -> {formula, total} / B도 동일함.
+ *    triedFaction : 도주 시도 진영 string
+ * }
+ * 도주 시도 안했으면 undefined
+ */
+
+/**
  * 객체 받아서 return할 수 있는 이벤트 만들어 돌려줌
  * @param {Participant} c 캐릭터 객체 하나 
  * @returns {Calcs}

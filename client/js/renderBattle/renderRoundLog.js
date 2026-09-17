@@ -1,6 +1,8 @@
 // roundLog(캐릭터별 판정/정산 결과 리스트)를 "판정 결과" / "체력 정산" 두 개의 표로
 // #myCharacters 안에 그립니다. faction(진영) 값 기준으로 정렬해서 표시합니다.
 
+import { round } from "mathjs";
+
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
@@ -53,6 +55,43 @@ function buildRollTable(sortedLog, roomState) {
     </table>`;
 }
 
+function buildRunTable(roundLog, teamNames) {
+  if(!roundLog.runResult) return "";
+
+  const success = roundLog.runResult.success;
+  const successLog = success? `도주 성공. 전투가 종료됩니다.`   : `도주 실패. 전투가 계속됩니다.`
+  const triedFaction = roundLog.runResult.triedFaction;
+
+  let rows = ""
+  Object.entries(roundLog.runResult).forEach(([key, value]) => {
+
+    rows += `
+        <tr>
+          <td>${escapeHtml(teamNames[key])}</td>
+          <td>${key == triedFaction? "시도" : "저지"}</td>
+          <td>${escapeHtml(value.formula)}</td>
+          <td>${escapeHtml(value.total)}</td>
+        </tr>`;
+  })
+
+  return `
+    <h2>도주 결과</h2>
+    <table class="round-log-table">
+      <thead>
+        <tr>
+          <th>진영</th>
+          <th>도주</th>
+          <th>계산식</th>
+          <th>결과</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="run-success">${successLog}</p>
+    `;
+}
+
+
 function buildHpTable(sortedLog) {
   const rows = sortedLog
     .map(
@@ -85,5 +124,11 @@ export function renderRoundLog(roundLog, roomState) {
   const container = document.getElementById("myCharacters");
   const sortedLog = sortByFaction(roundLog);
 
-  container.innerHTML = buildRollTable(sortedLog, roomState) + buildHpTable(sortedLog);
+  if(roundLog.roomState.runResult && roundLog.roomState.runResult.success){
+    container.innerHTML = buildRunTable(roundLog, roomState.teamNames);
+  } else{
+    container.innerHTML = buildRunTable(roundLog, roomState.teamNames); + buildRollTable(sortedLog, roomState) + buildHpTable(sortedLog);
+  }
+
+  document.getElementById("battleStatus").textContent = "잠시 후 전투가 진행됩니다..."
 }
