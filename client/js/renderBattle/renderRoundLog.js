@@ -22,6 +22,7 @@ function sortByFaction(roundLog) {
 function buildRollTable(sortedLog, roomState) {
   const rows = sortedLog
     .map((c) => {
+      if(!c.info) return "";
       c.info.targets = c.info.targets.map(id => {
           const character = roomState.characters.find(c => c.id === id);
           return character ? character.name : id;

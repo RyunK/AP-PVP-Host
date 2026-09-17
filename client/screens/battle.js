@@ -1,8 +1,8 @@
 import { socket } from "../js/socket.js";
-import { loadIdentity, clearIdentity } from "../js/state.js";
+// import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, showMyInfo } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -64,7 +64,7 @@ function onRoomState(state) {
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
-  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
 }
 
 let phase_state;
@@ -221,17 +221,7 @@ function startTurnTimer() {
 }
 
 
-function showMyInfo(myPlayerId, myPlayerName) {
-  const me = roomState.players.find((p) => p.id === myPlayerId);
-  const isHost = me?.isHost;
-  
-  document.getElementById("myInfoLabel").innerHTML = `
-  ${myPlayerName} 
-  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
-  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
-  
-  `;
-}
+
 
 let liveDrafts = new Map(); // characterId -> {skillName, targetId, value} (team:${team} room에서 실시간 수신)
 

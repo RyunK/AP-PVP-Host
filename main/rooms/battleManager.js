@@ -56,6 +56,7 @@ class BattleManager {
   }
 
   start() {
+    this.room.turn = null;
     this.room.turn = this._startRound(null);
     this.room.turn.phase = "orderCheck"
 

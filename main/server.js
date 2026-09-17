@@ -85,7 +85,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
         try {
           const room = roomManager.restartRoom(socket.data.playerId);
           cb({ ok: true, state: roomManager.serializeRoom(room) });
-          io.to(MAIN_ROOM).emit("room:state", roomManager.serializeRoom(room));
+          io.to("main").emit("room:state", roomManager.serializeRoom(room));
         } catch (err) {
           cb({ ok: false, error: err.message });
         }

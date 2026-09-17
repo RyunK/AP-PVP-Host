@@ -71,11 +71,12 @@ class RoomManager {
     // 캐릭터/팀/전투 관련 데이터는 전부 비움
     this.room.characters = new Map();
     this.room.teams = { A: [], B: [] };
-    this.room.teamNames = { A: "A팀", B: "B팀" };
     this.room.battleLogs = [];
     this.room.battleResult = null;
     this.room.phase = "lobby";
-    this.room.restarted = true; // ← 핵심: "이 방은 재시작됐다"는 표시
+    this.room.restarted = true;
+    this.room.turn = null;
+    this.room.chatHistory = [];
 
     // 플레이어 목록(닉네임)은 유지하되, 각자의 characterIds만 비움 (캐릭터 자체가 없어졌으니)
     for (const player of this.room.players.values()) {
@@ -350,7 +351,7 @@ class RoomManager {
       characters: [...room.characters.values()],
       teams: room.teams,
       teamNames: room.teamNames,
-      turnNumber: room.turn.number,
+      // turnNumber: room.turn.number,
       turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
       battleLogs: room.battleLogs,
