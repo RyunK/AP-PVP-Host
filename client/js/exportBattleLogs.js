@@ -37,6 +37,17 @@ function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
   }
   lines.push("");
 
+  if(roundLog.runResult){
+    lines.push("[도주 결과]")
+      Object.entries(roundLog.runResult).forEach(([key, value]) => {
+
+        lines.push(` - ${teamNames[key]} : ${key == triedFaction? "시도" : "저지"}`);
+        lines.push(`    판정식: ${value.formula} = ${value.total}`)
+      })
+    lines.push(`도주 ${roundLog.runResult.success? "성공" : "실패"}`);
+    lines.push("");
+  }
+
   return lines.join("\n");
 }
 
@@ -49,6 +60,10 @@ function buildResultSection(battleResult, fallbackTeamNames) {
   lines.push("===== 전투 결과 =====");
   lines.push("");
 
+  if(battleResult.runSuccess){
+    const runTeam = battleResult.winnerTeam == "A" ? "B" : "A"
+    lines.push(`${teamNames[runTeam]}의 도주 성공.`)
+  }
   if (!battleResult.winnerTeam) {
     // 결과 없음 - 아무것도 안 씀
   } else if (battleResult.winnerTeam === "draw") {
