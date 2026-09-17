@@ -73,9 +73,28 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
+  const now_phase = state.turn?.phase;
+  const now_round = state.turn?.round;
+  let phase_kr;
   if (state.phase == "summary") {
     renderScreen("summary", { summary: state.battleResult, state });
     return;
+  }
+
+  switch(now_phase){
+    case "vanguard" : phase_kr = "선공"; break;
+    case "rearguard" : phase_kr = "후공"; break;
+    case "resolution" : phase_kr = "정산"; break;
+    default: phase_kr = "-"; 
+  }
+  if(phase_state != now_phase && round == now_round ){
+    showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
+    liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    document.getElementById("battleStatus").textContent = ""
+  } else if (round != now_round && round != 0){
+    showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
+    liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    document.getElementById("battleStatus").textContent = ""
   }
 
   // 전반적인 전투 갱신
@@ -88,20 +107,8 @@ async function onBattleState(state) {
   // 1라운드 지금 막 시작했다면 순서 확인
   await renderOrderCheck()
 
-  const now_phase = state.turn?.phase;
-  const now_round = state.turn?.round;
-  let phase_kr;
-  switch(now_phase){
-    case "vanguard" : phase_kr = "선공"; break;
-    case "rearguard" : phase_kr = "후공"; break;
-    case "resolution" : phase_kr = "정산"; break;
-    default: phase_kr = "-"; 
-  }
-  if(phase_state != now_phase && round == now_round ){
-    showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
-  } else if (round != now_round && round != 0){
-    showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
-  }
+  
+  
   phase_state = now_phase;
   round = now_round;
 }
@@ -170,6 +177,7 @@ function startOrderCheckCountdown() {
     document.getElementById("loadingModalHead").textContent = "SYSTEM LOADING" + dots;
     if (remaining <= 0) {
       clearInterval(orderCheckIntervalId);
+      orderChecked = false; 
       orderCheckIntervalId = null;
       document.querySelector(".alert-modal").style.display = "none";
 
@@ -194,7 +202,6 @@ function startTurnTimer() {
     const durationMs = roomState.turn.durationMs;
 
     function update() {
-        document.getElementById("battleStatus").textContent = ""
         const remainingMs = Math.max(
             0, durationMs - (Date.now() - startTime)
         );
@@ -211,7 +218,7 @@ function startTurnTimer() {
             clearInterval(turnTimerInterval);
             turnTimerInterval = null;
         }
-        liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+        
 
     }
 

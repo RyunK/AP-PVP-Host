@@ -106,3 +106,7 @@ export function updateChatCharacterOptions(myCharacters = [], myPlayerName = "")
     select.value = currentValue;
   }
 }
+
+export function resetChat(){
+  messages.length = 0;
+}

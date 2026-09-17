@@ -13,7 +13,7 @@
 import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
-import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
+import { mountChat, updateChatCharacterOptions, resetChat } from "../js/chat.js";
 import { renderPlayerList, escapeHtml, renderReadyBadge, showMyInfo } from "../js/playerList.js";
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -58,9 +58,16 @@ export function init(params = {}) {
 function onRoomState(state) {
   roomState = state;
   if (state.phase === "lobby" && state.restarted) {
+    resetChat();
     renderScreen("lobby"); // 호스트가 재시작했으니 자동으로 따라감
   }
 }
+
+export function destroy() {
+    // console.log("destroy 실행됨");
+    socket.off("room:state", onRoomState);
+}
+
 
 function setupRestartButton() {
   const identity = loadIdentity(); 
@@ -260,6 +267,7 @@ function attachEventListeners(){
   document.getElementById("restartBtn")?.addEventListener("click", () => {
     socket.emit("room:restart", {}, (res) => {
       if (!res.ok) return alert(res.error);
+      resetChat();
       renderScreen("lobby"); // 초기화된 방의 로비로 이동
     });
   });

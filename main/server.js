@@ -86,6 +86,8 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const room = roomManager.restartRoom(socket.data.playerId);
           cb({ ok: true, state: roomManager.serializeRoom(room) });
           io.to("main").emit("room:state", roomManager.serializeRoom(room));
+          sendSysMessage(`방이 재시작됐습니다.`);
+          sendSysMessage(`${profile.name}님이 입장했습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }

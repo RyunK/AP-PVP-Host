@@ -279,6 +279,7 @@ function saveCharacters(){
 }
 
 function renderTeamBoard() {
+  const teamBoard = document.getElementById("teamBoard");
   const me = roomState.players.find((p) => p.id === myPlayerId);
   const isHost = me?.isHost;
 
@@ -313,6 +314,14 @@ function renderTeamBoard() {
         ${chips}
       </div>`;
   };
+
+  console.log("teamBoard:", teamBoard);
+  console.log("isConnected:", teamBoard?.isConnected);
+  console.log("current teamBoard:", document.querySelector("#teamBoard"));
+  console.log(
+    "same:",
+    teamBoard === document.querySelector("#teamBoard")
+  );
 
   teamBoard.innerHTML = teamCol("A") + teamCol("B");
 

@@ -949,3 +949,8 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   margin-bottom: 0;
   font-size: 14px;
 }
+
+.run-success{
+
+  font-size: 14px;
+}
