@@ -57,8 +57,15 @@ function fillSettingsForm(settings) {
   if (!settings) return;
   settingsForm.teamSize.value = settings.teamSize;
   settingsForm.turnTimeLimitSec.value = settings.turnTimeLimitSec;
+  settingsForm.resolutionTimeLimitSec.value = settings.resolutionTimeLimitSec;
   settingsForm.maxCharactersPerPlayer.value = settings.maxCharactersPerPlayer;
+  settingsForm.maxStat.value = settings.maxStat;
+  settingsForm.maxStatSum.value = settings.maxStatSum;
+  settingsForm.maxRound.value = settings.maxRound;
+  settingsForm.minRunRound.value = settings.minRunRound;
+  settingsForm.maxAttackers.value = settings.maxAttackers;
   settingsForm.allowMultiCharacterPerPlayer.checked = settings.allowMultiCharacterPerPlayer;
+  settingsForm.allowAsymmetricBattles.checked = settings.allowAsymmetricBattles;
 }
 
 settingsForm.addEventListener("submit", async (e) => {
@@ -67,8 +74,15 @@ settingsForm.addEventListener("submit", async (e) => {
   const settings = {
     teamSize: Number(formData.get("teamSize")),
     turnTimeLimitSec: Number(formData.get("turnTimeLimitSec")),
+    resolutionTimeLimitSec :Number(formData.get("resolutionTimeLimitSec")),
     maxCharactersPerPlayer: Number(formData.get("maxCharactersPerPlayer")),
+    maxStat: Number(formData.get("maxStat")),
+    maxStatSum: Number(formData.get("maxStatSum")),
+    maxRound: Number(formData.get("maxRound")),
+    minRunRound: Number(formData.get("minRunRound")),
+    maxAttackers: Number(formData.get("maxAttackers")),
     allowMultiCharacterPerPlayer: formData.get("allowMultiCharacterPerPlayer") === "on",
+    allowAsymmetricBattles: formData.get("allowAsymmetricBattles") === "on",
   };
   await window.host.saveMatchSettings(settings);
   settingsToast.textContent = "저장되었습니다.";

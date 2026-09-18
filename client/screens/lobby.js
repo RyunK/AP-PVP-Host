@@ -190,15 +190,15 @@ function addCharacterRow() {
     <label for="c-hp">현재체력</label>
     <input type="number" placeholder="현재체력" class="c-hp" />
     <label for="c-hp-stat">체력(스탯)</label>
-    <input type="number" placeholder="체력(스탯)" class="c-hp-stat" value="0" />
+    <input type="number" placeholder="체력(스탯)" class="c-hp-stat" value="0" min="0" />
     <label for="c-power">이능력</label>
-    <input type="number" placeholder="이능력" class="c-power" value="1" />
+    <input type="number" placeholder="이능력" class="c-power" value="1" min="1" />
     <label for="c-dex">민첩</label>
-    <input type="number" placeholder="민첩" class="c-dex" value="1" />
+    <input type="number" placeholder="민첩" class="c-dex" value="1" min="1" />
     <label for="c-mnd">정신력</label>
-    <input type="number" placeholder="정신력" class="c-mnd" value="1" />
+    <input type="number" placeholder="정신력" class="c-mnd" value="1" min="1" />
     <label for="c-luck">행운</label>
-    <input type="number" placeholder="행운" class="c-luck" value="1" />
+    <input type="number" placeholder="행운" class="c-luck" value="1" min="1" />
     <label class="hint stat-summary" style="grid-column: 3 / -1;">최대체력: 100 | 스탯합: 0</label>
     <button type="button" class="remove-row-btn">✕</button>
   `;
