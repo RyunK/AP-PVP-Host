@@ -94,10 +94,12 @@ async function onBattleState(state) {
   if(phase_state != now_phase && round == now_round ){
     showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    ocument.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   } else if (round != now_round && round != 0){
     showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    ocument.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   }
 
@@ -420,7 +422,7 @@ function buildSkillOptions(c) {
     options.push({ value: "회복", label: "회복" });
   }
 
-  if(round >= 6 && phase == "rearguard"){
+  if(round >= roomState.settings.minRunRound && phase == "rearguard"){
     options.push({ value: "도주", label: "도주" });
   }
 
@@ -595,7 +597,10 @@ function attachCardHandlers(card) {
       battleStatus.textContent = "";
 
       socket.emit("action:confirm", { characterId, skillName, targetIds, value }, (res) => {
-        if (!res.ok) battleStatus.textContent = res.error;
+        if (!res.ok) {
+          battleStatus.classList.replace("hint", "warning");
+          battleStatus.textContent = res.error;
+        }
       });
     });
   }
@@ -620,7 +625,10 @@ function attachCardHandlers(card) {
           value: card.querySelector(".action-value").value,
         },
         (res) => {
-          if (!res.ok) return (battleStatus.textContent = res.error);
+            if (!res.ok) {
+            battleStatus.classList.replace("hint", "warning");
+            battleStatus.textContent = res.error;
+          }
         });
 
         // 드롭다운 요약 텍스트도 즉시 갱신

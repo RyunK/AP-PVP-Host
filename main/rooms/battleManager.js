@@ -311,7 +311,7 @@ class BattleManager {
       .filter(action => action.skillName === "낙화")
       .flatMap(action => action.targetIds);
 
-    if (nakhwaTargetIds.includes(characterId)) {
+    if (nakhwaTargetIds.includes(characterId) && act == character.skill) {
       throw new Error("낙화의 대상으로 지정됐을 때에는 스킬을 사용할 수 없습니다.");
     }
 
