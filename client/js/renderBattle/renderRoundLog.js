@@ -97,13 +97,16 @@ function buildRunTable(roundLog, teamNames) {
 function buildHpTable(sortedLog) {
   const rows = sortedLog
     .map(
-      (c) => `
+      (c) => {
+        if(!c.info) return "";
+        return `
         <tr>
           <td>${escapeHtml(c.info.name)}</td>
           <td>${escapeHtml(c.hpResult.before)}</td>
           <td>${escapeHtml(c.hpResult.formula)}</td>
           <td>${escapeHtml(c.hpResult.value)}</td>
         </tr>`
+      }
     )
     .join("");
 
