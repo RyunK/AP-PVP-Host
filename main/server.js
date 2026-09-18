@@ -6,16 +6,19 @@ const { Server } = require("socket.io");
 const { RoomManager } = require("./rooms/roomManager");
 const { reload: reloadFormulaCache } = require("./engine/formulaLoader");
 const store = require("./store");
+const crypto = require("crypto");
+
 
 const { calcMessage, autoPhaseForwarding } = require("./messageMaker");
 
 
 
-function startServer({ port, onRoomsChanged, onLog }) {
+function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
   return new Promise((resolve) => {
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, { cors: { origin: "*" } });
+    let roomPasswordHash = initialPasswordHash || null;
 
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
@@ -58,10 +61,17 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function sendBattleMessage(text) {
       const message = roomManager.postBattleMessage(text);
-      io.to("main").emit("chat:message", message);
+      io.to("main").emit("chat:message", message);  
+    }
 
-      // console.log(text);
-      
+    function verifyPassword(password, storedHash) {
+      if (!storedHash) return true; // 비밀번호가 설정 안 되어 있으면 통과
+      const [salt, originalHash] = storedHash.split(":");
+      const hash = crypto.scryptSync(password || "", salt, 64).toString("hex");
+      // 타이밍 공격 방지를 위해 timingSafeEqual 사용
+      const a = Buffer.from(hash, "hex");
+      const b = Buffer.from(originalHash, "hex");
+      return a.length === b.length && crypto.timingSafeEqual(a, b);
     }
 
     io.on("connection", (socket) => {
@@ -69,6 +79,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("room:enter", (profile, cb) => {
         try {
+          if (!verifyPassword(profile.password, roomPasswordHash)) {
+            throw new Error("비밀번호가 올바르지 않습니다.");
+          }
           const { room, playerId } = roomManager.enterRoom(socket.id, profile);
           socket.join("main"); // socket.io room 이름은 아무 문자열이나 상관없음, 고정값 사용
           socket.data.playerId = playerId;
@@ -292,6 +305,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
         const player = room.players.get(playerId);
         if (!player) return;
         io.sockets.sockets.get(player.socketId)?.disconnect(true);
+      },
+      updateRoomPassword: (newHash) => {
+        roomPasswordHash = newHash;
       },
     }));
   });

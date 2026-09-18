@@ -109,6 +109,28 @@ remakeBtn.addEventListener("click", async () => {
 });
 
 
+document.getElementById("pwToggleBtn").addEventListener("click", () => {
+  const input = document.getElementById("roomPasswordInput");
+  const btn = document.getElementById("pwToggleBtn");
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+  btn.innerHTML = isPassword ? `<i class="fas fa-eye-slash"></i>` : `<i class="fas fa-eye"></i>`;
+});
+
+document.getElementById("pwConfirm").addEventListener("click", async () => {
+  const input = document.getElementById("roomPasswordInput");
+  const status = document.getElementById("pwStatus");
+  const password = input.value; // 빈 문자열이면 "비밀번호 사용 안 함"으로 처리
+
+  const result = await window.host.setRoomPassword(password);
+  if (result.ok) {
+    status.textContent = password ? "비밀번호가 설정되었습니다." : "비밀번호가 해제되었습니다.";
+    input.value = "";
+  } else {
+    status.textContent = `오류: ${result.error}`;
+  }
+});
+
 // ---- 전투 설정 ----
 const settingsForm = document.getElementById("settingsForm");
 const settingsToast = document.getElementById("settingsToast");

@@ -22,4 +22,5 @@ contextBridge.exposeInMainWorld("host", {
     ipcRenderer.on("rooms:update", (_e, data) => cb(data)),
   onLogLine: (cb) => ipcRenderer.on("log:line", (_e, line) => cb(line)),
   remakeTunnel: () => ipcRenderer.invoke("remake-tunnel"),
+  setRoomPassword: (password) => ipcRenderer.invoke("set-room-password", password),
 });

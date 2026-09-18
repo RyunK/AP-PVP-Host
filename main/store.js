@@ -4,6 +4,7 @@ const store = new Store({
   name: "game-host-config",
   defaults: {
     localPort: 4000,
+    roomPasswordHash: null,
     matchSettings: {
       teamSize: 3, // 3:3 기본, 1~3 가변
       allowMultiCharacterPerPlayer: true,

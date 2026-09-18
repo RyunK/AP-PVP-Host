@@ -14,12 +14,13 @@ export function init() {
         errorEl.textContent = "연결 중..."
         document.getElementById("enterBtn").disabled = true;
         const name = document.getElementById("nameInput").value.trim();
+        const password = document.getElementById("passwordInput").value.trim();
         if (!name){
           document.getElementById("enterBtn").disabled = false;
           return (errorEl.textContent = "닉네임을 입력해주세요.");
         } 
 
-        socket.emit("room:enter", { name }, (res) => {
+        socket.emit("room:enter", { name, password }, (res) => {
             document.getElementById("enterBtn").disabled = false;
             if (!res.ok) return (errorEl.textContent = res.error);
             saveIdentity({ name, playerId: res.playerId });

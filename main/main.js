@@ -4,6 +4,7 @@ const path = require("path");
 const { startServer, stopServer } = require("./server");
 const { startTunnel, stopTunnel } = require("./tunnel");
 const store = require("./store");
+const crypto = require("crypto");
 
 let mainWindow = null;
 let serverHandle = null;
@@ -45,6 +46,7 @@ async function bootstrap() {
     port: LOCAL_PORT,
     onRoomsChanged: (rooms) => send("rooms:update", rooms),
     onLog: (line) => send("log:line", line),
+    initialPasswordHash: store.get("roomPasswordHash"),
   });
   send("log:line", `로컬 서버 시작됨 (포트 ${LOCAL_PORT})`);
 
@@ -150,6 +152,27 @@ ipcMain.handle("remake-tunnel", async () => {
     return { ok: true, url: tunnelHandle.url };
   } catch (err) {
     send("log:line", `터널 재발급 실패: ${err.message}`);
+    return { ok: false, error: err.message };
+  }
+});
+
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`; // salt와 hash를 한 문자열에 같이 저장
+}
+
+ipcMain.handle("set-room-password", (_evt, password) => {
+  try {
+    if (!password) {
+      store.set("roomPasswordHash", null); // 빈 값이면 비밀번호 해제
+    } else {
+      store.set("roomPasswordHash", hashPassword(password));
+    }
+    if (serverHandle) serverHandle.updateRoomPassword(store.get("roomPasswordHash"));
+    return { ok: true };
+  } catch (err) {
     return { ok: false, error: err.message };
   }
 });
