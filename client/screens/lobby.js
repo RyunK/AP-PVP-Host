@@ -315,13 +315,13 @@ function renderTeamBoard() {
       </div>`;
   };
 
-  console.log("teamBoard:", teamBoard);
-  console.log("isConnected:", teamBoard?.isConnected);
-  console.log("current teamBoard:", document.querySelector("#teamBoard"));
-  console.log(
-    "same:",
-    teamBoard === document.querySelector("#teamBoard")
-  );
+  // console.log("teamBoard:", teamBoard);
+  // console.log("isConnected:", teamBoard?.isConnected);
+  // console.log("current teamBoard:", document.querySelector("#teamBoard"));
+  // console.log(
+  //   "same:",
+  //   teamBoard === document.querySelector("#teamBoard")
+  // );
 
   teamBoard.innerHTML = teamCol("A") + teamCol("B");
 

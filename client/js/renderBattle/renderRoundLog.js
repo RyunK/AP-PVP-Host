@@ -124,7 +124,7 @@ function buildHpTable(sortedLog) {
 
 export function renderRoundLog(roundLog, roomState) {
 
-  console.log(roundLog);
+  // console.log(roundLog);
 
   const container = document.getElementById("myCharacters");
   const sortedLog = sortByFaction(roundLog);
