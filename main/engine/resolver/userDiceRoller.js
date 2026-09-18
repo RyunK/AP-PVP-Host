@@ -82,7 +82,7 @@ class UserDiceRoller{
     const runners = this.actvie_runners;
     const nakhwaUsers = new Map([...runners].filter(([_, r]) => r.useSkill == "낙화" ));
 
-    if(nakhwaUsers.length < 1) return
+    if(nakhwaUsers.size < 1) return
 
     for (const [_, skillUser] of nakhwaUsers) {
       const targetRunner = this.actvie_runners.get(skillUser.target[0]);

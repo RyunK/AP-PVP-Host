@@ -10,7 +10,7 @@ import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 import { showPhaseAlert } from "../modals/battleModal.js"
 
 import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
-import {skillDescribes} from "../js/renderBattle/skillDescribe.js"
+import { getSkillDescribe} from "../js/renderBattle/skillDescribe.js"
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
@@ -477,7 +477,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
         <div class="skill-dropdown-panel" style="display:none;">
           ${skillOptions
             .map((opt) => {
-              const lines = skillDescribes[opt.value] || [];
+              const lines = getSkillDescribe(opt.value, roomState) || [];
               return `
                 <div class="skill-option-row" data-value="${opt.value}">
                   <span>${escapeHtml(opt.label)}</span>

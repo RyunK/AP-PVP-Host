@@ -356,6 +356,7 @@ class RoomManager {
       characters: [...room.characters.values()],
       teams: room.teams,
       teamNames: room.teamNames,
+      skillTable: this.room.ruleData?.skillTable,
       // turnNumber: room.turn.number,
       turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
