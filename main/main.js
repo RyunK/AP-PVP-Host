@@ -13,6 +13,8 @@ let tunnelHandle = null;
 const LOCAL_PORT = store.get("localPort") || 4000;
 
 function createWindow() {
+  
+
   mainWindow = new BrowserWindow({
     width: 980,
     height: 680,
@@ -28,6 +30,20 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
+
+  // 관리자 창 안에서 외부 링크로 이동하려는 시도를 전부 차단하고, 대신 시스템 브라우저로 엶
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" }; // 새 Electron 창을 띄우지 않음
+  });
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    // 우리가 로드한 그 파일(index.html) 자체로의 이동이 아니면 전부 외부로 돌림
+    if (url !== mainWindow.webContents.getURL()) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
 
   if (process.env.NODE_ENV === "development") {
     mainWindow.webContents.openDevTools({ mode: "detach" });

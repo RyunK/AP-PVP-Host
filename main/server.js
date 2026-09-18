@@ -266,19 +266,6 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
         }
       });
 
-      // socket.on("resolution:confirm", ({ }, cb) => {
-      //   try {
-      //     roomManager.toNextRound();
-      //     sendBattleMessage("정산 확인 완료.");
-      //     sendBattleMessage(`선공 페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
-      //     emitRoomState(roomManager.getRoom());
-      //     emitBattleState(roomManager.getRoom());
-      //     cb({ ok: true });
-      //   } catch (err) {
-      //     cb({ ok: false, error: err.message });
-      //   }
-      // });
-
       socket.on("disconnect", () => {
         onLog?.(`플레이어 연결 종료: ${socket.id}`);
         const result = roomManager.leavePlayer(socket.id);

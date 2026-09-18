@@ -275,6 +275,8 @@ window.host.onTunnelError(({ message }) => {
 window.host.onRoomsUpdate((rooms) => renderRooms(rooms));
 window.host.onLogLine((line) => appendLog(line));
 
+
+
 // ---- 초기 상태 로드 ----
 (async () => {
   const state = await window.host.getInitialState();
