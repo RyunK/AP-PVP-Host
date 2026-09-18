@@ -27,5 +27,13 @@ export function init() {
             renderScreen("lobby");
         });
     });
+
+    document.getElementById("pwToggleBtn").addEventListener("click", () => {
+      const input = document.getElementById("passwordInput");
+      const btn = document.getElementById("pwToggleBtn");
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      btn.innerHTML = isPassword ? `<i class="fas fa-eye-slash"></i>` : `<i class="fas fa-eye"></i>`;
+    });
   }
 }
