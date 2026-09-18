@@ -1,18 +1,9 @@
-// 원본 Apps Script의 GameData 클래스(스킬표 E1:K12, 크리티컬표 A12:C20을 읽던 로직)를
-// 이 프로젝트 구조(공개 CSV 링크 동기화)에 맞게 이식한 버전입니다.
-//
-//   1) 구글 시트에서 [공유] → "링크가 있는 모든 사용자에게 보기 권한" 설정
-//   2) 관리자 UI에 시트 URL + 탭 이름("data")을 넣고 동기화
-//
-// CSV로 시트 전체를 받아온 뒤, 원본과 동일한 셀 범위(E1:K12 / A12:C20)만 코드에서
-// 잘라내어 파싱합니다. "사용 방법" 셀처럼 줄바꿈이 포함된 텍스트가 있어서,
-// 아래 parseCsv는 줄 단위가 아니라 따옴표를 인식하는 방식으로 만들었습니다.
+// 시트 읽어서 json 파일로 저장
 
 const { saveGameData } = require("./formulaLoader");
 
-// 원본 GameData가 읽던 것과 동일한 두 범위. 시트 양식이 바뀌지 않는 한 고정값입니다.
 const SKILL_RANGE = "A1:G12";
-const CRITICAL_RANGE = "A12:C20";
+const CRITICAL_RANGE = "A14:C23";
 
 function extractSpreadsheetId(urlOrId) {
   const match = urlOrId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -108,7 +99,7 @@ function extractRange(rows, range) {
 }
 
 /**
- * 스킬표 파싱 (원본 loadSkillTable과 동일한 열 위치 + 새로 추가된 횟수/유형)
+ * 스킬표 파싱 
  * 열 순서: [이름, 횟수, 유형, [다이스], 추가/고정, 추가주사위 개수, 추가주사위 눈 수]
  */
 function parseSkillTable(rows) {
@@ -121,7 +112,7 @@ function parseSkillTable(rows) {
       uses: row[1] ? Number(row[1]) : null, // 횟수: 비어있으면 무제한(null)
       types: row[2] ? row[2].split(",").map((t) => t.trim()) : [], // 유형: 콤마로 여러 개 가능
       diceCount: Number(row[3]) || row[3], // [다이스]
-      statBonus: Number(row[4]) || row[3], // 추가/고정 (스탯명 또는 "체력*2" 같은 수식)
+      statBonus: Number(row[4]) || row[4], // 추가/고정 (스탯명 또는 "체력*2" 같은 수식)
       extraDiceCount: Number(row[5]) || row[5], // 추가주사위 개수
       extraDiceStat: Number(row[6]) || row[6], // 추가주사위 눈 수 (기준이 되는 스탯명)
     };
@@ -130,7 +121,7 @@ function parseSkillTable(rows) {
   return result;
 }
 
-/** 크리티컬표 파싱 (원본 loadCriticalTable과 동일: 헤더 행 건너뛰고 A~C열만 사용) */
+/** 크리티컬표 파싱  */
 function parseCriticalTable(rows) {
   const result = {};
 
@@ -176,5 +167,6 @@ async function syncFromSheet(sheetConfig) {
     snapshot: saved,
   };
 }
+
 
 module.exports = { syncFromSheet, extractSpreadsheetId, parseSkillTable, parseCriticalTable };

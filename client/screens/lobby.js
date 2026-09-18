@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -29,7 +29,7 @@ export function init() {
 
 
   socket.emit("room:get-state", {}, (res) => {
-    console.log("room:get-state 응답:", res);
+    // console.log("room:get-state 응답:", res);
     if (res.ok) onRoomState(res.state);
   });
   
@@ -43,6 +43,15 @@ export function init() {
 
   teamBoard.addEventListener("click", handleBoardClick);
   unassignedBoard.addEventListener("click", handleBoardClick);
+
+  setupPlayerListToggle(
+    document.getElementById("playerListContainer"),
+    () => ({ players: roomState.players, roomPhase: roomState.phase })
+  );
+}
+
+export function destroy() {
+    socket.off("room:state", onRoomState);
 }
 
 function handleBoardClick(e) {
@@ -63,17 +72,17 @@ function handleBoardClick(e) {
   }
 }
 
-function showMyInfo(myPlayerId, myPlayerName) {
-  const me = roomState.players.find((p) => p.id === myPlayerId);
-  const isHost = me?.isHost;
+// function showMyInfo(myPlayerId, myPlayerName) {
+//   const me = roomState.players.find((p) => p.id === myPlayerId);
+//   const isHost = me?.isHost;
   
-  document.getElementById("myInfoLabel").innerHTML = `
-  ${myPlayerName} 
-  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
-  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
+//   document.getElementById("myInfoLabel").innerHTML = `
+//   ${myPlayerName} 
+//   ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
+//   ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
   
-  `;
-}
+//   `;
+// }
 
 function renderMyCharacterList() {
   const container = document.getElementById("myCharacterList");
@@ -115,10 +124,10 @@ function toggleReady() {
 }
 
 function onRoomState(state) {
-  console.log("전체 roomState:", state);
+  // console.log("전체 roomState:", state);
   roomState = state;
 
-  if (state.phase === "battle" || state.phase === "ended") {
+  if (state.phase === "battle" || state.phase === "summary") {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;
   }
@@ -130,8 +139,12 @@ function onRoomState(state) {
 
   renderMyCharacterList();
   renderTeamBoard();
-  renderPlayerList(document.getElementById("playerListContainer"), state.players);
-  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
+  // setupPlayerListToggle(
+  //     document.getElementById("playerListContainer"),
+  //     () => ({ players: roomState.players, roomPhase: roomState.phase })
+  //   );
+  showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   
 }
@@ -275,6 +288,7 @@ function saveCharacters(){
 }
 
 function renderTeamBoard() {
+  const teamBoard = document.getElementById("teamBoard");
   const me = roomState.players.find((p) => p.id === myPlayerId);
   const isHost = me?.isHost;
 
@@ -309,6 +323,14 @@ function renderTeamBoard() {
         ${chips}
       </div>`;
   };
+
+  // console.log("teamBoard:", teamBoard);
+  // console.log("isConnected:", teamBoard?.isConnected);
+  // console.log("current teamBoard:", document.querySelector("#teamBoard"));
+  // console.log(
+  //   "same:",
+  //   teamBoard === document.querySelector("#teamBoard")
+  // );
 
   teamBoard.innerHTML = teamCol("A") + teamCol("B");
 
@@ -366,18 +388,16 @@ function renderTeamBoard() {
     });
   });
 
-  // teamBoard.querySelectorAll(".char-name").forEach((el) => {
-  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
-  // });
-
-  // unassignedBoard.querySelectorAll(".char-name").forEach((el) => {
-  //   el.addEventListener("click", () => showCharacterInfo(el.dataset.char));
-  // });
 }
 
 function startBattle(){
   socket.emit("battle:start", {}, (res) => {
-    if (!res.ok) lobbyStatus.textContent = res.error;
+    document.getElementById("startBattleBtn").disabled = true;
+      lobbyStatus.textContent = "전장을 열고 있습니다...";
+    if (!res.ok) {
+      document.getElementById("startBattleBtn").disabled = false;
+      lobbyStatus.textContent = res.error;
+    }
   });
 }
 

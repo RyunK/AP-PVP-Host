@@ -1,0 +1,43 @@
+<section id="screen-summary">
+  <div class="lobby-layout">
+    <div class="lobby-main">
+      <div class="room-header">
+        <span>내 정보</span>
+        <strong id="myInfoLabel"></strong>
+      </div>
+      <span class="hint">전투 정산</span>
+      <div id="runResult"></div>
+      <div id="summaryWinner"></div>
+      <div id="summaryTable"></div>
+      <p class="summary-thanks accent">수고하셨습니다.</p>
+
+      <div id="final-status"></div>
+
+      <p class="hint summary-warning">이 화면에서 나가면 모든 데이터가 삭제됩니다.</p>
+
+      <div class="summary-actions">
+        <div class="tooltip-wrap">
+          <button class="btn btn-primary-border" id="saveBattleLogBtn">전투 경과 저장</button>
+          <div class="custom-tooltip">상세한 전투 기록을 .txt 파일로 저장합니다.</div>
+        </div>
+        <div class="tooltip-wrap">
+          <button class="btn btn-primary-border" id="saveChatLogBtn">전체 채팅 저장</button>
+          <div class="custom-tooltip">채팅을 .html 파일로 저장합니다. 브라우저로 열어보거나, 이 형식을 지원하는 블로그 등에 붙여넣을 수 있습니다.</div>
+        </div>
+      </div>
+      <div class="tooltip-wrap" id="restartWrap" style="display:none;">
+        <button class="btn btn-primary" id="restartBtn">로비로 돌아가기</button>
+        <div class="custom-tooltip">전투를 초기화하고 돌아갑니다. 호스트가 돌아가면 나머지 유저들도 자동으로 따라갑니다.</div>
+      </div>
+
+    </div>
+    <div class="lobby-side">
+      <div id="playerListContainer" class="player-list-container">
+        <!-- <h2>플레이어 목록</h2> -->
+      </div>
+      <div id="chatContainer" class="chat-container">
+        <!-- <h2>채팅 내용</h2> -->
+      </div>
+    </div>
+  </div>
+</section>

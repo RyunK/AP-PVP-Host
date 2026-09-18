@@ -33,7 +33,7 @@ function setLink(url) {
   connDot.className = "dot ok";
   connText.textContent = "링크 생성됨";
   tunnelHintEl.textContent =
-    "이 링크는 앱을 껐다 켤 때마다 바뀝니다.";
+    "몇 분 기다려도 링크가 열리지 않는다면 링크를 재발급 받으세요.";
 }
 
 document.getElementById("copyLinkBtn").addEventListener("click", async () => {

@@ -2,7 +2,8 @@
 // 호스트만이 항상 진실, 클라이언트는 호스트에게 요청을 보내고 받기만 함.
 const crypto = require("crypto");
 const RECONNECT_GRACE_MS = 30_000; // 30초
-const { resolveSkillAction } = require("../engine/damageCalc");
+const { BattleManager } = require("./battleManager");
+const { loadGameData } = require("../engine/formulaLoader")
 
 function randomPlayerId() {
   return `p_${crypto.randomBytes(6).toString("hex")}`;
@@ -11,19 +12,26 @@ function randomPlayerId() {
 class RoomManager {
   constructor({ getMatchSettings, onRoomClosed, onRoomStateChanged  }) {
     this.room = null;
+    this.battle = null;
     this.getMatchSettings = getMatchSettings;
     this.onRoomClosed = onRoomClosed || (() => {});
     this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
+    this.onceChecker = false; // false -> 아직 안했다 / true -> 했다.
+
+    
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
   enterRoom(socketId, profile) {
     if (!this.room) {
       this.room = this._createRoom(socketId);
+      this.room.restarted = true;
     }
-    if (this.room.phase === "battle") {
-      throw new Error("이미 전투가 시작된 방입니다.");
+    if (this.room.phase === "summary" && !this.room.restarted) {
+      throw new Error("호스트가 재시작하기 전까지 입장할 수 없습니다.");
     }
+    if (this.room.phase === "battle") throw new Error("이미 전투가 시작된 방입니다.");
+
     const isHost = ![...this.room.players.values()].some((p) => p.isHost); // 아무도 없고 호스트도 없으면 내가 호스트
     return this._addPlayer(this.room, socketId, profile, { isHost });
   }
@@ -39,6 +47,9 @@ class RoomManager {
     if (!player) {
       throw new Error("이 방에서 플레이어 정보를 찾을 수 없습니다.");
     }
+    if (this.room.phase === "ended" && !this.room.restarted && !player.isHost) {
+      throw new Error("호스트가 재시작하기 전까지 다시 입장할 수 없습니다.");
+    }
 
     if (player.disconnectTimer) {
       clearTimeout(player.disconnectTimer);
@@ -51,6 +62,33 @@ class RoomManager {
     return { room: this.room, playerId };
   }
 
+  restartRoom(playerId) {
+    if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+
+    const requester = this.room.players.get(playerId);
+    if (!requester?.isHost) throw new Error("호스트만 재시작할 수 있습니다.");
+
+    // 캐릭터/팀/전투 관련 데이터는 전부 비움
+    this.room.characters = new Map();
+    this.room.teams = { A: [], B: [] };
+    this.room.battleLogs = [];
+    this.room.battleResult = null;
+    this.room.phase = "lobby";
+    this.room.restarted = true;
+    this.room.turn = null;
+    this.room.chatHistory = [];
+
+    // 플레이어 목록(닉네임)은 유지하되, 각자의 characterIds만 비움 (캐릭터 자체가 없어졌으니)
+    for (const player of this.room.players.values()) {
+      player.characterIds = [];
+      player.ready = false; // 준비 상태를 쓰고 계셨다면 같이 초기화
+    }
+
+    this.battle?.destroy();
+    this.battle = null;
+
+    return this.room;
+  }
 
   _createRoom(hostSocketId) {
     const settings = this.getMatchSettings();
@@ -65,6 +103,9 @@ class RoomManager {
       teamNames: { A: "A팀", B: "B팀" },
       turn: { number: 0, pendingActions: new Map() },
       chatHistory: [],
+      battleLogs: [],
+      ruleData: loadGameData(),
+      battleResult: null,
     };
   }
 
@@ -116,6 +157,8 @@ class RoomManager {
 
     const stillConnected = [...room.players.values()].some((p) => p.connected);
     if (player.isHost || !stillConnected) {
+      this.battle?.destroy(); // this.room.battle이 아니라 this.battle
+      this.battle = null;         
       this.room = null;
       this.onRoomClosed( "재접속하지 않아 방이 종료되었습니다.");
     } else{
@@ -158,16 +201,23 @@ class RoomManager {
     player.characterIds = [];
 
     const created = characterDefs.map((def, idx) => {
+      const skillMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
+      const skillTargetMax = this.room.ruleData["skillTable"][def.skill || "엄호"]["uses"] || 0;
       const charId = `c_${playerId}_${idx}`;
+      const maxhp = 100 + (def.hp_stat || 0) * 5
+      if (def?.hp > maxhp) def.hp = maxhp;
       room.characters.set(charId, {
         id: charId,
         ownerId: playerId,
         name: def.name || `캐릭터${idx + 1}`,
         position: def.position || "아이기스",
         skill: def.skill  || "엄호",
+        skillMax  : skillMax,
+        skillCount : 0,
+        skillTargetMax: skillTargetMax,
         stats: {
           hp: def.hp || 1,
-          hp_stat: def.hp_stat || 1,
+          hp_stat: def.hp_stat || 0,
           power: def.power || 1,
           dex: def.dex || 1,
           mnd: def.mnd || 1,
@@ -187,10 +237,6 @@ class RoomManager {
     if (!this.room) throw new Error("방을 찾을 수 없습니다.");
 
     const character = this.room.characters.get(characterId);
-
-    // console.log("character:", character); 
-    // console.log("전달받은 playerId:", requesterId); 
-    // console.log("character.ownerId:", character?.ownerId); 
 
     if (!character) throw new Error("캐릭터를 찾을 수 없습니다.");
     const requester = this.room.players.get(requesterId);
@@ -236,86 +282,57 @@ class RoomManager {
     character.team = team;
   }
 
-  startBattle(room) {
-    const nonHostPlayers = [...room.players.values()].filter((p) => !p.isHost);
-    const allReady = nonHostPlayers.every((p) => p.ready);
-    if (!allReady) {
-      throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
-    }
+  startBattle(room, { onAutoAdvance } = {}) {
+    const nonHostPlayers = [...this.room.players.values()].filter((p) => !p.isHost);
+    const requiredToReady = nonHostPlayers.filter((p) => p.characterIds.length > 0); // 캐릭터 있는 사람만
+    const allReady = requiredToReady.every((p) => p.ready);
+    if (!allReady) throw new Error("아직 준비를 완료하지 않은 플레이어가 있습니다.");
+
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
     if (aCount === 0 || bCount === 0 || aCount !== bCount) {
-      throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다 (예: 3:3, 2:2, 1:1).");
+      throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다.");
     }
+
+    // 이 시점에 캐릭터가 하나도 없는 플레이어는 이번 전투의 관전자로 확정
+    for (const player of this.room.players.values()) {
+      player.isSpectator = player.characterIds.length === 0;
+    }
+
     room.phase = "battle";
-    room.turn = { number: 1, pendingActions: new Map() };
+    this.battle = new BattleManager(room, { onAutoAdvance });
+    this.battle.start();
   }
 
-  /** 액션을 큐에 넣고, 생존한 모든 캐릭터의 액션이 모이면 턴을 계산합니다 */
-  submitAction(room, characterId, action) {
-    if (room.phase !== "battle") throw new Error("전투 중이 아닙니다.");
-    const actor = room.characters.get(characterId);
-    if (!actor || !actor.alive) throw new Error("행동할 수 없는 캐릭터입니다.");
-
-    room.turn.pendingActions.set(characterId, action);
-
-    const aliveCharIds = [...room.characters.values()]
-      .filter((c) => c.alive)
-      .map((c) => c.id);
-    const allSubmitted = aliveCharIds.every((id) => room.turn.pendingActions.has(id));
-
-    if (!allSubmitted) {
-      return { resolved: false, waitingFor: aliveCharIds.filter((id) => !room.turn.pendingActions.has(id)) };
-    }
-
-    const turnResult = this._resolveTurn(room);
-    return { resolved: true, ...turnResult };
+  endOrderCheck(){
+    this.battle.endOrderCheck();
   }
 
-  _resolveTurn(room) {
-    const events = [];
-    for (const [characterId, action] of room.turn.pendingActions.entries()) {
-      const actor = room.characters.get(characterId);
-      if (!actor || !actor.alive) continue;
-      const target = action.targetId ? room.characters.get(action.targetId) : null;
+  draftAction(playerId, characterId, skillName, targetIds, value) {
+    if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
+    return this.battle.draftAction(playerId, characterId, skillName, targetIds, value);
+  }
 
-      // action은 이제 { skillName, targetId } 형태입니다 (예: skillName: "엄호").
-      // 실제 주사위/피해 계산 공식은 아직 미구현(TODO)이라, 지금은 에러 없이
-      // "todo" 이벤트만 기록하고 다음 턴으로 넘어갑니다. HP는 아직 변하지 않습니다.
-      let result;
-      try {
-        result = resolveSkillAction({
-          actorStats: actor.stats,
-          targetStats: target ? target.stats : {},
-          skillName: action.skillName,
-        });
-      } catch (err) {
-        result = { type: "error", message: err.message };
-      }
+  async confirmAction(playerId, characterId, skillName, targetIds, value) {
+    if (!this.battle) throw new Error("전투가 시작되지 않았습니다.");
+    // 스킬 사용자의 이름과 대상의 이름을 함께 가져와서 메시지를 전송
+    const room = this.getRoom();
+    const p_name = room.characters.get(characterId)?.name || "알 수 없음";
+    const t_name = targetIds
+    .map(n => room.characters.get(n).name)
+    .join(", ");
 
-      if (result.type === "damage" && target) {
-        target.stats.hp = Math.max(0, target.stats.hp - result.amount);
-        if (target.stats.hp === 0) target.alive = false;
-      }
-      if (result.type === "heal" && target) {
-        target.stats.hp = Math.min(target.stats.maxHp, target.stats.hp + result.amount);
-      }
+    const result = await this.battle.confirmAction(playerId, characterId, skillName, targetIds, value);
+    
+    return {result, p_name, t_name};
+  }
 
-      events.push({ actorId: characterId, targetId: action.targetId, ...result });
-    }
+  toNextRound(){
+    this.battle.toNextRound();
+  }
 
-    const aWiped = room.teams.A.every((id) => !room.characters.get(id)?.alive);
-    const bWiped = room.teams.B.every((id) => !room.characters.get(id)?.alive);
-
-    room.turn = { number: room.turn.number + 1, pendingActions: new Map() };
-
-    let winner = null;
-    if (aWiped && !bWiped) winner = "B";
-    if (bWiped && !aWiped) winner = "A";
-    if (aWiped && bWiped) winner = "draw";
-    if (winner) room.phase = "ended";
-
-    return { events, winner, nextTurn: room.turn.number };
+  getPlayerTeams(playerId) {
+    return this.battle ? this.battle.getPlayerTeams(playerId) : [];
   }
 
   serializeRoom(room) {
@@ -326,6 +343,7 @@ class RoomManager {
         id: p.id,
         name: p.name,
         isHost: p.isHost,
+        isSpectator: p.isSpectator || false,
         characterIds: p.characterIds,
         connected: p.connected,
         ready: p.ready,
@@ -333,8 +351,12 @@ class RoomManager {
       characters: [...room.characters.values()],
       teams: room.teams,
       teamNames: room.teamNames,
-      turnNumber: room.turn.number,
+      // turnNumber: room.turn.number,
+      turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
+      battleLogs: room.battleLogs,
+      battleResult: room.battleResult,
+      restarted: room.restarted || false,
     };
   }
 
@@ -383,10 +405,10 @@ class RoomManager {
       text: trimmed.slice(0, 300),
       timestamp: Date.now(),
       system: false,
+      battleMessage: false,
     };
 
     this.room.chatHistory.push(message);
-    if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
 
     return message;
   }
@@ -404,10 +426,31 @@ class RoomManager {
         text: message,
         timestamp: Date.now(),
         system: true,
+        battleMessage: false, // 전투 관련 메시지임을 표시
       };
 
       this.room.chatHistory.push(sysMessage);
-      if (this.room.chatHistory.length > 100) this.room.chatHistory.shift();
+
+      return sysMessage;
+  }
+
+  /**
+   * 전투시 메시지를 전송하는 메서드
+   * @param {*} message 
+   * @returns 
+   */
+  postBattleMessage(message) {
+      if (!this.room) throw new Error("방을 찾을 수 없습니다.");
+      const sysMessage = {
+        id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        displayName: "[System]",
+        text: message,
+        timestamp: Date.now(),
+        system: false,
+        battleMessage: true, // 전투 관련 메시지임을 표시
+      };
+
+      this.room.chatHistory.push(sysMessage);
 
       return sysMessage;
   }

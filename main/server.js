@@ -7,6 +7,8 @@ const { RoomManager } = require("./rooms/roomManager");
 const { reload: reloadFormulaCache } = require("./engine/formulaLoader");
 const store = require("./store");
 
+const { calcMessage, autoPhaseForwarding } = require("./messageMaker");
+
 
 
 function startServer({ port, onRoomsChanged, onLog }) {
@@ -14,7 +16,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, { cors: { origin: "*" } });
-    // 플레이어는 이 서버가 내려주는 client/ 정적 페이지를 브라우저로 열기만 하면 됩니다.
+
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
 
@@ -39,12 +41,28 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function emitRoomState(room) {
       io.to("main").emit("room:state", roomManager.serializeRoom(room));
+      // console.log("emitRoomState" + room.turn.phase)
+
+    }
+
+    function emitBattleState(room) {
+      io.to("main").emit("battle:state", roomManager.serializeRoom(room));
+      // console.log("emitBattleState" + room.turn.phase)
+
     }
 
     function sendSysMessage(text) {
       const message = roomManager.postSysMessage(text);
       io.to("main").emit("chat:message", message);
     };
+
+    function sendBattleMessage(text) {
+      const message = roomManager.postBattleMessage(text);
+      io.to("main").emit("chat:message", message);
+
+      // console.log(text);
+      
+    }
 
     io.on("connection", (socket) => {
       onLog?.(`플레이어 연결됨: ${socket.id}`);
@@ -58,6 +76,18 @@ function startServer({ port, onRoomsChanged, onLog }) {
           emitRoomState(room);
           sendSysMessage(`${profile.name}님이 입장했습니다.`);
           broadcastRooms();
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+        }
+      });
+
+      socket.on("room:restart", (_payload, cb) => {
+        try {
+          const room = roomManager.restartRoom(socket.data.playerId);
+          cb({ ok: true, state: roomManager.serializeRoom(room) });
+          io.to("main").emit("room:state", roomManager.serializeRoom(room));
+          sendSysMessage(`방이 재시작됐습니다.`);
+          sendSysMessage(`${profile.name}님이 입장했습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -102,7 +132,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const created = roomManager.setCharacters(room, socket.data.playerId, characterDefs);
           cb({ ok: true, characterIds: created });
           emitRoomState(room);
-          sendSysMessage(`캐릭터 ${created.map((id) => room.characters.get(id).name).join(", ")}가 추가되었습니다.`);
+          sendSysMessage(`캐릭터 ${created.map((id) => room.characters.get(id).name).join(", ")}가 저장되었습니다.`);
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
@@ -158,31 +188,83 @@ function startServer({ port, onRoomsChanged, onLog }) {
           const room = roomManager.getRoom();
           if (!room) throw new Error("방을 찾을 수 없습니다.");
           if (room.hostSocketId !== socket.id) throw new Error("호스트만 전투를 시작할 수 있습니다.");
-          roomManager.startBattle(room);
+          roomManager.startBattle(room, {
+            onAutoAdvance: (expectedPhase) => {
+              emitRoomState(roomManager.serializeRoom(room));
+              emitBattleState(roomManager.serializeRoom(room));
+              const messages = autoPhaseForwarding(roomManager.getRoom(), expectedPhase);
+              messages?.forEach((m) => {
+                sendBattleMessage(m);
+              })
+            },
+          });
           cb({ ok: true });
           emitRoomState(room);
-          sendSysMessage(`전투가 시작되었습니다.`);
+          sendBattleMessage("SYSTEM LOADING...");
+          // sendBattleMessage("전투를 시작합니다.");
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
       });
 
-      socket.on("action:submit", ({ characterId, action }, cb) => {
+      socket.on("action:draft", ({ characterId, skillName, targetIds, value }, cb) => {
         try {
-          const room = roomManager.getRoom();
-          if (!room) throw new Error("방을 찾을 수 없습니다.");
-          const result = roomManager.submitAction(room, characterId, action);
-          cb({ ok: true, waiting: !result.resolved });
-          if (result.resolved) {
-            io.to("main").emit("turn:resolved", result);
-            emitRoomState(room);
-          } else {
-            io.to("main").emit("turn:waiting", { waitingFor: result.waitingFor });
-          }
+          const team = roomManager.draftAction(socket.data.playerId, characterId, skillName, targetIds, value);
+          cb({ ok: true });
+          io.to(`main`).emit("battle:draft", { characterId, skillName, targetIds, value });
         } catch (err) {
           cb({ ok: false, error: err.message });
         }
       });
+
+      socket.on("action:confirm", async ({ characterId, skillName, targetIds, value }, cb) => {
+        try {
+          const { result, p_name, t_name } = await roomManager.confirmAction(
+            socket.data.playerId,
+            characterId,
+            skillName,
+            targetIds,
+            value
+          );
+          // console.log(result);
+          cb({ ok: true });
+          const firstTeam = result.roundLog?.firstTeam;
+          const secondTeam = firstTeam == "A" ? "B" : "A";
+          const teamNames = roomManager.getRoom().teamNames;
+
+          let skillLabel = skillName;
+          if (skillName == "침식") skillLabel += `(${value})`;
+
+          emitBattleState(roomManager.serializeRoom(roomManager.getRoom()));
+          sendBattleMessage(`선언 확인: ${p_name} → ${t_name} [${skillLabel}]`);
+
+          if (result.roundComplete) {
+            sendBattleMessage(`${teamNames[secondTeam]} 전원 선언 확인. 정산 페이즈 개시.`);
+            const resolutionMessage = calcMessage(result.roundLog.results);
+            sendBattleMessage("정산 완료.\n" + resolutionMessage);
+            io.to("main").emit("resolution:result", result.roundLog);
+          } else if (result.phaseComplete) {
+            sendBattleMessage(`${teamNames[firstTeam]} 전원 선언 확인. 후공 페이즈 개시.`);
+            sendBattleMessage(`${teamNames[secondTeam]} 선언.`);
+          }
+        } catch (err) {
+          cb({ ok: false, error: err.message });
+          console.error(err.stack);
+        }
+      });
+
+      // socket.on("resolution:confirm", ({ }, cb) => {
+      //   try {
+      //     roomManager.toNextRound();
+      //     sendBattleMessage("정산 확인 완료.");
+      //     sendBattleMessage(`선공 페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
+      //     emitRoomState(roomManager.getRoom());
+      //     emitBattleState(roomManager.getRoom());
+      //     cb({ ok: true });
+      //   } catch (err) {
+      //     cb({ ok: false, error: err.message });
+      //   }
+      // });
 
       socket.on("disconnect", () => {
         onLog?.(`플레이어 연결 종료: ${socket.id}`);
