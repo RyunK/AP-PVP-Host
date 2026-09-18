@@ -61,7 +61,7 @@ const REQUIRED_CRITICAL_LEVELS = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const REQUIRED_CRITICAL_KEYS = ["chance", "multiplier"];
 
 function checkDataValidation(cache) {
-  console.log("checking");
+  // console.log("checking");
 
   if (!cache || typeof cache !== "object") {
     throw new Error("파일이 잘못되었습니다.");
@@ -137,7 +137,7 @@ function checkDataValidation(cache) {
     }
   }
 
-  console.log("모든 검증을 통과했습니다.");
+  // console.log("모든 검증을 통과했습니다.");
   return true;
 }
 

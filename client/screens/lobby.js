@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -72,17 +72,17 @@ function handleBoardClick(e) {
   }
 }
 
-function showMyInfo(myPlayerId, myPlayerName) {
-  const me = roomState.players.find((p) => p.id === myPlayerId);
-  const isHost = me?.isHost;
+// function showMyInfo(myPlayerId, myPlayerName) {
+//   const me = roomState.players.find((p) => p.id === myPlayerId);
+//   const isHost = me?.isHost;
   
-  document.getElementById("myInfoLabel").innerHTML = `
-  ${myPlayerName} 
-  ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
-  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
+//   document.getElementById("myInfoLabel").innerHTML = `
+//   ${myPlayerName} 
+//   ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
+//   ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
   
-  `;
-}
+//   `;
+// }
 
 function renderMyCharacterList() {
   const container = document.getElementById("myCharacterList");
@@ -144,7 +144,7 @@ function onRoomState(state) {
   //     document.getElementById("playerListContainer"),
   //     () => ({ players: roomState.players, roomPhase: roomState.phase })
   //   );
-  showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   
 }
