@@ -71,7 +71,7 @@ class UserDiceRoller{
       // 대상 스킬 카운트 1 깎기
       targetRunner.skillCount = Math.max(targetRunner.skillCount -1, 0);
 
-      targetRunner.bonus = (targetRunner.bonus || 0) + user.result.finalValue;
+      targetRunner.bonus = (targetRunner.bonus || 0) + skillUser.result.finalValue;
       targetRunner.result.finalValue += skillUser.result.finalValue;
       targetRunner.result.finalFormula += ` + 환희:${skillUser.result.finalValue}`;
     });
@@ -79,16 +79,13 @@ class UserDiceRoller{
 
 
   applyNakhwa() {
-    // const nakhwaUsers = this.actvie_runners.filter(
-    //   runner => runner.useSkill === "낙화"
-    // );
     const runners = this.actvie_runners;
-    const nakhwaUsers = new Map([...runners].filter((_, r) => r.useSkill == "낙화" ));
+    const nakhwaUsers = new Map([...runners].filter(([_, r]) => r.useSkill == "낙화" ));
 
     if(nakhwaUsers.length < 1) return
 
-    for (const [_, user] of nakhwaUsers) {
-      const targetRunner = this.actvie_runners[user.target[0]];
+    for (const [_, skillUser] of nakhwaUsers) {
+      const targetRunner = this.actvie_runners.get(skillUser.target[0]);
 
       if (!targetRunner) continue;
       if (targetRunner.result.finalValue == 0){
@@ -102,7 +99,7 @@ class UserDiceRoller{
         continue;
       }
 
-      targetRunner.penalty = (targetRunner.penalty || 0) + user.result.finalValue;
+      targetRunner.penalty = (targetRunner.penalty || 0) + skillUser.result.finalValue;
       targetRunner.result.finalValue -= skillUser.result.finalValue;
       targetRunner.result.finalValue = Math.max(1, targetRunner.result.finalValue);
       targetRunner.result.finalFormula += ` - 낙화:${skillUser.result.finalValue}`;

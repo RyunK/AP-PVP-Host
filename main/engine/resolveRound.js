@@ -121,11 +121,14 @@ function validCheck(characters, actionMap, characterId, source){
       엄호: 1, 수호: 2, 확산: 3, 침식: 1, 성호: 2, 환희: 1, 낙화: 1, 공격: 1, 방어: 1, 회복: 1, 도주: 10
     }
 
+    // 타겟 너무 많으면 앞에서부터 자르기
     if(c_act.targetIds.length > skillTargetMax[c_act.skillName]){
         c_act.targetIds = c_act.targetIds.slice(0, skillTargetMax[c_act.skillName]);
     }
     const character = characters.get(characterId);
-    if ((character.skillCount >= character.skillMax) 
+    
+    // 잘못된 스킬 사용 시 아예 비우기 
+    if ((character.skillCount >= character.skillMax && c_act.skillName == character.skill) 
     || (c_act.skillName == "낙화" && source == "rearguard") 
     || (c_act.skillName == "도주" && source == "vanguard" ) ){
         c_act.skillName = "";

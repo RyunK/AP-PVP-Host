@@ -77,6 +77,7 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
+  console.log(state);
   const now_phase = state.turn?.phase;
   const now_round = state.turn?.round;
   let phase_kr;
@@ -94,12 +95,12 @@ async function onBattleState(state) {
   if(phase_state != now_phase && round == now_round ){
     showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
-    ocument.getElementById("battleStatus").classList.replace("warning", "hint");
+    document.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   } else if (round != now_round && round != 0){
     showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
-    ocument.getElementById("battleStatus").classList.replace("warning", "hint");
+    document.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   }
 
