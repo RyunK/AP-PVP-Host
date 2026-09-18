@@ -285,7 +285,7 @@ class BattleManager {
   }
 
   _checkValidAct(characterId, act, targetIds, value){
-    if (!targetIds || targetIds.length <= 0) throw new Error("대상이 없습니다.");
+    if ((!targetIds || targetIds.length <= 0) && act != "도주") throw new Error("대상이 없습니다.");
     if(targetIds.length > this.skillTargetMax[act]) throw new Error("대상이 너무 많습니다.");
 
     if (!act) throw new Error("행동이 없습니다.");

@@ -37,6 +37,13 @@ function reload() {
 }
 
 
+function checkDataValidation(cache){
+  console.log("checking")
+  // cache.skillTable에 
+
+}
+
+
 module.exports = {
   loadGameData,
   saveGameData,

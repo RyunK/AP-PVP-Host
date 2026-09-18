@@ -168,4 +168,5 @@ async function syncFromSheet(sheetConfig) {
   };
 }
 
+
 module.exports = { syncFromSheet, extractSpreadsheetId, parseSkillTable, parseCriticalTable };
