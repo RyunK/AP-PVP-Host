@@ -10,9 +10,10 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
+let isPlayerListCollapsed = false; // 모듈 스코프에 상태 저장
 
 export function renderPlayerList(container, players, roomPhase) {
-  container.innerHTML = players
+  const listHtml = players
     .map((p) => {
       const roleBadge = p.characterIds.length <= 0
         ? '<span class="badge badge--waiting">관전</span>'
@@ -30,6 +31,19 @@ export function renderPlayerList(container, players, roomPhase) {
         </div>`;
     })
     .join("");
+
+  container.innerHTML =
+    "<h3>플레이어 목록</h3>" +
+    (isPlayerListCollapsed ? "" : listHtml) +
+    `<span class="hint">${isPlayerListCollapsed ? "펼치기" : "접기"}</span>`;
+}
+
+export function setupPlayerListToggle(container, getRenderArgs) {
+  container.addEventListener("click", () => {
+    isPlayerListCollapsed = !isPlayerListCollapsed;
+    const { players, roomPhase } = getRenderArgs();
+    renderPlayerList(container, players, roomPhase);
+  });
 }
 
 export function renderReadyBadge(ready) {

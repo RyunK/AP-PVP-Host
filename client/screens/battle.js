@@ -2,7 +2,7 @@ import { socket } from "../js/socket.js";
 // import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, showMyInfo } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, showMyInfo, setupPlayerListToggle } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -38,6 +38,10 @@ export function init() {
     } 
   });
 
+  setupPlayerListToggle(
+    document.getElementById("playerListContainer"),
+    () => ({ players: roomState.players, roomPhase: roomState.phase })
+  );
 }
 
 function onResult(roundLog){

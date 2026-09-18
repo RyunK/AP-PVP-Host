@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -43,6 +43,11 @@ export function init() {
 
   teamBoard.addEventListener("click", handleBoardClick);
   unassignedBoard.addEventListener("click", handleBoardClick);
+
+  setupPlayerListToggle(
+    document.getElementById("playerListContainer"),
+    () => ({ players: roomState.players, roomPhase: roomState.phase })
+  );
 }
 
 export function destroy() {
@@ -135,6 +140,10 @@ function onRoomState(state) {
   renderMyCharacterList();
   renderTeamBoard();
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
+  // setupPlayerListToggle(
+  //     document.getElementById("playerListContainer"),
+  //     () => ({ players: roomState.players, roomPhase: roomState.phase })
+  //   );
   showMyInfo(myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   

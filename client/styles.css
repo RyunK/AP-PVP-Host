@@ -261,6 +261,18 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   font-size: 13px;
 }
 
+.player-list--collapsible {
+  cursor: pointer;
+}
+.player-list--collapsible.is-collapsed .player-chip {
+  display: none;
+}
+/* 접혀있을 때도 "몇 명 있는지" 정도는 보이게 하고 싶다면, 접힌 상태 전용 요약을 추가로 넣어도 됩니다 */
+
+.player-chip--me {
+  border: 1px solid var(--accent);
+}
+
 .room-header{
   display: flex;
   justify-content: space-between;
