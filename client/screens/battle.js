@@ -15,7 +15,7 @@ import { getSkillDescribe} from "../js/renderBattle/skillDescribe.js"
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 let orderChecked = false;
-
+let serverTimeOffset = 0;
 
 
 export function init() {
@@ -63,7 +63,7 @@ export function destroy() {
  */
 function onRoomState(state) {
   roomState = state;
-  
+  serverTimeOffset = state.serverTime - Date.now();
   mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
@@ -77,6 +77,7 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
+  serverTimeOffset = state.serverTime - Date.now();
   console.log(state);
   const now_phase = state.turn?.phase;
   const now_round = state.turn?.round;
@@ -175,8 +176,9 @@ function startOrderCheckCountdown() {
 
   let tick_num = 0;
   function tick() {
-    const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, durationMs - elapsed);
+    console.log(roomState);
+    console.log(serverTimeOffset);
+    const remaining = Math.max(0, durationMs - ((Date.now() + serverTimeOffset) - startTime));
     const secondsLeft = Math.ceil(remaining / 1000);
     const dots = ".".repeat(tick_num % 4);
     tick_num += 1;
@@ -210,7 +212,7 @@ function startTurnTimer() {
 
     function update() {
         const remainingMs = Math.max(
-            0, durationMs - (Date.now() - startTime)
+            0, durationMs - ((Date.now() + serverTimeOffset) - startTime)
         );
 
         const totalSeconds = Math.ceil(remainingMs / 1000);

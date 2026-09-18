@@ -33,7 +33,9 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
        io.to("main").emit("room:closed", { reason });
      },
      onRoomStateChanged: (room) => {
-        io.to("main").emit("room:state", roomManager.serializeRoom(room));
+        const state = roomManager.serializeRoom(room);
+        state.serverTime = Date.now();
+        io.to("main").emit("room:state", state);
         broadcastRooms();
       },
    });
@@ -43,15 +45,16 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
     }
 
     function emitRoomState(room) {
-      io.to("main").emit("room:state", roomManager.serializeRoom(room));
-      // console.log("emitRoomState" + room.turn.phase)
-
+      const state = roomManager.serializeRoom(room);
+      state.serverTime = Date.now();
+      io.to("main").emit("room:state", state);
     }
 
     function emitBattleState(room) {
-      io.to("main").emit("battle:state", roomManager.serializeRoom(room));
+      const state = roomManager.serializeRoom(room);
+      state.serverTime = Date.now();
+      io.to("main").emit("battle:state", state);
       // console.log("emitBattleState" + room.turn.phase)
-
     }
 
     function sendSysMessage(text) {
@@ -98,7 +101,7 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
         try {
           const room = roomManager.restartRoom(socket.data.playerId);
           cb({ ok: true, state: roomManager.serializeRoom(room) });
-          io.to("main").emit("room:state", roomManager.serializeRoom(room));
+          emitRoomState(room);
           sendSysMessage(`방이 재시작됐습니다.`);
           sendSysMessage(`${profile.name}님이 입장했습니다.`);
         } catch (err) {
@@ -121,7 +124,9 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
       socket.on("room:get-state", (_payload, cb) => {
         const room = roomManager.getRoom();
         if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });
-        cb({ ok: true, state: roomManager.serializeRoom(room) });
+        const state = roomManager.serializeRoom(room);
+        state.serverTime = Date.now();
+        cb({ ok: true, state: state });
       });
 
       socket.on("room:rejoin", ({ playerId }, cb) => {

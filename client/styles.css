@@ -167,7 +167,10 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   grid-template-rows: auto 1fr;
   gap: 20px;
   height: calc(100vh - 80px);
+  min-width: 0;
 }
+
+
 
 
 .chat-container, .player-list-container {
@@ -983,4 +986,20 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 
 .password-toggle-btn:hover{
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .lobby-layout {
+    flex-direction: column;
+  }
+
+  .lobby-side {
+    width: 100%;
+    position: static;
+    height: auto;
+  }
+
+  .chat-container{
+    max-height: 300px;
+  }
 }
