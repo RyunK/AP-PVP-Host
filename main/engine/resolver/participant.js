@@ -17,9 +17,9 @@ class Participant {
     this.currentHp = c.stats.hp;            // K열 현재 체력
     this.hpStat = c.stats.hp_stat;          // L열 체력(스탯)
     this.power = c.stats.power;             // M열 이능력
-    this.agility = c.stats.dex;             // N열 민첩
-    this.mental = c.stats.mnd;              // O열 정신력
-    this.luck = c.stats.luck;              // P열 행운
+    this.agility = Math.min(c.stats.dex, 8);             // N열 민첩
+    this.mental = c.stats.mnd;                          // O열 정신력
+    this.luck = Math.min(c.stats.luck, 8);              // P열 행운
 
     this.skillCount = c.skillCount;    // 스킬 사용한 횟수
     this.bonus = 0;            // U열 보너스
