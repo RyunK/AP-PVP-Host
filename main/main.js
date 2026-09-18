@@ -137,3 +137,19 @@ ipcMain.handle("kick-player", (_evt, { playerId }) => {
   if (serverHandle) serverHandle.kickPlayer(playerId);
   return true;
 });
+
+ipcMain.handle("remake-tunnel", async () => {
+  try {
+    if (tunnelHandle) {
+      await stopTunnel(tunnelHandle);
+    }
+    tunnelHandle = await startTunnel(LOCAL_PORT, {
+      onLog: (line) => send("log:line", line),
+    });
+    send("log:line", `링크 재발급됨: ${tunnelHandle.url}`);
+    return { ok: true, url: tunnelHandle.url };
+  } catch (err) {
+    send("log:line", `터널 재발급 실패: ${err.message}`);
+    return { ok: false, error: err.message };
+  }
+});

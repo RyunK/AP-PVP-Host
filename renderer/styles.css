@@ -132,9 +132,9 @@ h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
   font-weight: 500;
 }
 .btn-primary { background: var(--accent); color: var(--accent-text-on); }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:not(:disabled):hover { background: var(--accent-hover); }
 .btn-ghost { background: var(--bg-btn-ghost); color: var(--text); }
-.btn-ghost:hover { background: var(--bg-btn-ghost-hover); }
+.btn-ghost:not(:disabled):hover { background: var(--bg-btn-ghost-hover); }
  
 .stat-row { display: flex; gap: 16px; margin-top: 28px; }
 .stat-box {

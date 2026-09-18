@@ -34,6 +34,8 @@ function setLink(url) {
   connText.textContent = "링크 생성됨";
   tunnelHintEl.textContent =
     "몇 분 기다려도 링크가 열리지 않는다면 링크를 재발급 받으세요.";
+  
+  startRemakeLock(Date.now());
 }
 
 document.getElementById("copyLinkBtn").addEventListener("click", async () => {
@@ -48,6 +50,64 @@ document.getElementById("copyLinkBtn").addEventListener("click", async () => {
 document.getElementById("openLinkBtn").addEventListener("click", () => {
   if (currentLink) window.host.openExternal(currentLink);
 });
+
+const REMAKE_LOCK_MS = 3 * 60 * 1000; // 3분
+let lastLinkIssuedAt = null;
+let remakeIntervalId = null;
+
+const remakeBtn = document.getElementById("remakeLink");
+
+function startRemakeLock(issuedAt) {
+  lastLinkIssuedAt = issuedAt;
+  remakeBtn.disabled = true;
+
+  if (remakeIntervalId) clearInterval(remakeIntervalId);
+
+  function tick() {
+    const elapsed = Date.now() - lastLinkIssuedAt;
+    const remaining = Math.max(0, REMAKE_LOCK_MS - elapsed);
+
+    if (remaining <= 0) {
+      remakeBtn.textContent = "링크 재발급";
+      remakeBtn.disabled = false;
+      clearInterval(remakeIntervalId);
+      remakeIntervalId = null;
+      return;
+    }
+
+    const totalSeconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    remakeBtn.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  tick();
+  remakeIntervalId = setInterval(tick, 1000);
+}
+
+remakeBtn.addEventListener("click", async () => {
+  if (remakeBtn.disabled) return; // 이중 클릭 방지
+
+  remakeBtn.disabled = true;
+  remakeBtn.textContent = "발급 중...";
+
+  try {
+    const result = await window.host.remakeTunnel();
+    if (result.ok) {
+      setLink(result.url);
+      startRemakeLock(Date.now());
+    } else {
+      appendLog(`터널 재발급 실패: ${result.error}`);
+      remakeBtn.textContent = "링크 재발급";
+      remakeBtn.disabled = false;
+    }
+  } catch (err) {
+    appendLog(`터널 재발급 실패: ${err.message}`);
+    remakeBtn.textContent = "링크 재발급";
+    remakeBtn.disabled = false;
+  }
+});
+
 
 // ---- 전투 설정 ----
 const settingsForm = document.getElementById("settingsForm");
