@@ -17,8 +17,10 @@ class RoomManager {
     this.onRoomClosed = onRoomClosed || (() => {});
     this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
     this.onceChecker = false; // false -> 아직 안했다 / true -> 했다.
+  }
 
-    
+  setSheetConfig(sheetConfig) {
+    this.sheetConfig = sheetConfig || { spreadsheetId: "", sheetName: "" };
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
@@ -362,6 +364,7 @@ class RoomManager {
       chat: room.chatHistory,
       battleLogs: room.battleLogs,
       battleResult: room.battleResult,
+      sheetConfig: this.sheetConfig || { spreadsheetId: "", sheetName: "" },
       restarted: room.restarted || false,
     };
   }

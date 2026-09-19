@@ -291,6 +291,11 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
         currentSettings = settings;
       },
       reloadFormulas: () => reloadFormulaCache(),
+      setSheetConfig: (sheetConfig) => {
+        roomManager.setSheetConfig(sheetConfig);
+        const room = roomManager.getRoom();
+        if (room) io.to("main").emit("room:state", roomManager.serializeRoom(room));
+      },
       kickPlayer: (roomCode, playerId) => {
         const room = roomManager.getRoom(roomCode);
         if (!room) return;

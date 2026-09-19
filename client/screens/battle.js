@@ -71,7 +71,7 @@ function onRoomState(state) {
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
   showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
-  renderRoomSettingsPanel(state.settings);
+  renderRoomSettingsPanel(state.settings, state.sheetConfig);
 }
 
 let phase_state;

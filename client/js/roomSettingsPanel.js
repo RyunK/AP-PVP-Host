@@ -7,6 +7,10 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function isSafeUrl(url) {
+  return typeof url === "string" && /^https?:\/\//i.test(url.trim());
+}
+
 const SETTINGS_LABELS = {
   resolutionTimeLimitSec: "정산 페이즈 시간(초)",
   turnTimeLimitSec: "턴 제한시간(초)",
@@ -42,7 +46,7 @@ export function setupRoomSettingsPanel() {
 }
 
 /** roomState.settings가 바뀔 때마다(room:state 수신 시) 호출해서 내용만 갱신합니다. */
-export function renderRoomSettingsPanel(settings) {
+export function renderRoomSettingsPanel(settings, sheetConfig) {
   const panel = document.getElementById("roomSettingsPanel");
   if (!panel || !settings) return;
 
@@ -57,5 +61,20 @@ export function renderRoomSettingsPanel(settings) {
     })
     .join("");
 
-  panel.innerHTML = rows;
+  const sheetRow = isSafeUrl(sheetConfig?.spreadsheetId)
+  ? `
+    <div class="room-setting-row">
+      <span class="room-setting-label">수식 시트</span>
+      <span class="room-setting-value">
+        <a href="${escapeHtml(sheetConfig.spreadsheetId)}" target="_blank" rel="noopener">시트 열기</a>
+        (${escapeHtml(sheetConfig.sheetName || "-")} 탭)
+      </span>
+    </div>`
+  : `
+    <div class="room-setting-row">
+      <span class="room-setting-label">수식 시트</span>
+      <span class="room-setting-value">아직 동기화 안 됨</span>
+    </div>`;
+
+  panel.innerHTML = rows + sheetRow;
 }

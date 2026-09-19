@@ -64,6 +64,7 @@ async function bootstrap() {
     onLog: (line) => send("log:line", line),
     initialPasswordHash: store.get("roomPasswordHash"),
   });
+  serverHandle.setSheetConfig(store.get("sheetConfig"));
   send("log:line", `로컬 서버 시작됨 (포트 ${LOCAL_PORT})`);
 
   // 2) Cloudflare Quick Tunnel 시작 → 외부에서 접속 가능한 URL 발급
@@ -129,7 +130,10 @@ ipcMain.handle("sync-formulas-from-sheet", async (_evt, sheetConfig) => {
   const { syncFromSheet } = require("./engine/sheetSync");
   const result = await syncFromSheet(sheetConfig);
   store.set("sheetConfig", sheetConfig);
-  if (serverHandle) serverHandle.reloadFormulas();
+  if (serverHandle) {
+    serverHandle.reloadFormulas();
+    serverHandle.setSheetConfig(sheetConfig);
+  }
   return result;
 });
 
