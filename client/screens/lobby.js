@@ -7,6 +7,7 @@ import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle, 
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
+import { setupRoomSettingsPanel, renderRoomSettingsPanel } from "../js/roomSettingsPanel.js";
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
@@ -14,6 +15,7 @@ const myPlayerId = getMyPlayerId();
 const teamBoard = document.getElementById("teamBoard");
 const unassignedBoard = document.getElementById("unassignedBoard");
 const characterAlert = document.getElementById("characterAlert");
+
 
 // 포지션별로 고를 수 있는 선택 스킬 목록
 const POSITION_SKILLS = {
@@ -48,6 +50,7 @@ export function init() {
     document.getElementById("playerListContainer"),
     () => ({ players: roomState.players, roomPhase: roomState.phase })
   );
+  setupRoomSettingsPanel();
 }
 
 export function destroy() {
@@ -127,6 +130,7 @@ function onRoomState(state) {
   // console.log("전체 roomState:", state);
   roomState = state;
 
+  renderRoomSettingsPanel(state.settings);
   if (state.phase === "battle" || state.phase === "summary") {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;

@@ -164,13 +164,15 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   top: 20px;
 
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   gap: 20px;
   height: calc(100vh - 80px);
   min-width: 0;
 }
 
-
+#playerListContainer:hover {
+  cursor: pointer;
+}
 
 
 .chat-container, .player-list-container {
@@ -987,6 +989,36 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .password-toggle-btn:hover{
   cursor: pointer;
 }
+
+
+.room-settings-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.room-settings-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 10px 14px;
+}
+.room-setting-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+.room-setting-label { color: var(--text-muted); }
+.room-setting-value { color: var(--text); }
 
 @media (max-width: 768px) {
   .lobby-layout {

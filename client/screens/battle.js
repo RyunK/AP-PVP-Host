@@ -11,6 +11,7 @@ import { showPhaseAlert } from "../modals/battleModal.js"
 
 import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
 import { getSkillDescribe} from "../js/renderBattle/skillDescribe.js"
+import { setupRoomSettingsPanel, renderRoomSettingsPanel } from "../js/roomSettingsPanel.js";
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
@@ -42,6 +43,7 @@ export function init() {
     document.getElementById("playerListContainer"),
     () => ({ players: roomState.players, roomPhase: roomState.phase })
   );
+  setupRoomSettingsPanel();
 }
 
 function onResult(roundLog){
@@ -69,6 +71,7 @@ function onRoomState(state) {
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
   showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  renderRoomSettingsPanel(state.settings);
 }
 
 let phase_state;
