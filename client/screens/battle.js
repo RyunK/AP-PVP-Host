@@ -2,7 +2,7 @@ import { socket } from "../js/socket.js";
 // import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, showMyInfo, setupPlayerListToggle } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, showMyInfo, setupPlayerListToggle, myInfoConnetBadge } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -33,10 +33,14 @@ export function init() {
   socket.on("round:resolved", onRoundResolved);
   socket.on("resolution:result", onResult);
 
+  
+
   socket.emit("room:get-state", {}, (res) => {
     if (res.ok){
       onBattleState(res.state);
       onRoomState(res.state);
+      showMyInfo(res.state, myPlayerId, getMyPlayerName(res.state, myPlayerId));
+      myInfoConnetBadge(socket);
     } 
   });
 
@@ -71,7 +75,6 @@ function onRoomState(state) {
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
-  showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
   renderRoomSettingsPanel(state.settings, state.sheetConfig);
 }
 
@@ -180,8 +183,8 @@ function startOrderCheckCountdown() {
 
   let tick_num = 0;
   function tick() {
-    console.log(roomState);
-    console.log(serverTimeOffset);
+    // console.log(roomState);
+    // console.log(serverTimeOffset);
     const remaining = Math.max(0, durationMs - ((Date.now() + serverTimeOffset) - startTime));
     const secondsLeft = Math.ceil(remaining / 1000);
     const dots = ".".repeat(tick_num % 4);

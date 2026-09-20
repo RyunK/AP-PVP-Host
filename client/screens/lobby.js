@@ -3,7 +3,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, myInfoConnetBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
@@ -31,10 +31,15 @@ export function init() {
   socket.off("room:state", onRoomState); // 중복 등록 방지
   socket.on("room:state", onRoomState);
 
-
   socket.emit("room:get-state", {}, (res) => {
     // console.log("room:get-state 응답:", res);
-    if (res.ok) onRoomState(res.state);
+    if (res.ok) {
+      onRoomState(res.state);
+      
+      showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
+      myInfoConnetBadge(socket);
+
+    }
   });
   
 
@@ -150,7 +155,6 @@ function onRoomState(state) {
   //     document.getElementById("playerListContainer"),
   //     () => ({ players: roomState.players, roomPhase: roomState.phase })
   //   );
-  showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   
 }
