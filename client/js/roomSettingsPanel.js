@@ -41,7 +41,9 @@ export function setupRoomSettingsPanel() {
   toggle.addEventListener("click", () => {
     const isOpen = panel.style.display !== "none";
     panel.style.display = isOpen ? "none" : "block";
-    if (arrow) arrow.textContent = isOpen ? "▾" : "▴";
+    if (arrow) arrow.innerHTML = isOpen ? 
+    `<i class="fa-solid fa-caret-down" style="font-size: 0.8em"></i>` 
+    : `<i class="fa-solid fa-caret-up " style="font-size: 0.8em"></i>`;
   });
 }
 

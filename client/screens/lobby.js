@@ -9,6 +9,8 @@ import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 import { setupRoomSettingsPanel, renderRoomSettingsPanel } from "../js/roomSettingsPanel.js";
 
+import { arrowSelector } from "../modals/helper.js"
+
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 
@@ -470,3 +472,17 @@ function showCharacterInfo(characterId) {
     modal.style.display = "none";
   });
 }
+
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".room-settings-panel").forEach((panel) => {
+    if (!panel.parentElement.contains(e.target)) {
+      panel.style.display = "none";
+    }
+    const setting_panel = document.getElementById("roomSettingsPanel");
+    const toggle = document.getElementById("roomSettingsToggle");
+    const arrow = toggle?.querySelector(".room-settings-arrow");
+    const isOpen = setting_panel.style.display !== "none";
+    arrowSelector(arrow, isOpen)
+
+  });
+});

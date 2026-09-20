@@ -156,6 +156,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .lobby-main {
   flex: 1;
   min-width: 0; /* flex 자식이 내용 때문에 억지로 늘어나는 것 방지 */
+  position: relative;
 }
 .lobby-side {
   width: 400px;
@@ -164,7 +165,7 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   top: 20px;
 
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   gap: 20px;
   height: calc(100vh - 80px);
   min-width: 0;
@@ -508,22 +509,10 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
 .target-multiselect-toggle,
 .skill-dropdown-toggle {
   position: relative;
-  padding-right: 28px; /* 화살표 들어갈 자리 확보 */
+  display: flex;
+  justify-content: space-between;
 }
 
-.target-multiselect-toggle::after,
-.skill-dropdown-toggle::after {
-  content: "";
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid var(--text-muted);
-  border-bottom: 1.5px solid var(--text-muted);
-  transform: translateY(-70%) rotate(45deg); /* 정사각형 모서리를 45도 돌리면 ∨ 모양이 됨 */
-  pointer-events: none; /* 화살표를 클릭해도 버튼 클릭으로 처리되게 */
-}
 
 .unassigned-board {
   margin-top: 20px;
@@ -990,11 +979,19 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   cursor: pointer;
 }
 
+.room-settings-box{
+  position: absolute;
+  margin-top: 8px;
+
+  display: flex;
+  justify-content: right;
+  right: 0;
+}
 
 .room-settings-toggle {
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -1003,6 +1000,8 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   color: var(--text-muted);
   font-size: 12.5px;
   cursor: pointer;
+  min-width: 200px;
+  gap: 8px
 }
 .room-settings-panel {
   background: var(--bg-panel);
@@ -1010,6 +1009,10 @@ h2 { font-size: 16px; color: var(--accent); margin: 28px 0 8px; }
   border-top: none;
   border-radius: 0 0 8px 8px;
   padding: 10px 14px;
+  position: absolute;
+  min-width: 200px;
+  top: 100%;
+  z-index: 1;
 }
 .room-setting-row {
   display: flex;

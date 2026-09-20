@@ -8,6 +8,7 @@ import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 import { showPhaseAlert } from "../modals/battleModal.js"
+import { arrowSelector } from "../modals/helper.js"
 
 import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
 import { getSkillDescribe} from "../js/renderBattle/skillDescribe.js"
@@ -478,7 +479,10 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
         ${skillOptionsHtml}
       </select>
       <div class="skill-custom-dropdown ${disabled ? "is-disabled" : ""}">
-        <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  ${escapeHtml(currentLabel)} </button>
+        <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  
+          ${escapeHtml(currentLabel)} 
+          <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
+        </button>
         <div class="skill-dropdown-panel" style="display:none;">
           ${skillOptions
             .map((opt) => {
@@ -535,7 +539,10 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
         <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
 
         <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
-          <button type="button" class="target-multiselect-toggle" ${disabled}>${targetSummary}</button>
+          <button type="button" class="target-multiselect-toggle" ${disabled}>
+            ${targetSummary}
+            <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
+          </button>
           <div class="target-multiselect-panel" style="display:none;">
             ${buildGroup("A", teamAName)}
             ${buildGroup("B", teamBName)}
@@ -565,7 +572,10 @@ function attachCardHandlers(card) {
   if (skillToggle && skillPanel) {
     skillToggle.addEventListener("click", (e) => {
       e.stopPropagation();
-      skillPanel.style.display = skillPanel.style.display === "none" ? "block" : "none";
+      const isOpen = skillPanel.style.display !== "none";
+      skillPanel.style.display = isOpen ? "none" : "block";
+      const arrow = skillToggle?.querySelector(".arrow");
+      arrowSelector(arrow, !isOpen)
     });
 
     card.querySelectorAll(".skill-option-row").forEach((row) => {
@@ -589,6 +599,9 @@ function attachCardHandlers(card) {
       e.stopPropagation();
       const isOpen = panel.style.display !== "none";
       panel.style.display = isOpen ? "none" : "block";
+      const toggle = panel.parentElement.querySelector(":scope > button");
+      const arrow = toggle?.querySelector(".arrow");
+      arrowSelector(arrow, !isOpen)
     });
   }
 
@@ -683,9 +696,16 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
 
 
 document.addEventListener("click", (e) => {
-  document.querySelectorAll(".target-multiselect-panel, .skill-dropdown-panel").forEach((panel) => {
+  document.querySelectorAll(`.target-multiselect-panel, .skill-dropdown-panel,
+     .room-settings-panel`).forEach((panel) => {
     if (!panel.parentElement.contains(e.target)) {
       panel.style.display = "none";
     }
+    // const setting_panel = document.getElementById("roomSettingsPanel");
+    // const toggle = document.getElementById("roomSettingsToggle");
+    const toggle = panel.parentElement.querySelector(":scope > button");
+    const arrow = toggle?.querySelector(".arrow");
+    const isOpen = panel.style.display !== "none";
+    arrowSelector(arrow, isOpen)
   });
 });
