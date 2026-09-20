@@ -430,15 +430,44 @@ function showCharacterInfo(characterId) {
       <h3>${escapeHtml(c.name)}</h3>
       <p class="hint">오너 : ${escapeHtml(owner?.name || "알 수 없음")}</p>
       <p>포지션: ${escapeHtml(c.position || "-")} · 스킬: ${escapeHtml(c.skill || "-")}</p>
-      <p>HP: ${c.stats.hp} / ${100 + (c.stats.hp_stat*5)}</p>
-      <p>체력(스탯) ${c.stats.hp_stat} · 민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}</p>
-        
-      <span class="hint">팀 이동</span>
-      <div class="modal-actions">
-          <button class="btn btn-primary" data-modal-team="A">${escapeHtml(teamAName)}</button>
-          <button class="btn btn-primary" data-modal-team="B">${escapeHtml(teamBName)}</button>
+      <div class="char-stats">
+      <div class="stat-item stat-hp">
+        <span>HP</span>
+        <strong>${c.stats.hp}</strong>
+        <small>/ ${100 + c.stats.hp_stat * 5}</small>
       </div>
-      <div class="modal-actions">
+
+      <div class="stat-item">
+        <span>체력</span>
+        <strong>${c.stats.hp_stat}</strong>
+      </div>
+      <div class="stat-item">
+        <span>이능력</span>
+        <strong>${c.stats.power}</strong>
+      </div>
+      <div class="stat-item">
+        <span>민첩</span>
+        <strong>${c.stats.dex}</strong>
+      </div>
+
+      <div class="stat-item">
+        <span>정신력</span>
+        <strong>${c.stats.mnd}</strong>
+      </div>
+
+      <div class="stat-item">
+        <span>행운</span>
+        <strong>${c.stats.luck}</strong>
+      </div>
+
+      
+    </div>
+      <h4 class="hint">팀 이동</h4>
+      <div class="modal-actions modal-team">
+          <button class="btn btn-ghost" data-modal-team="A">${escapeHtml(teamAName)}</button>
+          <button class="btn btn-ghost" data-modal-team="B">${escapeHtml(teamBName)}</button>
+      </div>
+      <div class="modal-actions modal-move">
           ${canDelete ? '<button id="modalDeleteBtn" class="btn btn-danger">삭제</button>' : ""}
           <button id="modalCloseBtn" class="btn btn-ghost">닫기</button>
       </div>
@@ -489,4 +518,11 @@ document.addEventListener("click", (e) => {
     arrowSelector(arrow, isOpen)
 
   });
+
+  const modal = document.querySelector(".modal-box");
+  const clickedCharName = e.target.closest(".char-name");
+
+  if (!modal.contains(e.target) && !clickedCharName) {
+    document.getElementById("charInfoModal").style.display = "none";
+  }
 });
