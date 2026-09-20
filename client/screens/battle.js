@@ -141,7 +141,7 @@ async function renderOrderCheck() {
 
   orderChecked = true; // 다시 안 그리게 잠금 (재렌더링 시 모달이 또 뜨는 것 방지)
 
-  const modal = document.querySelector(".alert-modal");
+  const modal = document.querySelector(".modal-overlay");
   const dexA = maxDex("A");
   const dexB = maxDex("B");
   const isTie = dexA === dexB;
@@ -152,15 +152,34 @@ async function renderOrderCheck() {
 
   const diceRow = isTie
     ? `
-      <p class="">1d100 결과</p>
-      <p>${escapeHtml(teamAName)}: ${roomState.turn.decidedFirstTeam[0]} · ${escapeHtml(teamBName)}: ${roomState.turn.decidedFirstTeam[1]}</p>`
+      <h3 class="order-1d100">1D100</h3>
+      <div class="ordercheck-row">
+        <div class="stat-item">
+          <span>${escapeHtml(teamAName)}</span>
+          <strong>${roomState.turn.decidedFirstTeam[0]}</strong>
+        </div>
+        <div class="stat-item">
+          <span>${escapeHtml(teamBName)}</span>
+          <strong>${roomState.turn.decidedFirstTeam[1]}</strong>
+        </div>
+      </div>
+      `
     : "";
 
   modal.innerHTML = `
-    <div class="alert-modal-box">
+    <div class="modal-box">
       <h2 id="loadingModalHead">SYSTEM LOADING...</h2>
       <h2>선공 판정</h2>
-      <p>${escapeHtml(teamAName)} 최고 민첩: ${dexA} · ${escapeHtml(teamBName)} 최고 민첩: ${dexB}</p>
+      <div class="ordercheck-row">
+        <div class="stat-item">
+          <span>${escapeHtml(teamAName)} 최고 민첩</span>
+          <strong>${dexA}</strong>
+        </div>
+        <div class="stat-item">
+          <span>${escapeHtml(teamBName)} 최고 민첩</span>
+          <strong>${dexB}</strong>
+        </div>
+      </div>
       ${diceRow}
       <p class="order-result"><strong>${escapeHtml(firstTeamName)}</strong>이(가) 선공합니다.</p>
       <p class="hint" id="orderCheckCountdown"></p>
@@ -195,7 +214,7 @@ function startOrderCheckCountdown() {
       clearInterval(orderCheckIntervalId);
       orderChecked = false; 
       orderCheckIntervalId = null;
-      document.querySelector(".alert-modal").style.display = "none";
+      document.querySelector(".modal-overlay").style.display = "none";
 
     }
   }

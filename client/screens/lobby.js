@@ -522,7 +522,7 @@ document.addEventListener("click", (e) => {
   const modal = document.querySelector(".modal-box");
   const clickedCharName = e.target.closest(".char-name");
 
-  if (!modal.contains(e.target) && !clickedCharName) {
+  if (!modal?.contains(e.target) && !clickedCharName) {
     document.getElementById("charInfoModal").style.display = "none";
   }
 });
