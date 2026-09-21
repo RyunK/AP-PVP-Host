@@ -181,7 +181,7 @@ sheetForm.addEventListener("submit", async (e) => {
   const sheetConfig = {
     spreadsheetId: formData.get("spreadsheetId"),
     sheetName: formData.get("sheetName") || "data",
-    apiKey: "AIzaSyDmyez6nWxZRP2cwGsf4cVigXo1GhvaPvM",
+    apiKey: "AIzaSyAb_4GsQZfvm0jTRrphCfAHxMvJjDbexyk",
   };
   syncResult.className = "sync-result";
   syncResult.textContent = "설정 반영 중...";

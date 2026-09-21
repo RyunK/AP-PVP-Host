@@ -1,17 +1,17 @@
 {
   "skillTable": {
     "엄호": {
-      "uses": 5,
+      "uses": 3,
       "types": [
         "방어"
       ],
-      "diceCount": "4+체력",
-      "statBonus": "민첩*2",
-      "extraDiceCount": "이능력+3",
-      "extraDiceStat": "행운+3"
+      "diceCount": 4,
+      "statBonus": "체력",
+      "extraDiceCount": "",
+      "extraDiceStat": ""
     },
     "수호": {
-      "uses": 5,
+      "uses": 2,
       "types": [
         "방어",
         "수호"
@@ -22,7 +22,7 @@
       "extraDiceStat": ""
     },
     "확산": {
-      "uses": 8,
+      "uses": 3,
       "types": [
         "공격"
       ],
@@ -32,7 +32,7 @@
       "extraDiceStat": ""
     },
     "침식": {
-      "uses": 6,
+      "uses": 3,
       "types": [
         "공격"
       ],
@@ -42,17 +42,17 @@
       "extraDiceStat": ""
     },
     "성호": {
-      "uses": 6,
+      "uses": 3,
       "types": [
         "회복"
       ],
-      "diceCount": 2,
+      "diceCount": 3,
       "statBonus": "",
-      "extraDiceCount": 1,
+      "extraDiceCount": 2,
       "extraDiceStat": "이능력"
     },
     "환희": {
-      "uses": 5,
+      "uses": 1,
       "types": [
         "버프"
       ],
@@ -62,7 +62,7 @@
       "extraDiceStat": ""
     },
     "낙화": {
-      "uses": 5,
+      "uses": 1,
       "types": [
         "디버프"
       ],
