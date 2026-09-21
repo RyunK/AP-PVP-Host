@@ -1,4 +1,6 @@
-require("dotenv").config();
+// import dotenv from "dotenv";
+
+// dotenv.config();
 
 const navItems = document.querySelectorAll(".nav-item");
 const panes = document.querySelectorAll(".pane");
@@ -183,7 +185,7 @@ sheetForm.addEventListener("submit", async (e) => {
   const sheetConfig = {
     spreadsheetId: formData.get("spreadsheetId"),
     sheetName: formData.get("sheetName") || "data",
-    apiKey: process.env.API_KEY,
+    apiKey: window.host.API_KEY,
   };
   syncResult.className = "sync-result";
   syncResult.textContent = "설정 반영 중...";

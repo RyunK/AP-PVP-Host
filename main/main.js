@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, shell, clipboard } = require("electron");
 const path = require("path");
 
+require('dotenv').config();
+
 const { startServer, stopServer } = require("./server");
 const { startTunnel, stopTunnel } = require("./tunnel");
 const store = require("./store");
