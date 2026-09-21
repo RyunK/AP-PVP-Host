@@ -288,12 +288,12 @@ const myCharactersEl = document.getElementById("myCharacters");
 
   const confirmedMap = new Map(turn?.confirmed || []);
   const myCharacters = roomState.characters.filter((ch) => ch.ownerId === myPlayerId);
-  // const myTeams = myCharacters.map((ch) => ch.team);
   const myTeams = myCharacters.length > 0 ? myCharacters.map((c) => c.team) : ["A", "B"];
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
+  const isSpectator = myCharacters.length <= 0;
 
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = renderActionCard(c, confirmedMap, isMyTeamActing).trim();
+  wrapper.innerHTML = renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator).trim();
   const newCard = wrapper.firstElementChild;
 
   oldCard.replaceWith(newCard);
@@ -302,8 +302,6 @@ const myCharactersEl = document.getElementById("myCharacters");
 
 function onRoundResolved(roundLog) {
   liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
-  // TODO: roundLog.events가 나중에 채워지면 여기서 battleLog에 출력
-
 }
 
 
@@ -402,7 +400,6 @@ function renderBattle() {
 
   const myCharacters = roomState.characters.filter((c) => c.ownerId === myPlayerId);
   const myTeams = myCharacters.length > 0 ? myCharacters.map((c) => c.team) : ["A", "B"];
-  // const isSpectator = !myCharacters;
 
   const isMyTeamActing = myTeams.includes(turn?.actingTeam);
   const isSpectator = myCharacters.length <= 0;

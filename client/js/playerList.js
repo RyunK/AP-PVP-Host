@@ -71,8 +71,6 @@ export function showMyInfo(roomState, myPlayerId, myPlayerName) {
   `;
 }
 
-  // ${!me?.connected ? '<span id="badgeOnline" class="badge badge--offline">연결 끊김</span>' 
-    // : '<span id="badgeOnline" class="badge badge--online">연결됨</span>'}
 
 export function updateMyConnectionStatus(connected) {
   const badge = document.getElementById("badgeOnline");
