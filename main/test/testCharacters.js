@@ -57,8 +57,8 @@ function makeCharacterMap(){
 }
 
 function makeActionMap(){
-    rearguard.set("cid_abc", { skillName: "방어", targetIds: ["cid_abc"], value:0 });
-    vanguard.set("cid_def", { skillName: "낙화", targetIds: ["cid_abc"], value:0 });
+    vanguard.set("cid_def", { skillName: "공격", targetIds: ["cid_abc"], value:0 });
+    rearguard.set("cid_abc", { skillName: "도주", targetIds: [""], value:0 });
 }
 
 

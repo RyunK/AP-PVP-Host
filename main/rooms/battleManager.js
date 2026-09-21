@@ -38,7 +38,6 @@ class BattleManager {
       } else if (expectedPhase === "orderCheck"){
         this.endOrderCheck();
       }
-      console.log("onAutoAdvance: " + expectedPhase);
       this.onAutoAdvance?.(expectedPhase); // 타임아웃 끝나면 현재 상태 emit
     }, delayMs);
   }
@@ -126,7 +125,6 @@ class BattleManager {
   }
 
   _hasAliveMember(team) {
-    console.log(this.room.teams[team].some((id) => this.room.characters.get(id)?.alive))
     return this.room.teams[team].some((id) => this.room.characters.get(id)?.alive);
   }
 

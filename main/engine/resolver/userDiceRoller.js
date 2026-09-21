@@ -29,9 +29,6 @@ class UserDiceRoller{
       if(runner.useSkill == "도주"){
         tryRunFaction = runner.faction;
         runResult = await this.runAway(tryRunFaction);
-        if(runResult.success){
-          break;
-        }else continue;
       }
 
       const result = await DiceRoller.rollSkillWithCritical(
@@ -45,7 +42,12 @@ class UserDiceRoller{
     if (tryRunFaction !== "") {
         for (const runner of actvie_runners.values()) {
             if (runner.faction === tryRunFaction) {
-                delete runner.result;
+                runner.result.finalFormula = "";
+                runner.result.finalValue = 0;
+            // 해당 진영이 아니더라도 도주 성공했으면 아무 일도 안일어나야 함
+            }else if (runResult.success){ 
+              runner.result.finalFormula = "";
+              runner.result.finalValue = 0;
             }
         }
     }
@@ -60,7 +62,7 @@ class UserDiceRoller{
   applyHwanhee() {
     const runners = this.actvie_runners;
     // const runner_map = this.runner_map;
-    const skillUsers = new Map([...runners].filter((_, r) => r.useSkill == "환희" ));
+    const skillUsers = new Map([...runners].filter(([_, r]) => r.useSkill == "환희" ));
 
     skillUsers.forEach((skillUser, skillUser_id) => {
       const targetRunner = runners.get(skillUser.target[0]);

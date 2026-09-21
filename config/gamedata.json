@@ -144,6 +144,10 @@
     "8": {
       "chance": 70,
       "multiplier": 1.5
+    },
+    "스탯": {
+      "chance": null,
+      "multiplier": null
     }
   }
 }

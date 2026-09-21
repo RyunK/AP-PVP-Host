@@ -44,7 +44,7 @@ class HpCalculator{
   
   applyDamages(runner){
     // 공격 유형 스킬을 시전한 시전자의 대상을 찾아서 대미지 추가
-    let damage = runner.result.finalValue;
+    let damage = runner.result?.finalValue || 0;
 
     for (const target of runner.target) {
       const guardian = this.suho[target];
@@ -58,7 +58,7 @@ class HpCalculator{
 
   applyProtections(runner){
     // 방어 유형 스킬을 시전한 시전자의 대상을 찾아서 경감 추가
-    let protection = runner.result.finalValue;
+    let protection = runner.result?.finalValue || 0;
 
     // 수호 시전자가 아니면 대상에게 방어 추가, 수호 시전자면 본인에게 추가
     if(runner.useSkill != "수호"){
@@ -72,7 +72,7 @@ class HpCalculator{
 
   applyHeals(runner){
     // 회복 유형 스킬을 시전한 시전자의 대상을 찾아서 회복 추가
-    let heal = runner.result.finalValue;
+    let heal = runner.result?.finalValue || 0;
     for (const target of runner.target) {
       this.runners.get(target).add_heal(heal);
     }

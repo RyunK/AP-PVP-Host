@@ -12,7 +12,7 @@ function getFirstTeamOfRound(roundNumber, finalRound, finalFirstTeam) {
 function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
   const entries = Object.values(roundLog); // cid는 키일 뿐이라 값만 사용
   const lines = [];
-  
+  const cid2Name = new Map(entries.map(o => [o.info.id, o.info.name]));
 
   lines.push(`===== ${roundNumber}라운드 (선공: ${teamNames[firstTeam]}) =====`);
   lines.push("");
@@ -20,7 +20,7 @@ function buildRoundSection(roundLog, roundNumber, firstTeam, teamNames) {
   lines.push("[판정 결과]");
   for (const c of entries) {
     if(!c.info) continue;
-    const targets = (c.info?.targets || []).join(", ") || "-";
+    const targets = (c.info?.targets || []).map(id => cid2Name.get(id) || id).join(", ") || "-";
     lines.push(
       `- ${c.info.name} (${teamNames[c.info.faction]}) | 스킬: ${c.info.useSkill || "-"}` +
         (c.info.corVal ? ` | 침식값: ${c.info.corVal}` : "") +
