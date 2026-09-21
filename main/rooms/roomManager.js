@@ -17,8 +17,10 @@ class RoomManager {
     this.onRoomClosed = onRoomClosed || (() => {});
     this.onRoomStateChanged = onRoomStateChanged || (() => {}); 
     this.onceChecker = false; // false -> 아직 안했다 / true -> 했다.
+  }
 
-    
+  setSheetConfig(sheetConfig) {
+    this.sheetConfig = sheetConfig || { spreadsheetId: "", sheetName: "" };
   }
 
    /** 방이 없으면 새로 만들고(이 사람이 호스트), 있으면 거기 참가시킴 */
@@ -206,6 +208,10 @@ class RoomManager {
       const charId = `c_${playerId}_${idx}`;
       const maxhp = 100 + (def.hp_stat || 0) * 5
       if (def?.hp > maxhp) def.hp = maxhp;
+      const maxStat = this.room.settings.maxStat;
+      const maxStatSum = this.room.settings.maxStatSum;
+      if(maxStatSum < (def.hp_stat + def.power + def.dex + def.mnd + def.luck))
+        throw new Error(`${def.name}의 스탯 합이 너무 큽니다. 최대 ${maxStat}입니다.`)
       room.characters.set(charId, {
         id: charId,
         ownerId: playerId,
@@ -217,11 +223,11 @@ class RoomManager {
         skillTargetMax: skillTargetMax,
         stats: {
           hp: def.hp || 1,
-          hp_stat: def.hp_stat || 0,
-          power: def.power || 1,
-          dex: def.dex || 1,
-          mnd: def.mnd || 1,
-          luck: def.luck || 1,
+          hp_stat: Math.min(def.hp_stat, maxStat) || 0,
+          power: Math.min(def.power, maxStat) || 1,
+          dex: Math.min(def.dex, maxStat) || 1,
+          mnd: Math.min(def.mnd, maxStat) || 1,
+          luck: Math.min(def.luck, maxStat) || 1,
         },
         team: null,
         alive: true,
@@ -266,7 +272,7 @@ class RoomManager {
   }
 
   assignTeam(room, characterId, team) {
-    if (!["A", "B"].includes(team)) throw new Error("팀은 A 또는 B여야 합니다.");
+    if (!["A", "B"].includes(team)) throw new Error("팀 정보를 찾을 수 없습니다.");
     const character = room.characters.get(characterId);
     if (!character) throw new Error("캐릭터를 찾을 수 없습니다.");
 
@@ -290,7 +296,8 @@ class RoomManager {
 
     const aCount = room.teams.A.length;
     const bCount = room.teams.B.length;
-    if (aCount === 0 || bCount === 0 || aCount !== bCount) {
+    if ((aCount === 0 || bCount === 0 || aCount !== bCount) 
+      && !this.room.settings.allowAsymmetricBattles) {
       throw new Error("양 팀 인원이 같아야 전투를 시작할 수 있습니다.");
     }
 
@@ -351,11 +358,13 @@ class RoomManager {
       characters: [...room.characters.values()],
       teams: room.teams,
       teamNames: room.teamNames,
+      skillTable: this.room.ruleData?.skillTable,
       // turnNumber: room.turn.number,
       turn: this.battle ? this.battle.serializeTurn() : null, 
       chat: room.chatHistory,
       battleLogs: room.battleLogs,
       battleResult: room.battleResult,
+      sheetConfig: this.sheetConfig || { spreadsheetId: "", sheetName: "" },
       restarted: room.restarted || false,
     };
   }

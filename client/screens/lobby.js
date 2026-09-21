@@ -3,10 +3,13 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, myInfoConnetBadge, setupPlayerListToggle, showMyInfo } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
+import { setupRoomSettingsPanel, renderRoomSettingsPanel } from "../js/roomSettingsPanel.js";
+
+import { arrowSelector } from "../modals/helper.js"
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
@@ -14,6 +17,7 @@ const myPlayerId = getMyPlayerId();
 const teamBoard = document.getElementById("teamBoard");
 const unassignedBoard = document.getElementById("unassignedBoard");
 const characterAlert = document.getElementById("characterAlert");
+
 
 // 포지션별로 고를 수 있는 선택 스킬 목록
 const POSITION_SKILLS = {
@@ -27,10 +31,15 @@ export function init() {
   socket.off("room:state", onRoomState); // 중복 등록 방지
   socket.on("room:state", onRoomState);
 
-
   socket.emit("room:get-state", {}, (res) => {
     // console.log("room:get-state 응답:", res);
-    if (res.ok) onRoomState(res.state);
+    if (res.ok) {
+      onRoomState(res.state);
+      
+      showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
+      myInfoConnetBadge(socket);
+
+    }
   });
   
 
@@ -48,6 +57,7 @@ export function init() {
     document.getElementById("playerListContainer"),
     () => ({ players: roomState.players, roomPhase: roomState.phase })
   );
+  setupRoomSettingsPanel();
 }
 
 export function destroy() {
@@ -127,6 +137,7 @@ function onRoomState(state) {
   // console.log("전체 roomState:", state);
   roomState = state;
 
+  renderRoomSettingsPanel(state.settings, state.sheetConfig);
   if (state.phase === "battle" || state.phase === "summary") {
     renderScreen("battle"); // 전투가 시작되면 자동으로 화면 전환
     return;
@@ -144,7 +155,6 @@ function onRoomState(state) {
   //     document.getElementById("playerListContainer"),
   //     () => ({ players: roomState.players, roomPhase: roomState.phase })
   //   );
-  showMyInfo(roomState ,myPlayerId, getMyPlayerName(roomState, myPlayerId));
 
   
 }
@@ -190,15 +200,15 @@ function addCharacterRow() {
     <label for="c-hp">현재체력</label>
     <input type="number" placeholder="현재체력" class="c-hp" />
     <label for="c-hp-stat">체력(스탯)</label>
-    <input type="number" placeholder="체력(스탯)" class="c-hp-stat" value="0" />
+    <input type="number" placeholder="체력(스탯)" class="c-hp-stat" value="0" min="0" />
     <label for="c-power">이능력</label>
-    <input type="number" placeholder="이능력" class="c-power" value="1" />
+    <input type="number" placeholder="이능력" class="c-power" value="1" min="1" />
     <label for="c-dex">민첩</label>
-    <input type="number" placeholder="민첩" class="c-dex" value="1" />
+    <input type="number" placeholder="민첩" class="c-dex" value="1" min="1" />
     <label for="c-mnd">정신력</label>
-    <input type="number" placeholder="정신력" class="c-mnd" value="1" />
+    <input type="number" placeholder="정신력" class="c-mnd" value="1" min="1" />
     <label for="c-luck">행운</label>
-    <input type="number" placeholder="행운" class="c-luck" value="1" />
+    <input type="number" placeholder="행운" class="c-luck" value="1" min="1" />
     <label class="hint stat-summary" style="grid-column: 3 / -1;">최대체력: 100 | 스탯합: 0</label>
     <button type="button" class="remove-row-btn">✕</button>
   `;
@@ -420,15 +430,44 @@ function showCharacterInfo(characterId) {
       <h3>${escapeHtml(c.name)}</h3>
       <p class="hint">오너 : ${escapeHtml(owner?.name || "알 수 없음")}</p>
       <p>포지션: ${escapeHtml(c.position || "-")} · 스킬: ${escapeHtml(c.skill || "-")}</p>
-      <p>HP: ${c.stats.hp} / ${100 + (c.stats.hp_stat*5)}</p>
-      <p>체력(스탯) ${c.stats.hp_stat} · 민첩 ${c.stats.dex} · 정신력 ${c.stats.mnd} · 행운 ${c.stats.luck} · 이능력 ${c.stats.power}</p>
-        
-      <span class="hint">팀 이동</span>
-      <div class="modal-actions">
-          <button class="btn btn-primary" data-modal-team="A">${escapeHtml(teamAName)}</button>
-          <button class="btn btn-primary" data-modal-team="B">${escapeHtml(teamBName)}</button>
+      <div class="char-stats">
+      <div class="stat-item stat-hp">
+        <span>HP</span>
+        <strong>${c.stats.hp}</strong>
+        <small>/ ${100 + c.stats.hp_stat * 5}</small>
       </div>
-      <div class="modal-actions">
+
+      <div class="stat-item">
+        <span>체력</span>
+        <strong>${c.stats.hp_stat}</strong>
+      </div>
+      <div class="stat-item">
+        <span>이능력</span>
+        <strong>${c.stats.power}</strong>
+      </div>
+      <div class="stat-item">
+        <span>민첩</span>
+        <strong>${c.stats.dex}</strong>
+      </div>
+
+      <div class="stat-item">
+        <span>정신력</span>
+        <strong>${c.stats.mnd}</strong>
+      </div>
+
+      <div class="stat-item">
+        <span>행운</span>
+        <strong>${c.stats.luck}</strong>
+      </div>
+
+      
+    </div>
+      <h4 class="hint">팀 이동</h4>
+      <div class="modal-actions modal-team">
+          <button class="btn btn-ghost" data-modal-team="A">${escapeHtml(teamAName)}</button>
+          <button class="btn btn-ghost" data-modal-team="B">${escapeHtml(teamBName)}</button>
+      </div>
+      <div class="modal-actions modal-move">
           ${canDelete ? '<button id="modalDeleteBtn" class="btn btn-danger">삭제</button>' : ""}
           <button id="modalCloseBtn" class="btn btn-ghost">닫기</button>
       </div>
@@ -466,3 +505,24 @@ function showCharacterInfo(characterId) {
     modal.style.display = "none";
   });
 }
+
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".room-settings-panel").forEach((panel) => {
+    if (!panel.parentElement.contains(e.target)) {
+      panel.style.display = "none";
+    }
+    const setting_panel = document.getElementById("roomSettingsPanel");
+    const toggle = document.getElementById("roomSettingsToggle");
+    const arrow = toggle?.querySelector(".room-settings-arrow");
+    const isOpen = setting_panel.style.display !== "none";
+    arrowSelector(arrow, isOpen)
+
+  });
+
+  const modal = document.querySelector(".modal-box");
+  const clickedCharName = e.target.closest(".char-name");
+
+  if (!modal?.contains(e.target) && !clickedCharName) {
+    document.getElementById("charInfoModal").style.display = "none";
+  }
+});

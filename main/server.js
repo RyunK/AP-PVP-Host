@@ -6,16 +6,19 @@ const { Server } = require("socket.io");
 const { RoomManager } = require("./rooms/roomManager");
 const { reload: reloadFormulaCache } = require("./engine/formulaLoader");
 const store = require("./store");
+const crypto = require("crypto");
+
 
 const { calcMessage, autoPhaseForwarding } = require("./messageMaker");
 
 
 
-function startServer({ port, onRoomsChanged, onLog }) {
+function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
   return new Promise((resolve) => {
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, { cors: { origin: "*" } });
+    let roomPasswordHash = initialPasswordHash || null;
 
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
@@ -30,7 +33,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
        io.to("main").emit("room:closed", { reason });
      },
      onRoomStateChanged: (room) => {
-        io.to("main").emit("room:state", roomManager.serializeRoom(room));
+        const state = roomManager.serializeRoom(room);
+        state.serverTime = Date.now();
+        io.to("main").emit("room:state", state);
         broadcastRooms();
       },
    });
@@ -40,15 +45,16 @@ function startServer({ port, onRoomsChanged, onLog }) {
     }
 
     function emitRoomState(room) {
-      io.to("main").emit("room:state", roomManager.serializeRoom(room));
-      // console.log("emitRoomState" + room.turn.phase)
-
+      const state = roomManager.serializeRoom(room);
+      state.serverTime = Date.now();
+      io.to("main").emit("room:state", state);
     }
 
     function emitBattleState(room) {
-      io.to("main").emit("battle:state", roomManager.serializeRoom(room));
+      const state = roomManager.serializeRoom(room);
+      state.serverTime = Date.now();
+      io.to("main").emit("battle:state", state);
       // console.log("emitBattleState" + room.turn.phase)
-
     }
 
     function sendSysMessage(text) {
@@ -58,10 +64,17 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
     function sendBattleMessage(text) {
       const message = roomManager.postBattleMessage(text);
-      io.to("main").emit("chat:message", message);
+      io.to("main").emit("chat:message", message);  
+    }
 
-      // console.log(text);
-      
+    function verifyPassword(password, storedHash) {
+      if (!storedHash) return true; // 비밀번호가 설정 안 되어 있으면 통과
+      const [salt, originalHash] = storedHash.split(":");
+      const hash = crypto.scryptSync(password || "", salt, 64).toString("hex");
+      // 타이밍 공격 방지를 위해 timingSafeEqual 사용
+      const a = Buffer.from(hash, "hex");
+      const b = Buffer.from(originalHash, "hex");
+      return a.length === b.length && crypto.timingSafeEqual(a, b);
     }
 
     io.on("connection", (socket) => {
@@ -69,6 +82,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
 
       socket.on("room:enter", (profile, cb) => {
         try {
+          if (!verifyPassword(profile.password, roomPasswordHash)) {
+            throw new Error("비밀번호가 올바르지 않습니다.");
+          }
           const { room, playerId } = roomManager.enterRoom(socket.id, profile);
           socket.join("main"); // socket.io room 이름은 아무 문자열이나 상관없음, 고정값 사용
           socket.data.playerId = playerId;
@@ -85,7 +101,7 @@ function startServer({ port, onRoomsChanged, onLog }) {
         try {
           const room = roomManager.restartRoom(socket.data.playerId);
           cb({ ok: true, state: roomManager.serializeRoom(room) });
-          io.to("main").emit("room:state", roomManager.serializeRoom(room));
+          emitRoomState(room);
           sendSysMessage(`방이 재시작됐습니다.`);
           sendSysMessage(`${profile.name}님이 입장했습니다.`);
         } catch (err) {
@@ -108,7 +124,9 @@ function startServer({ port, onRoomsChanged, onLog }) {
       socket.on("room:get-state", (_payload, cb) => {
         const room = roomManager.getRoom();
         if (!room) return cb({ ok: false, error: "방을 찾을 수 없습니다." });
-        cb({ ok: true, state: roomManager.serializeRoom(room) });
+        const state = roomManager.serializeRoom(room);
+        state.serverTime = Date.now();
+        cb({ ok: true, state: state });
       });
 
       socket.on("room:rejoin", ({ playerId }, cb) => {
@@ -253,19 +271,6 @@ function startServer({ port, onRoomsChanged, onLog }) {
         }
       });
 
-      // socket.on("resolution:confirm", ({ }, cb) => {
-      //   try {
-      //     roomManager.toNextRound();
-      //     sendBattleMessage("정산 확인 완료.");
-      //     sendBattleMessage(`선공 페이즈 개시. ${room.teamNames[firstTeam]} 선언.`);
-      //     emitRoomState(roomManager.getRoom());
-      //     emitBattleState(roomManager.getRoom());
-      //     cb({ ok: true });
-      //   } catch (err) {
-      //     cb({ ok: false, error: err.message });
-      //   }
-      // });
-
       socket.on("disconnect", () => {
         onLog?.(`플레이어 연결 종료: ${socket.id}`);
         const result = roomManager.leavePlayer(socket.id);
@@ -286,12 +291,20 @@ function startServer({ port, onRoomsChanged, onLog }) {
         currentSettings = settings;
       },
       reloadFormulas: () => reloadFormulaCache(),
+      setSheetConfig: (sheetConfig) => {
+        roomManager.setSheetConfig(sheetConfig);
+        const room = roomManager.getRoom();
+        if (room) io.to("main").emit("room:state", roomManager.serializeRoom(room));
+      },
       kickPlayer: (roomCode, playerId) => {
         const room = roomManager.getRoom(roomCode);
         if (!room) return;
         const player = room.players.get(playerId);
         if (!player) return;
         io.sockets.sockets.get(player.socketId)?.disconnect(true);
+      },
+      updateRoomPassword: (newHash) => {
+        roomPasswordHash = newHash;
       },
     }));
   });

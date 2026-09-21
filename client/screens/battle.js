@@ -2,20 +2,22 @@ import { socket } from "../js/socket.js";
 // import { loadIdentity, clearIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, showMyInfo, setupPlayerListToggle } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, showMyInfo, setupPlayerListToggle, myInfoConnetBadge } from "../js/playerList.js";
 
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
 import { showPhaseAlert } from "../modals/battleModal.js"
+import { arrowSelector } from "../modals/helper.js"
 
 import {renderRoundLog} from "../js/renderBattle/renderRoundLog.js"
-import {skillDescribes} from "../js/renderBattle/skillDescribe.js"
+import { getSkillDescribe} from "../js/renderBattle/skillDescribe.js"
+import { setupRoomSettingsPanel, renderRoomSettingsPanel } from "../js/roomSettingsPanel.js";
 
 let roomState = null;
 const myPlayerId = getMyPlayerId();
 let orderChecked = false;
-
+let serverTimeOffset = 0;
 
 
 export function init() {
@@ -31,10 +33,14 @@ export function init() {
   socket.on("round:resolved", onRoundResolved);
   socket.on("resolution:result", onResult);
 
+  
+
   socket.emit("room:get-state", {}, (res) => {
     if (res.ok){
       onBattleState(res.state);
       onRoomState(res.state);
+      showMyInfo(res.state, myPlayerId, getMyPlayerName(res.state, myPlayerId));
+      myInfoConnetBadge(socket);
     } 
   });
 
@@ -42,6 +48,7 @@ export function init() {
     document.getElementById("playerListContainer"),
     () => ({ players: roomState.players, roomPhase: roomState.phase })
   );
+  setupRoomSettingsPanel();
 }
 
 function onResult(roundLog){
@@ -63,12 +70,12 @@ export function destroy() {
  */
 function onRoomState(state) {
   roomState = state;
-  
+  serverTimeOffset = state.serverTime - Date.now();
   mountChat(document.getElementById("chatContainer"), getMyCharacters(), state.chat || []);
   updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
   renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
 
-  showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
+  renderRoomSettingsPanel(state.settings, state.sheetConfig);
 }
 
 let phase_state;
@@ -77,6 +84,8 @@ let round = 0;
 async function onBattleState(state) {
   roomState = state;
 
+  serverTimeOffset = state.serverTime - Date.now();
+  console.log(state);
   const now_phase = state.turn?.phase;
   const now_round = state.turn?.round;
   let phase_kr;
@@ -94,10 +103,12 @@ async function onBattleState(state) {
   if(phase_state != now_phase && round == now_round ){
     showPhaseAlert(`${now_phase.toUpperCase()} PHASE`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    document.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   } else if (round != now_round && round != 0){
     showPhaseAlert(`ROUND ${now_round}`, `${phase_kr} 페이즈 시작.`, now_round);
     liveDrafts.clear(); // 새 라운드 시작이니 이전 임시 선언 정리
+    document.getElementById("battleStatus").classList.replace("warning", "hint");
     document.getElementById("battleStatus").textContent = ""
   }
 
@@ -130,7 +141,7 @@ async function renderOrderCheck() {
 
   orderChecked = true; // 다시 안 그리게 잠금 (재렌더링 시 모달이 또 뜨는 것 방지)
 
-  const modal = document.querySelector(".alert-modal");
+  const modal = document.querySelector(".modal-overlay");
   const dexA = maxDex("A");
   const dexB = maxDex("B");
   const isTie = dexA === dexB;
@@ -141,15 +152,34 @@ async function renderOrderCheck() {
 
   const diceRow = isTie
     ? `
-      <p class="">1d100 결과</p>
-      <p>${escapeHtml(teamAName)}: ${roomState.turn.decidedFirstTeam[0]} · ${escapeHtml(teamBName)}: ${roomState.turn.decidedFirstTeam[1]}</p>`
+      <h3 class="order-1d100">1D100</h3>
+      <div class="ordercheck-row">
+        <div class="stat-item">
+          <span>${escapeHtml(teamAName)}</span>
+          <strong>${roomState.turn.decidedFirstTeam[0]}</strong>
+        </div>
+        <div class="stat-item">
+          <span>${escapeHtml(teamBName)}</span>
+          <strong>${roomState.turn.decidedFirstTeam[1]}</strong>
+        </div>
+      </div>
+      `
     : "";
 
   modal.innerHTML = `
-    <div class="alert-modal-box">
+    <div class="modal-box">
       <h2 id="loadingModalHead">SYSTEM LOADING...</h2>
       <h2>선공 판정</h2>
-      <p>${escapeHtml(teamAName)} 최고 민첩: ${dexA} · ${escapeHtml(teamBName)} 최고 민첩: ${dexB}</p>
+      <div class="ordercheck-row">
+        <div class="stat-item">
+          <span>${escapeHtml(teamAName)} 최고 민첩</span>
+          <strong>${dexA}</strong>
+        </div>
+        <div class="stat-item">
+          <span>${escapeHtml(teamBName)} 최고 민첩</span>
+          <strong>${dexB}</strong>
+        </div>
+      </div>
       ${diceRow}
       <p class="order-result"><strong>${escapeHtml(firstTeamName)}</strong>이(가) 선공합니다.</p>
       <p class="hint" id="orderCheckCountdown"></p>
@@ -172,8 +202,9 @@ function startOrderCheckCountdown() {
 
   let tick_num = 0;
   function tick() {
-    const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, durationMs - elapsed);
+    // console.log(roomState);
+    // console.log(serverTimeOffset);
+    const remaining = Math.max(0, durationMs - ((Date.now() + serverTimeOffset) - startTime));
     const secondsLeft = Math.ceil(remaining / 1000);
     const dots = ".".repeat(tick_num % 4);
     tick_num += 1;
@@ -183,7 +214,7 @@ function startOrderCheckCountdown() {
       clearInterval(orderCheckIntervalId);
       orderChecked = false; 
       orderCheckIntervalId = null;
-      document.querySelector(".alert-modal").style.display = "none";
+      document.querySelector(".modal-overlay").style.display = "none";
 
     }
   }
@@ -207,7 +238,7 @@ function startTurnTimer() {
 
     function update() {
         const remainingMs = Math.max(
-            0, durationMs - (Date.now() - startTime)
+            0, durationMs - ((Date.now() + serverTimeOffset) - startTime)
         );
 
         const totalSeconds = Math.ceil(remainingMs / 1000);
@@ -420,7 +451,7 @@ function buildSkillOptions(c) {
     options.push({ value: "회복", label: "회복" });
   }
 
-  if(round >= 6 && phase == "rearguard"){
+  if(round >= roomState.settings.minRunRound && phase == "rearguard"){
     options.push({ value: "도주", label: "도주" });
   }
 
@@ -470,11 +501,14 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
         ${skillOptionsHtml}
       </select>
       <div class="skill-custom-dropdown ${disabled ? "is-disabled" : ""}">
-        <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  ${escapeHtml(currentLabel)} </button>
+        <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  
+          ${escapeHtml(currentLabel)} 
+          <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
+        </button>
         <div class="skill-dropdown-panel" style="display:none;">
           ${skillOptions
             .map((opt) => {
-              const lines = skillDescribes[opt.value] || [];
+              const lines = getSkillDescribe(opt.value, roomState) || [];
               return `
                 <div class="skill-option-row" data-value="${opt.value}">
                   <span>${escapeHtml(opt.label)}</span>
@@ -527,7 +561,10 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
         <input type="number" class="action-value" placeholder="침식 값" value="${realdata?.value ?? ""}" ${disabledAttr} style="width: 100px;" />
 
         <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
-          <button type="button" class="target-multiselect-toggle" ${disabled}>${targetSummary}</button>
+          <button type="button" class="target-multiselect-toggle" ${disabled}>
+            ${targetSummary}
+            <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
+          </button>
           <div class="target-multiselect-panel" style="display:none;">
             ${buildGroup("A", teamAName)}
             ${buildGroup("B", teamBName)}
@@ -557,7 +594,10 @@ function attachCardHandlers(card) {
   if (skillToggle && skillPanel) {
     skillToggle.addEventListener("click", (e) => {
       e.stopPropagation();
-      skillPanel.style.display = skillPanel.style.display === "none" ? "block" : "none";
+      const isOpen = skillPanel.style.display !== "none";
+      skillPanel.style.display = isOpen ? "none" : "block";
+      const arrow = skillToggle?.querySelector(".arrow");
+      arrowSelector(arrow, !isOpen)
     });
 
     card.querySelectorAll(".skill-option-row").forEach((row) => {
@@ -581,6 +621,9 @@ function attachCardHandlers(card) {
       e.stopPropagation();
       const isOpen = panel.style.display !== "none";
       panel.style.display = isOpen ? "none" : "block";
+      const toggle = panel.parentElement.querySelector(":scope > button");
+      const arrow = toggle?.querySelector(".arrow");
+      arrowSelector(arrow, !isOpen)
     });
   }
 
@@ -595,7 +638,10 @@ function attachCardHandlers(card) {
       battleStatus.textContent = "";
 
       socket.emit("action:confirm", { characterId, skillName, targetIds, value }, (res) => {
-        if (!res.ok) battleStatus.textContent = res.error;
+        if (!res.ok) {
+          battleStatus.classList.replace("hint", "warning");
+          battleStatus.textContent = res.error;
+        }
       });
     });
   }
@@ -620,7 +666,10 @@ function attachCardHandlers(card) {
           value: card.querySelector(".action-value").value,
         },
         (res) => {
-          if (!res.ok) return (battleStatus.textContent = res.error);
+            if (!res.ok) {
+            battleStatus.classList.replace("hint", "warning");
+            battleStatus.textContent = res.error;
+          }
         });
 
         // 드롭다운 요약 텍스트도 즉시 갱신
@@ -669,9 +718,16 @@ function applyAutoTargeting(card, skillName, myCharacterId) {
 
 
 document.addEventListener("click", (e) => {
-  document.querySelectorAll(".target-multiselect-panel, .skill-dropdown-panel").forEach((panel) => {
+  document.querySelectorAll(`.target-multiselect-panel, .skill-dropdown-panel,
+     .room-settings-panel`).forEach((panel) => {
     if (!panel.parentElement.contains(e.target)) {
       panel.style.display = "none";
     }
+    // const setting_panel = document.getElementById("roomSettingsPanel");
+    // const toggle = document.getElementById("roomSettingsToggle");
+    const toggle = panel.parentElement.querySelector(":scope > button");
+    const arrow = toggle?.querySelector(".arrow");
+    const isOpen = panel.style.display !== "none";
+    arrowSelector(arrow, isOpen)
   });
 });

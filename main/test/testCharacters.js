@@ -18,8 +18,8 @@ const def1 = {
 
 const def2 = {
     name: "def",
-    position: "드레파논",
-    skill : "침식",
+    position: "카두케우스",
+    skill : "낙화",
     hp: 100,
     hp_stat: 2,
     power: 3,
@@ -35,7 +35,9 @@ function addCharacter(charId, playerId, def, team){
         name: def.name || `캐릭터${idx + 1}`,
         position: def.position || "아이기스",
         skill: def.skill  || "엄호",
+        skillMax  : 3,
         skillCount : 0,
+        skillTargetMax: 1,
         stats: {
           hp: def.hp || 1,
           hp_stat: def.hp_stat || 0,
@@ -55,8 +57,8 @@ function makeCharacterMap(){
 }
 
 function makeActionMap(){
-    vanguard.set("cid_abc", { skillName: "엄호", targetIds: ["cid_def"], value:0 });
-    rearguard.set("cid_def", { skillName: "공격", targetIds: [], value:0 });
+    rearguard.set("cid_abc", { skillName: "방어", targetIds: ["cid_abc"], value:0 });
+    vanguard.set("cid_def", { skillName: "낙화", targetIds: ["cid_abc"], value:0 });
 }
 
 

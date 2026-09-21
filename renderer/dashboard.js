@@ -34,6 +34,8 @@ function setLink(url) {
   connText.textContent = "링크 생성됨";
   tunnelHintEl.textContent =
     "몇 분 기다려도 링크가 열리지 않는다면 링크를 재발급 받으세요.";
+  
+  startRemakeLock(Date.now());
 }
 
 document.getElementById("copyLinkBtn").addEventListener("click", async () => {
@@ -49,6 +51,86 @@ document.getElementById("openLinkBtn").addEventListener("click", () => {
   if (currentLink) window.host.openExternal(currentLink);
 });
 
+const REMAKE_LOCK_MS = 3 * 60 * 1000; // 3분
+let lastLinkIssuedAt = null;
+let remakeIntervalId = null;
+
+const remakeBtn = document.getElementById("remakeLink");
+
+function startRemakeLock(issuedAt) {
+  lastLinkIssuedAt = issuedAt;
+  remakeBtn.disabled = true;
+
+  if (remakeIntervalId) clearInterval(remakeIntervalId);
+
+  function tick() {
+    const elapsed = Date.now() - lastLinkIssuedAt;
+    const remaining = Math.max(0, REMAKE_LOCK_MS - elapsed);
+
+    if (remaining <= 0) {
+      remakeBtn.textContent = "링크 재발급";
+      remakeBtn.disabled = false;
+      clearInterval(remakeIntervalId);
+      remakeIntervalId = null;
+      return;
+    }
+
+    const totalSeconds = Math.ceil(remaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    remakeBtn.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  tick();
+  remakeIntervalId = setInterval(tick, 1000);
+}
+
+remakeBtn.addEventListener("click", async () => {
+  if (remakeBtn.disabled) return; // 이중 클릭 방지
+
+  remakeBtn.disabled = true;
+  remakeBtn.textContent = "발급 중...";
+
+  try {
+    const result = await window.host.remakeTunnel();
+    if (result.ok) {
+      setLink(result.url);
+      startRemakeLock(Date.now());
+    } else {
+      appendLog(`터널 재발급 실패: ${result.error}`);
+      remakeBtn.textContent = "링크 재발급";
+      remakeBtn.disabled = false;
+    }
+  } catch (err) {
+    appendLog(`터널 재발급 실패: ${err.message}`);
+    remakeBtn.textContent = "링크 재발급";
+    remakeBtn.disabled = false;
+  }
+});
+
+
+document.getElementById("pwToggleBtn").addEventListener("click", () => {
+  const input = document.getElementById("roomPasswordInput");
+  const btn = document.getElementById("pwToggleBtn");
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+  btn.innerHTML = isPassword ? `<i class="fas fa-eye-slash"></i>` : `<i class="fas fa-eye"></i>`;
+});
+
+document.getElementById("pwConfirm").addEventListener("click", async () => {
+  const input = document.getElementById("roomPasswordInput");
+  const status = document.getElementById("pwStatus");
+  const password = input.value; // 빈 문자열이면 "비밀번호 사용 안 함"으로 처리
+
+  const result = await window.host.setRoomPassword(password);
+  if (result.ok) {
+    status.textContent = password ? "비밀번호가 설정되었습니다." : "비밀번호가 해제되었습니다.";
+    input.value = "";
+  } else {
+    status.textContent = `오류: ${result.error}`;
+  }
+});
+
 // ---- 전투 설정 ----
 const settingsForm = document.getElementById("settingsForm");
 const settingsToast = document.getElementById("settingsToast");
@@ -57,8 +139,15 @@ function fillSettingsForm(settings) {
   if (!settings) return;
   settingsForm.teamSize.value = settings.teamSize;
   settingsForm.turnTimeLimitSec.value = settings.turnTimeLimitSec;
+  settingsForm.resolutionTimeLimitSec.value = settings.resolutionTimeLimitSec;
   settingsForm.maxCharactersPerPlayer.value = settings.maxCharactersPerPlayer;
+  settingsForm.maxStat.value = settings.maxStat;
+  settingsForm.maxStatSum.value = settings.maxStatSum;
+  settingsForm.maxRound.value = settings.maxRound;
+  settingsForm.minRunRound.value = settings.minRunRound;
+  settingsForm.maxAttackers.value = settings.maxAttackers;
   settingsForm.allowMultiCharacterPerPlayer.checked = settings.allowMultiCharacterPerPlayer;
+  settingsForm.allowAsymmetricBattles.checked = settings.allowAsymmetricBattles;
 }
 
 settingsForm.addEventListener("submit", async (e) => {
@@ -67,8 +156,15 @@ settingsForm.addEventListener("submit", async (e) => {
   const settings = {
     teamSize: Number(formData.get("teamSize")),
     turnTimeLimitSec: Number(formData.get("turnTimeLimitSec")),
+    resolutionTimeLimitSec :Number(formData.get("resolutionTimeLimitSec")),
     maxCharactersPerPlayer: Number(formData.get("maxCharactersPerPlayer")),
+    maxStat: Number(formData.get("maxStat")),
+    maxStatSum: Number(formData.get("maxStatSum")),
+    maxRound: Number(formData.get("maxRound")),
+    minRunRound: Number(formData.get("minRunRound")),
+    maxAttackers: Number(formData.get("maxAttackers")),
     allowMultiCharacterPerPlayer: formData.get("allowMultiCharacterPerPlayer") === "on",
+    allowAsymmetricBattles: formData.get("allowAsymmetricBattles") === "on",
   };
   await window.host.saveMatchSettings(settings);
   settingsToast.textContent = "저장되었습니다.";
@@ -178,6 +274,8 @@ window.host.onTunnelError(({ message }) => {
 });
 window.host.onRoomsUpdate((rooms) => renderRooms(rooms));
 window.host.onLogLine((line) => appendLog(line));
+
+
 
 // ---- 초기 상태 로드 ----
 (async () => {

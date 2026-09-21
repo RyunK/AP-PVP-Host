@@ -14,7 +14,7 @@ import { socket } from "../js/socket.js";
 import { loadIdentity } from "../js/state.js";
 import { renderScreen } from "../js/router.js";
 import { mountChat, updateChatCharacterOptions, resetChat } from "../js/chat.js";
-import { renderPlayerList, escapeHtml, renderReadyBadge, showMyInfo } from "../js/playerList.js";
+import { renderPlayerList, escapeHtml, myInfoConnetBadge, showMyInfo } from "../js/playerList.js";
 import { getMyPlayerId } from "../js/state.js";
 import { getMyCharacters, getMyPlayerName } from "../js/roomHelpers.js";
 
@@ -47,6 +47,7 @@ export function init(params = {}) {
         updateChatCharacterOptions(getMyCharacters(roomState, myPlayerId), getMyPlayerName(roomState, myPlayerId));  
         renderPlayerList(document.getElementById("playerListContainer"), state.players, state.phase);
         showMyInfo(state, myPlayerId, getMyPlayerName(roomState, myPlayerId));
+        myInfoConnetBadge(socket);
         renderRoster();
 
         setupRestartButton(); 

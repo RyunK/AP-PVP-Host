@@ -8,7 +8,15 @@
     <div class="lobby-main">
       <div class="room-header">
         <span>내 정보</span>
+         
         <strong id="myInfoLabel"></strong>
+      </div>
+      <div class="room-settings-box">
+        <button type="button" class="room-settings-toggle" id="roomSettingsToggle">
+          <i class="fa-solid fa-circle-info" style="font-size: 1.2em;"></i> 전투 설정 확인 
+          <span class="room-settings-arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
+        </button>
+        <div class="room-settings-panel" id="roomSettingsPanel" style="display:none;"></div>
       </div>
 
       <h2>내 캐릭터 설정</h2>
@@ -33,6 +41,7 @@
     </div>
 
     <div class="lobby-side">
+      
       <div id="playerListContainer" class="player-list-container">
         <!-- <h2>플레이어 목록</h2> -->
       </div>

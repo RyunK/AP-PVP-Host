@@ -1,3 +1,4 @@
+import { socket } from "./socket.js";
 
 /**
  * div 새로 만들어서 str 넣어줌
@@ -64,7 +65,41 @@ export function showMyInfo(roomState, myPlayerId, myPlayerName) {
   ${myPlayerName} 
   ${isHost ? '<span class="badge  badge--host">호스트</span>' : ""}
   ${roleBadge}
-  ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
+  <span id="badgeOnline" class="badge badge--offline">연결 끊김</span>
+
   
   `;
+}
+
+  // ${!me?.connected ? '<span id="badgeOnline" class="badge badge--offline">연결 끊김</span>' 
+    // : '<span id="badgeOnline" class="badge badge--online">연결됨</span>'}
+
+export function updateMyConnectionStatus(connected) {
+  const badge = document.getElementById("badgeOnline");
+
+  if (!badge) return;
+
+  badge.textContent = connected ? "연결됨" : "연결 끊김";
+  badge.classList.toggle("badge--online", connected);
+  badge.classList.toggle("badge--offline", !connected);
+}
+
+/**
+ * 실제 연결 상태에 따라 내 정보 연결 상태 뱃지 변경
+ * @param {*} socket 
+ */
+export function myInfoConnetBadge(socket){
+
+  const update = () => {
+    updateMyConnectionStatus(socket.connected);
+  };
+
+  socket.off("connect", update);
+  socket.off("disconnect", update);
+
+  socket.on("connect", update);
+  socket.on("disconnect", update);
+
+  // 함수가 호출되는 순간의 상태도 바로 반영
+  update();
 }

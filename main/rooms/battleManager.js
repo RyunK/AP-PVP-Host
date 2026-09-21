@@ -68,13 +68,13 @@ class BattleManager {
 
   _getPhaseDuration(phase) {
     const ORDER_CHECK_MS = 10_000;
-    const RESOLUTION_MS = 30_000;
+    // const RESOLUTION_MS = 30_000;
 
     switch (phase) {
       case "orderCheck":
         return ORDER_CHECK_MS;
       case "resolution":
-        return RESOLUTION_MS;
+        return (this.room.settings.resolutionTimeLimitSec || 30) * 1000;
       case "vanguard":
       case "rearguard":
         return (this.room.settings.turnTimeLimitSec || 60) * 1000;
@@ -134,7 +134,7 @@ class BattleManager {
     // 게임 끝났는지 체크
     const roundLog = this.room.battleLogs[this.room.battleLogs.length -1];
     const runSuccess = roundLog.runResult ? roundLog.runResult.success : false;
-    if (this.room.turn.round >= 10 || runSuccess
+    if (this.room.turn.round >= this.room.settings.maxRound || runSuccess
        || !this._hasAliveMember("A") || !this._hasAliveMember("B")){
       const summary = {
         A: this.buildSummaryData("A"),
@@ -203,7 +203,7 @@ class BattleManager {
     this._assertCanAct(playerId, characterId);
     targetIds = this._targetCheck(characterId, skillName, targetIds);
     this._checkValidAct(characterId, skillName, targetIds, value);
-    this._checkEnemyTargetLimit(characterId, targetIds, 2);
+    this._checkEnemyTargetLimit(characterId, targetIds, this.room.settings.maxAttackers);
 
     this.room.turn.phaseActions.set(characterId, { skillName, targetIds, value });
     this.room.turn.draft.delete(characterId);
@@ -295,7 +295,7 @@ class BattleManager {
     if(act == "낙화" && this.room.turn.phase == "rearguard") throw new Error("지금은 낙화를 사용할 수 없습니다.");
     if(act == "도주" 
       && this.room.turn.phase == "vanguard" 
-      && this.room.turn.round < 6) throw new Error("지금은 도주할 수 없습니다.");
+      && this.room.turn.round < this.room.settings.minRunRound ) throw new Error("지금은 도주할 수 없습니다.");
     if(act == "침식" && (character.stats.hp <= value || value > 20) ) throw new Error("침식값이 너무 큽니다.");
 
     if(act == "환희"){
@@ -311,7 +311,7 @@ class BattleManager {
       .filter(action => action.skillName === "낙화")
       .flatMap(action => action.targetIds);
 
-    if (nakhwaTargetIds.includes(characterId)) {
+    if (nakhwaTargetIds.includes(characterId) && act == character.skill) {
       throw new Error("낙화의 대상으로 지정됐을 때에는 스킬을 사용할 수 없습니다.");
     }
 
