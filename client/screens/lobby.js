@@ -82,17 +82,6 @@ function handleBoardClick(e) {
   }
 }
 
-// function showMyInfo(myPlayerId, myPlayerName) {
-//   const me = roomState.players.find((p) => p.id === myPlayerId);
-//   const isHost = me?.isHost;
-  
-//   document.getElementById("myInfoLabel").innerHTML = `
-//   ${myPlayerName} 
-//   ${isHost ? '<span class="badge badge--host">호스트</span>' : renderReadyBadge(me?.ready)}
-//   ${!me?.connected ? '<span class="badge badge--offline">연결 끊김</span>' : '<span class="badge badge--online">연결됨</span>'}
-  
-//   `;
-// }
 
 function renderMyCharacterList() {
   const container = document.getElementById("myCharacterList");
@@ -523,6 +512,7 @@ document.addEventListener("click", (e) => {
   const clickedCharName = e.target.closest(".char-name");
 
   if (!modal?.contains(e.target) && !clickedCharName) {
-    document.getElementById("charInfoModal").style.display = "none";
+    const modal = document.getElementById("charInfoModal");
+    modal && (modal.style.display = "none");
   }
 });
