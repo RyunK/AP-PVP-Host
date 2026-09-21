@@ -210,8 +210,16 @@ class RoomManager {
       if (def?.hp > maxhp) def.hp = maxhp;
       const maxStat = this.room.settings.maxStat;
       const maxStatSum = this.room.settings.maxStatSum;
+      
       if(maxStatSum < (def.hp_stat + def.power + def.dex + def.mnd + def.luck))
-        throw new Error(`${def.name}의 스탯 합이 너무 큽니다. 최대 ${maxStat}입니다.`)
+        throw new Error(`${def.name}의 스탯 합이 너무 큽니다. 최대 ${maxStatSum}입니다.`);
+      else if ([def.hp_stat, def.power, def.dex, def.mnd, def.luck].some(stat => stat > maxStat))
+        throw new Error(`${def.name}의 스탯 값 중 하나가 너무 큽니다. 최대 ${maxStat}입니다.`)
+      else if ([def.power, def.dex, def.mnd, def.luck].some(stat => stat < 1))
+        throw new Error(`${def.name}의 스탯 값 중 하나가 너무 작습니다. 체력 외의 스탯들은 최소 1입니다.`);
+      else if (def.hp_stat < 0)
+        throw new Error(`${def.name}의 체력 스탯이 너무 작습니다. 최소 0입니다.`);
+      
       room.characters.set(charId, {
         id: charId,
         ownerId: playerId,
