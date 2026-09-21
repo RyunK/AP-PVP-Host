@@ -289,12 +289,18 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
       io,
       updateMatchSettings: (settings) => {
         currentSettings = settings;
+        const room = roomManager.getRoom();
+        if (room) {
+          room.settings = { ...settings }; // 이미 만들어진 방의 settings도 즉시 갱신
+          emitRoomState(room);
+        }
       },
       reloadFormulas: () => reloadFormulaCache(),
       setSheetConfig: (sheetConfig) => {
         roomManager.setSheetConfig(sheetConfig);
         const room = roomManager.getRoom();
-        if (room) io.to("main").emit("room:state", roomManager.serializeRoom(room));
+        if(room) emitRoomState(room);
+        // if (room) io.to("main").emit("room:state", roomManager.serializeRoom(room));
       },
       kickPlayer: (roomCode, playerId) => {
         const room = roomManager.getRoom(roomCode);

@@ -344,7 +344,7 @@ class RoomManager {
 
   serializeRoom(room) {
     return {
-      phase: room.phase,
+      phase: room?.phase,
       settings: room.settings,
       players: [...room.players.values()].map((p) => ({
         id: p.id,
