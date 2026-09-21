@@ -10,67 +10,41 @@ function extractSpreadsheetId(urlOrId) {
   return match ? match[1] : urlOrId.trim();
 }
 
-function buildCsvExportUrl(spreadsheetId, sheetName) {
-  const base = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv`;
-  return sheetName ? `${base}&sheet=${encodeURIComponent(sheetName)}` : base;
+/**
+ * Sheets API v4의 batchGet으로 두 범위를 한 번에 가져옵니다.
+ * valueRenderOption=FORMATTED_VALUE는 "화면에 보이는 그대로"의 값을
+ * 반환하며, gviz와 달리 열 단위 타입 추론이 없어서 같은 열에
+ * 숫자와 텍스트가 섞여 있어도 셀 값이 날아가지 않습니다.
+ * 시트 이름을 range에 직접 쓸 수 있어 gid 조회가 필요 없습니다.
+ */
+function buildBatchGetUrl(spreadsheetId, sheetName, ranges, apiKey) {
+  const params = new URLSearchParams({
+    key: apiKey,
+    valueRenderOption: "FORMATTED_VALUE",
+    majorDimension: "ROWS",
+  });
+  ranges.forEach((r) => params.append("ranges", `${sheetName}!${r}`));
+
+  return `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${params.toString()}`;
 }
 
 /**
- * 따옴표(멀티라인 셀 포함)를 제대로 처리하는 CSV 파서.
- * 줄 단위로 먼저 자르지 않고 문자 단위로 읽어서, 따옴표 안의 줄바꿈을
- * 새 행으로 착각하지 않습니다.
+ * Sheets API는 각 행의 마지막에 있는 빈 셀들을 잘라내서 반환하므로,
+ * (예: 실제로는 7열인데 뒤쪽이 비어있으면 3개만 옴) targetCols 길이만큼
+ * 빈 문자열로 채워 인덱스가 항상 일정하게 맞도록 만듭니다.
  */
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i++; // 이스케이프된 큰따옴표
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\r") {
-      // 무시 (CRLF의 \r)
-    } else if (char === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else {
-      field += char;
-    }
-  }
-
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
+function padRows(values, targetCols) {
+  return (values || []).map((row) => {
+    const padded = row.slice(0, targetCols);
+    while (padded.length < targetCols) padded.push("");
+    return padded.map((v) => (v == null ? "" : String(v)));
+  });
 }
 
 function colLetterToIndex(letters) {
   let idx = 0;
   for (const ch of letters) idx = idx * 26 + (ch.charCodeAt(0) - 64);
-  return idx - 1; // 0-based
+  return idx - 1;
 }
 
 function parseA1Range(range) {
@@ -85,43 +59,30 @@ function parseA1Range(range) {
   };
 }
 
-/** 전체 시트 CSV(rows)에서 A1 표기 범위(예: "E1:K12")만 잘라냅니다. */
-function extractRange(rows, range) {
-  const { startRow, endRow, startCol, endCol } = parseA1Range(range);
-  const sliced = [];
-  for (let r = startRow; r <= endRow; r++) {
-    const sourceRow = rows[r] || [];
-    const cols = [];
-    for (let c = startCol; c <= endCol; c++) cols.push(sourceRow[c] ?? "");
-    sliced.push(cols);
-  }
-  return sliced;
+function colCount(range) {
+  const { startCol, endCol } = parseA1Range(range);
+  return endCol - startCol + 1;
 }
 
-/**
- * 스킬표 파싱 
- * 열 순서: [이름, 횟수, 유형, [다이스], 추가/고정, 추가주사위 개수, 추가주사위 눈 수]
- */
 function parseSkillTable(rows) {
   const result = {};
 
   rows.forEach((row) => {
-    if (!row[0]) return; // 이름이 없는 행(헤더 포함)은 건너뜀 — 원본과 동일한 방식
+    if (!row[0]) return;
 
     result[row[0]] = {
-      uses: row[1] ? Number(row[1]) : null, // 횟수: 비어있으면 무제한(null)
-      types: row[2] ? row[2].split(",").map((t) => t.trim()) : [], // 유형: 콤마로 여러 개 가능
-      diceCount: Number(row[3]) || row[3], // [다이스]
-      statBonus: Number(row[4]) || row[4], // 추가/고정 (스탯명 또는 "체력*2" 같은 수식)
-      extraDiceCount: Number(row[5]) || row[5], // 추가주사위 개수
-      extraDiceStat: Number(row[6]) || row[6], // 추가주사위 눈 수 (기준이 되는 스탯명)
+      uses: row[1] ? Number(row[1]) : null,
+      types: row[2] ? row[2].split(",").map((t) => t.trim()) : [],
+      diceCount: Number(row[3]) || row[3],
+      statBonus: Number(row[4]) || row[4],
+      extraDiceCount: Number(row[5]) || row[5],
+      extraDiceStat: Number(row[6]) || row[6],
     };
   });
 
   return result;
 }
 
-/** 크리티컬표 파싱  */
 function parseCriticalTable(rows) {
   const result = {};
 
@@ -137,27 +98,39 @@ function parseCriticalTable(rows) {
 }
 
 /**
- * @param {{ spreadsheetId: string, sheetName?: string }} sheetConfig
+ * @param {{ spreadsheetId: string, sheetName?: string, apiKey: string }} sheetConfig
  *   spreadsheetId 자리에 전체 시트 URL을 넣어도 자동으로 ID만 추출합니다.
- *   sheetName은 원본과 동일하게 기본값 "data" 탭을 씁니다.
+ *   apiKey는 Google Cloud Console에서 발급한 Sheets API 키입니다.
  */
 async function syncFromSheet(sheetConfig) {
-  const id = extractSpreadsheetId(sheetConfig.spreadsheetId);
-  const url = buildCsvExportUrl(id, sheetConfig.sheetName || "data");
-
-  const res = await fetch(url);
-  if (!res.ok) {
+  if (!sheetConfig.apiKey) {
     throw new Error(
-      `시트를 불러오지 못했습니다 (HTTP ${res.status}). 시트 공유 설정이 ` +
-        `"링크가 있는 모든 사용자 - 뷰어"로 되어 있는지, 탭 이름이 맞는지 확인해주세요.`
+      "apiKey가 필요합니다. Google Cloud Console에서 Sheets API를 사용 설정하고 API 키를 발급받아 전달해주세요."
     );
   }
 
-  const csvText = await res.text();
-  const allRows = parseCsv(csvText);
+  const id = extractSpreadsheetId(sheetConfig.spreadsheetId);
+  const sheetName = sheetConfig.sheetName || "data";
 
-  const skillTable = parseSkillTable(extractRange(allRows, SKILL_RANGE));
-  const criticalTable = parseCriticalTable(extractRange(allRows, CRITICAL_RANGE));
+  const url = buildBatchGetUrl(id, sheetName, [SKILL_RANGE, CRITICAL_RANGE], sheetConfig.apiKey);
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `시트를 불러오지 못했습니다 (HTTP ${res.status}). 시트 공유 설정("링크가 있는 모든 사용자 - 뷰어"), ` +
+        `탭 이름, API 키가 유효한지 확인해주세요. ${body}`
+    );
+  }
+
+  const data = await res.json();
+  const [skillRangeResult, criticalRangeResult] = data.valueRanges || [];
+
+  const skillRows = padRows(skillRangeResult?.values, colCount(SKILL_RANGE));
+  const criticalRows = padRows(criticalRangeResult?.values, colCount(CRITICAL_RANGE));
+
+  const skillTable = parseSkillTable(skillRows);
+  const criticalTable = parseCriticalTable(criticalRows);
 
   const saved = saveGameData({ skillTable, criticalTable });
 
@@ -167,6 +140,5 @@ async function syncFromSheet(sheetConfig) {
     snapshot: saved,
   };
 }
-
 
 module.exports = { syncFromSheet, extractSpreadsheetId, parseSkillTable, parseCriticalTable };
