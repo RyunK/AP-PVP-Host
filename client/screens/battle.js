@@ -502,7 +502,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
       </select>
       <div class="skill-custom-dropdown ${disabled ? "is-disabled" : ""}">
         <button type="button" class="skill-dropdown-toggle" ${disabledAttr}>  
-          ${escapeHtml(currentLabel)} 
+          <span class="select-summary">${escapeHtml(currentLabel)} </span>
           <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
         </button>
         <div class="skill-dropdown-panel" style="display:none;">
@@ -562,7 +562,7 @@ function renderActionCard(c, confirmedMap, isMyTeamActing, isSpectator) {
 
         <div class="target-multiselect ${disabled ? "is-disabled" : ""}">
           <button type="button" class="target-multiselect-toggle" ${disabled}>
-            ${targetSummary}
+            <span class="select-summary">${targetSummary}</span>
             <span class="arrow"><i class="fa-solid fa-caret-down " style="font-size: 0.8em"></i></span>
           </button>
           <div class="target-multiselect-panel" style="display:none;">
@@ -604,7 +604,7 @@ function attachCardHandlers(card) {
       row.addEventListener("click", () => {
         const select = card.querySelector(".action-type");
         select.value = row.dataset.value;
-        skillToggle.textContent = row.querySelector("span").textContent;
+        skillToggle.querySelector(".select-summary").textContent = row.querySelector("span").textContent;
         skillPanel.style.display = "none";
 
         // 진짜 select에 값만 바꾸고 끝나면 기존 리스너가 못 알아채니, input 이벤트를 직접 발생시킴
@@ -677,12 +677,20 @@ function attachCardHandlers(card) {
           const names = targetIds
             .map((id) => roomState.characters.find((c) => c.id === id)?.name)
             .filter(Boolean);
-          toggleBtn.textContent = names.length > 0 ? names.map((n) => `${escapeHtml(n)}`).join(", ") : "대상 선택";
+          toggleBtn.querySelector(".select-summary").textContent = names.length > 0 ? names.map((n) => `${escapeHtml(n)}`).join(", ") : "대상 선택";
         }
       });
     });
 }
 
+/**
+ * 확산, 수호, 성호 스킬은 대상을 자동 선택하고 잠금.
+ * 텍스트 갱신이 아닌 체크박스 선택 방식.
+ * @param {*} card 
+ * @param {*} skillName 
+ * @param {*} myCharacterId 
+ * @returns 
+ */
 function applyAutoTargeting(card, skillName, myCharacterId) {
   const myCharacter = roomState.characters.find((c) => c.id === myCharacterId);
   if (!myCharacter) return;
@@ -723,8 +731,6 @@ document.addEventListener("click", (e) => {
     if (!panel.parentElement.contains(e.target)) {
       panel.style.display = "none";
     }
-    // const setting_panel = document.getElementById("roomSettingsPanel");
-    // const toggle = document.getElementById("roomSettingsToggle");
     const toggle = panel.parentElement.querySelector(":scope > button");
     const arrow = toggle?.querySelector(".arrow");
     const isOpen = panel.style.display !== "none";
