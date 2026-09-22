@@ -23,9 +23,6 @@ function startServer({ port, onRoomsChanged, onLog, initialPasswordHash  }) {
     app.use(express.static(path.join(__dirname, "..", "client")));
     app.get("/health", (_req, res) => res.json({ ok: true }));
 
-    // app.use(express.static(path.join(__dirname, 'public')));
-    // app.use('/build', express.static(path.join(__dirname, '..',  'build')));
-
     let currentSettings = store.get("matchSettings");
     const roomManager = new RoomManager({
       getMatchSettings: () => currentSettings,
