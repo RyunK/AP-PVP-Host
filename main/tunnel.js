@@ -2,6 +2,23 @@
 // 이 패키지는 최초 실행 시 OS에 맞는 cloudflared 바이너리를 자동으로 다운로드/설치하므로
 // 호스트(비개발자)는 별도로 바이너리를 설치하거나 명령어를 칠 필요가 없습니다.
 const fs = require("fs");
+
+// tunnel.js 맨 위, require("cloudflared")보다 먼저
+const path = require("path");
+
+if (process.env.NODE_ENV !== "development" && process.resourcesPath) {
+  // 패키징된 앱에서는, asar 밖으로 빠져나온 실제 바이너리 경로를 직접 지정
+  const unpackedBin = path.join(
+    process.resourcesPath,
+    "app.asar.unpacked",
+    "node_modules",
+    "cloudflared",
+    "bin",
+    process.platform === "win32" ? "cloudflared.exe" : "cloudflared"
+  );
+  process.env.CLOUDFLARED_BIN = unpackedBin;
+}
+
 const { bin, install, Tunnel } = require("cloudflared");
 
 /**

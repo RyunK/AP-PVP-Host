@@ -4,3 +4,4 @@ config/formulas.json
 package-lock.json
 .DS_Store
 .env
+.build-src/
