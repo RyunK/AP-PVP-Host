@@ -85,7 +85,7 @@ async function onBattleState(state) {
   roomState = state;
 
   serverTimeOffset = state.serverTime - Date.now();
-  console.log(state);
+  // console.log(state);
   const now_phase = state.turn?.phase;
   const now_round = state.turn?.round;
   let phase_kr;
