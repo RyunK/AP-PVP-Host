@@ -3,36 +3,62 @@
 
 const fs = require("fs");
 const path = require("path");
+const { app } = require("electron");
 
-const CACHE_PATH = path.join(__dirname, "..", "..", "config", "gamedata.json");
+const DEFAULT_PATH = path.join(
+  app.getAppPath(),
+  "config",
+  "gamedata.json"
+);
+
+const CACHE_PATH = path.join(
+  app.getPath("userData"),
+  "config",
+  "gamedata.json"
+);
 
 let cache = null;
 
 function ensureConfigDir() {
   const dir = path.dirname(CACHE_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  // 최초 실행 시 기본 데이터를 userData로 복사
+  if (!fs.existsSync(CACHE_PATH)) {
+    fs.copyFileSync(DEFAULT_PATH, CACHE_PATH);
+  }
 }
 
 function loadGameData() {
   if (cache) return cache;
 
-  if (fs.existsSync(CACHE_PATH)) {
-    cache = JSON.parse(fs.readFileSync(CACHE_PATH, "utf-8"));
-  } else {
-    throw new Error("설정 정보를 찾을 수 없습니다.");
-  }
+  ensureConfigDir();
 
-  checkDataValidation(cache)
+  cache = JSON.parse(
+    fs.readFileSync(CACHE_PATH, "utf-8")
+  );
+
+  checkDataValidation(cache);
+
   return cache;
 }
 
 function saveGameData(newCache) {
   ensureConfigDir();
+
   cache = newCache;
 
   checkDataValidation(cache);
 
-  fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), "utf-8");
+  fs.writeFileSync(
+    CACHE_PATH,
+    JSON.stringify(cache, null, 2),
+    "utf-8"
+  );
+
   return cache;
 }
 

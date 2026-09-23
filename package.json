@@ -37,11 +37,11 @@
       "main/**/*",
       "renderer/**/*",
       "client/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "config/**/*"
     ],
     "asarUnpack": [
-      "node_modules/cloudflared/**/*",
-      "build/icon.png"
+      "node_modules/cloudflared/**/*"
     ],
     "win": {
       "target": "nsis",
