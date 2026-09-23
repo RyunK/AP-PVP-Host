@@ -38,7 +38,7 @@
       "renderer/**/*",
       "client/**/*",
       "node_modules/**/*",
-      "config/**/*"
+      "config/gamedata.json"
     ],
     "asarUnpack": [
       "node_modules/cloudflared/**/*"

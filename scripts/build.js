@@ -33,8 +33,10 @@ execSync(`node -e "require('rimraf').sync('${BUILD_DIR}')"`, { stdio: "inherit" 
 copyDir(path.join(ROOT, "main"), path.join(BUILD_DIR, "main"));
 copyDir(path.join(ROOT, "renderer"), path.join(BUILD_DIR, "renderer"));
 copyDir(path.join(ROOT, "client"), path.join(BUILD_DIR, "client"));
+copyDir(path.join(ROOT, "config"), path.join(BUILD_DIR, "config"));
 fs.copyFileSync(path.join(ROOT, "package.json"), path.join(BUILD_DIR, "package.json"));
 if (fs.existsSync(path.join(ROOT, "build"))) copyDir(path.join(ROOT, "build"), path.join(BUILD_DIR, "build"));
+
 
 // 2) .env 값을 실제 코드에 치환
 const apiKey = process.env.API_KEY;
