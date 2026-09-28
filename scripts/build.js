@@ -28,6 +28,23 @@ function walkJsFiles(dir, out = []) {
   return out;
 }
 
+// 빌드 폴더의 파일을 정규식으로 패치하고, 패치가 실제로 적용됐는지 검증
+function patchFile(relPath, patches) {
+  const file = path.join(BUILD_DIR, relPath);
+  if (!fs.existsSync(file)) throw new Error(`패치 대상 파일 없음: ${relPath}`);
+
+  let content = fs.readFileSync(file, "utf-8");
+  for (const { name, pattern, replace } of patches) {
+    const before = content;
+    content = content.replace(pattern, replace);
+    if (before === content) {
+      throw new Error(`[${relPath}] 패치 실패 (패턴 불일치): ${name}`);
+    }
+    console.log(`[패치 적용] ${relPath} - ${name}`);
+  }
+  fs.writeFileSync(file, content);
+}
+
 // 1) 깨끗한 빌드 폴더 준비
 execSync(`node -e "require('rimraf').sync('${BUILD_DIR}')"`, { stdio: "inherit" });
 copyDir(path.join(ROOT, "main"), path.join(BUILD_DIR, "main"));
@@ -36,6 +53,27 @@ copyDir(path.join(ROOT, "client"), path.join(BUILD_DIR, "client"));
 copyDir(path.join(ROOT, "config"), path.join(BUILD_DIR, "config"));
 fs.copyFileSync(path.join(ROOT, "package.json"), path.join(BUILD_DIR, "package.json"));
 if (fs.existsSync(path.join(ROOT, "build"))) copyDir(path.join(ROOT, "build"), path.join(BUILD_DIR, "build"));
+
+
+// 1.5) 빌드용 소스 패치
+// (1) main/main.js: dotenv require 주석 처리
+patchFile("main/main.js", [
+  {
+    name: "dotenv require 주석 처리",
+    // require('dotenv') / require("dotenv") / require('dotenv').config() 모두 대응
+    pattern: /^(?!\s*\/\/)(.*require\(\s*['"]dotenv['"]\s*\).*)$/m,
+    replace: "// $1",
+  },
+]);
+
+// (2) main/preload.js: process.env.API_KEY -> "__GOOGLE_API_KEY__"
+patchFile("main/preload.js", [
+  {
+    name: "process.env.API_KEY 치환",
+    pattern: /process\.env\.API_KEY/g,
+    replace: '"__GOOGLE_API_KEY__"',
+  },
+]);
 
 
 // 2) .env 값을 실제 코드에 치환
